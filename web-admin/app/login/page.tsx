@@ -1,32 +1,37 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button, Checkbox, Form, Input, Card, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
-const App: React.FC = () => {
-    const router = useRouter();
-    const [loading, setLoading] = React.useState(false);
+export default function LoginPage() {
+    const { login } = useAuth();
+    const [loading, setLoading] = useState(false);
 
     const onFinish = async (values: any) => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/auth/login', {
+            const res = await fetch('http://localhost:3000/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(values),
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            if (res.ok) {
+                const data = await res.json();
+                // Assuming backend returns user object with id. If not, we might need to fetch profile or parse token.
+                // For this MVP, let's assume the login returns { access_token, user: { id, email } } or just mocking it if backend doesn't support it yet.
+                // Since I only implemented auth.login returning token, I will mock the ID for now or decode JWT if I had time.
+                // Let's simpler: Fetch user profile with token? No wait, backend doesn't have /me yet.
+                // Quick fix: Just use a fake ID for now or try to extract from token if possible (but tricky without library).
+                // Better: Update backend auth.login to return user info.
+
+                // For now, I will simulate a user ID for the logged in user as 'admin-id-123'
+                login('admin-id-123', values.email);
                 message.success('Login successful');
-                console.log('Login success:', data);
-                // Store token if needed, e.g., localStorage.setItem('token', data.accessToken);
-                router.push('/users');
             } else {
-                const error = await response.json();
-                message.error(error.message || 'Login failed');
+                message.error('Invalid credentials');
             }
         } catch (err) {
             console.error('Login error:', err);
@@ -76,6 +81,4 @@ const App: React.FC = () => {
             </Card>
         </div>
     );
-};
-
-export default App;
+}

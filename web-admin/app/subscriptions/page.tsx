@@ -44,20 +44,21 @@ const methodColumns: ColumnsType<PaymentMethod> = [
     },
 ];
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function SubscriptionsPage() {
+    const { userId } = useAuth();
     const [subscription, setSubscription] = useState<Subscription | null>(null);
     const [methods, setMethods] = useState<PaymentMethod[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // TODO: Get real userId from auth context
-    const demoUserId = '5e8a9122-3f22-4c82-9a93-0161ec0094ff';
-
     const fetchData = async () => {
+        if (!userId) return;
         setLoading(true);
         try {
             const [subRes, methodsRes] = await Promise.all([
-                fetch(`http://localhost:3000/payments/subscription?userId=${demoUserId}`),
-                fetch(`http://localhost:3000/payments/methods?userId=${demoUserId}`)
+                fetch(`http://localhost:3000/payments/subscription?userId=${userId}`),
+                fetch(`http://localhost:3000/payments/methods?userId=${userId}`)
             ]);
 
             if (subRes.ok) {
@@ -78,8 +79,8 @@ export default function SubscriptionsPage() {
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (userId) fetchData();
+    }, [userId]);
 
     return (
         <div style={{ padding: '24px' }}>

@@ -47,18 +47,19 @@ const columns: ColumnsType<ApiKey> = [
     },
 ];
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function ApiKeysPage() {
+    const { userId } = useAuth();
     const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
 
-    // TODO: Get real userId from auth context
-    const demoUserId = '5e8a9122-3f22-4c82-9a93-0161ec0094ff';
-
     const fetchApiKeys = () => {
+        if (!userId) return;
         setLoading(true);
-        fetch(`http://localhost:3000/apikeys?userId=${demoUserId}`)
+        fetch(`http://localhost:3000/apikeys?userId=${userId}`)
             .then((res) => res.json())
             .then((data) => {
                 setApiKeys(Array.isArray(data) ? data : []);
@@ -71,15 +72,16 @@ export default function ApiKeysPage() {
     };
 
     useEffect(() => {
-        fetchApiKeys();
-    }, []);
+        if (userId) fetchApiKeys();
+    }, [userId]);
 
     const handleCreate = async (values: any) => {
+        if (!userId) return;
         try {
             const response = await fetch('http://localhost:3000/apikeys', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...values, userId: demoUserId }),
+                body: JSON.stringify({ ...values, userId }),
             });
 
             if (response.ok) {

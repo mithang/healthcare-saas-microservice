@@ -1,4 +1,5 @@
 FROM node:20-alpine AS base
+RUN apk add --no-cache openssl libc6-compat
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -23,6 +24,8 @@ RUN npx nest build ${APP_NAME}
 FROM base AS runner
 WORKDIR /app
 
+# Re-declare ARG APP_NAME to use it in this stage
+ARG APP_NAME
 ENV NODE_ENV production
 
 COPY --from=builder /app/dist/apps/${APP_NAME} ./dist

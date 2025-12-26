@@ -62,12 +62,8 @@ export class TOTPService {
 
   private encrypt(text: string): string {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      // @ts-ignore
-      Buffer.from(process.env.ENCRYPTION_KEY!, 'hex'),
-      iv,
-    );
+    const key = Buffer.from(process.env.ENCRYPTION_KEY || '', 'hex');
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return iv.toString('hex') + ':' + encrypted;
@@ -75,18 +71,11 @@ export class TOTPService {
 
   private decrypt(text: string): string {
     const textParts = text.split(':');
-    // @ts-ignore
-    const iv = Buffer.from(textParts.shift(), 'hex');
+    const iv = Buffer.from(textParts.shift() || '', 'hex');
     const encryptedText = Buffer.from(textParts.join(':'), 'hex');
-    const decipher = crypto.createDecipheriv(
-      'aes-256-cbc',
-      // @ts-ignore
-      Buffer.from(process.env.ENCRYPTION_KEY!, 'hex'),
-      iv,
-    );
-    // @ts-ignore
+    const key = Buffer.from(process.env.ENCRYPTION_KEY || '', 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
     let decrypted = decipher.update(encryptedText);
-    // @ts-ignore
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
   }

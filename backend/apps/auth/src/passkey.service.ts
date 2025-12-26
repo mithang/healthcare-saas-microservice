@@ -21,15 +21,14 @@ export class PasskeyService {
 
   async generateRegistrationOptions(
     userId: string,
-  ): Promise<GenerateRegistrationOptionsOpts> {
+  ): Promise<any> {
     const user = await this.userClient
       .send({ cmd: 'getUserById' }, userId)
       .toPromise();
 
-    // @ts-ignore
-    return generateRegistrationOptions({
+    const opts: GenerateRegistrationOptionsOpts = {
       rpName: 'Your App',
-      rpID: process.env.RP_ID!,
+      rpID: process.env.RP_ID || 'localhost',
       userID: user.userId,
       userName: user.email,
       attestationType: 'none',
@@ -37,7 +36,9 @@ export class PasskeyService {
         userVerification: 'preferred',
         residentKey: 'required',
       },
-    });
+      supportedAlgorithmIDs: [-7, -257],
+    };
+    return generateRegistrationOptions(opts);
   }
 
   async verifyRegistration(userId: string, credential: any): Promise<boolean> {
@@ -46,13 +47,11 @@ export class PasskeyService {
       .toPromise();
 
     try {
-      // @ts-ignore
       const verification = await verifyRegistrationResponse({
-        // @ts-ignore
-        credential,
+        response: credential,
         expectedChallenge: user.currentChallenge,
-        expectedOrigin: process.env.EXPECTED_ORIGIN!,
-        expectedRPID: process.env.RP_ID,
+        expectedOrigin: process.env.EXPECTED_ORIGIN || 'http://localhost:3000',
+        expectedRPID: process.env.RP_ID || 'localhost',
       });
 
       if (verification.verified) {
@@ -76,17 +75,17 @@ export class PasskeyService {
 
   async generateAuthenticationOptions(
     userId: string,
-  ): Promise<GenerateAuthenticationOptionsOpts> {
+  ): Promise<any> {
     const user = await this.userClient
       .send({ cmd: 'getUserById' }, userId)
       .toPromise();
 
-    // @ts-ignore
-    return generateAuthenticationOptions({
-      rpID: process.env.RP_ID!,
-      allowCredentials: [JSON.parse(user.passkey)],
+    const opts: GenerateAuthenticationOptionsOpts = {
+      rpID: process.env.RP_ID || 'localhost',
+      allowCredentials: user.passkey ? [JSON.parse(user.passkey)] : [],
       userVerification: 'preferred',
-    });
+    };
+    return generateAuthenticationOptions(opts);
   }
 
   async verifyAuthentication(userId: string, credential: any): Promise<any> {
@@ -95,14 +94,12 @@ export class PasskeyService {
       .toPromise();
 
     try {
-      // @ts-ignore
       const verification = await verifyAuthenticationResponse({
-        // @ts-ignore
-        credential,
+        response: credential,
         expectedChallenge: user.currentChallenge,
-        expectedOrigin: process.env.EXPECTED_ORIGIN!,
-        expectedRPID: process.env.RP_ID!,
-        authenticator: JSON.parse(user.passkey),
+        expectedOrigin: process.env.EXPECTED_ORIGIN || 'http://localhost:3000',
+        expectedRPID: process.env.RP_ID || 'localhost',
+        authenticator: user.passkey ? JSON.parse(user.passkey) : undefined,
       });
 
       if (verification.verified) {

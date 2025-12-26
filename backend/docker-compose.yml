@@ -1,5 +1,17 @@
 version: '3.8'
+
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - saas-network
+
   db:
     image: postgres:14-alpine
     restart: always
@@ -11,6 +23,107 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - saas-network
+
+  saas-microservices: # API Gateway
+    build:
+      context: .
+      args:
+        APP_NAME: saas-microservices
+    ports:
+      - '3000:3000'
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+      - auth-service
+      - user-service
+      - apikey-service
+      - logger-service
+      - payment-service
+    networks:
+      - saas-network
+
+  auth-service:
+    build:
+      context: .
+      args:
+        APP_NAME: auth
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+      - RP_ID=localhost
+      - EXPECTED_ORIGIN=http://localhost:3000
+      - JWT_SECRET=supersecret
+      - ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  user-service:
+    build:
+      context: .
+      args:
+        APP_NAME: user
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  apikey-service:
+    build:
+      context: .
+      args:
+        APP_NAME: apikey
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  logger-service:
+    build:
+      context: .
+      args:
+        APP_NAME: logger
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  payment-service:
+    build:
+      context: .
+      args:
+        APP_NAME: payment
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+networks:
+  saas-network:
+    driver: bridge
 
 volumes:
   postgres_data:

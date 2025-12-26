@@ -6,10 +6,13 @@ async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     LoggerModule,
     {
-      transport: Transport.TCP,
+      transport: Transport.RMQ,
       options: {
-        host: '0.0.0.0',
-        port: 3005,
+        urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+        queue: 'logger_queue',
+        queueOptions: {
+          durable: false,
+        },
       },
     },
   );

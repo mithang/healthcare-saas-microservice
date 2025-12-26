@@ -14,42 +14,57 @@ import { AppService } from './app.service';
     ClientsModule.register([
       {
         name: 'AUTH_SERVICE',
-        transport: Transport.TCP,
+        transport: Transport.RMQ,
         options: {
-          host: process.env.AUTH_SERVICE_HOST || '0.0.0.0',
-          port: parseInt(process.env.AUTH_SERVICE_PORT || '3007'),
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'auth_queue',
+          queueOptions: {
+            durable: false,
+          },
         },
       },
       {
         name: 'USER_SERVICE',
-        transport: Transport.TCP,
+        transport: Transport.RMQ,
         options: {
-          host: process.env.USER_SERVICE_HOST || '0.0.0.0',
-          port: parseInt(process.env.USER_SERVICE_PORT || '3006'),
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'user_queue',
+          queueOptions: {
+            durable: false,
+          },
         },
       },
       {
         name: 'APIKEY_SERVICE',
-        transport: Transport.TCP,
+        transport: Transport.RMQ,
         options: {
-          host: '0.0.0.0',
-          port: 3004,
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'apikey_queue',
+          queueOptions: {
+            durable: false,
+          },
         },
       },
       {
         name: 'LOGGER_SERVICE',
-        transport: Transport.TCP,
+        transport: Transport.RMQ,
         options: {
-          host: '0.0.0.0',
-          port: 3005,
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'logger_queue',
+          queueOptions: {
+            durable: false,
+          },
         },
       },
       {
         name: 'PAYMENT_SERVICE',
-        transport: Transport.TCP,
+        transport: Transport.RMQ,
         options: {
-          host: '0.0.0.0',
-          port: 3003,
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'payment_queue',
+          queueOptions: {
+            durable: false,
+          },
         },
       },
     ]),

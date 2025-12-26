@@ -1,31 +1,31 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/saas-microservices/src",
+  "sourceRoot": "apps/api-gateway/src",
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/saas-microservices/tsconfig.app.json"
+    "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
   },
   "monorepo": true,
-  "root": "apps/saas-microservices",
+  "root": "apps/api-gateway",
   "projects": {
-    "saas-microservices": {
+    "api-gateway": {
       "type": "application",
-      "root": "apps/saas-microservices",
+      "root": "apps/api-gateway",
       "entryFile": "main",
-      "sourceRoot": "apps/saas-microservices/src",
+      "sourceRoot": "apps/api-gateway/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/saas-microservices/tsconfig.app.json"
+        "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
-    "apikey": {
+    "apikey-service": {
       "type": "application",
-      "root": "apps/apikey",
+      "root": "apps/apikey-service",
       "entryFile": "main",
-      "sourceRoot": "apps/apikey/src",
+      "sourceRoot": "apps/apikey-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/apikey/tsconfig.app.json"
+        "tsConfigPath": "apps/apikey-service/tsconfig.app.json"
       }
     },
     "common": {
@@ -37,58 +37,58 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
-    "logger": {
+    "logger-service": {
       "type": "application",
-      "root": "apps/logger",
+      "root": "apps/logger-service",
       "entryFile": "main",
-      "sourceRoot": "apps/logger/src",
+      "sourceRoot": "apps/logger-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/logger/tsconfig.app.json"
+        "tsConfigPath": "apps/logger-service/tsconfig.app.json"
       }
     },
-    "file": {
+    "file-service": {
       "type": "application",
-      "root": "apps/file",
+      "root": "apps/file-service",
       "entryFile": "main",
-      "sourceRoot": "apps/file/src",
+      "sourceRoot": "apps/file-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/file/tsconfig.app.json"
+        "tsConfigPath": "apps/file-service/tsconfig.app.json"
       }
     },
-    "notification": {
+    "notification-service": {
       "type": "application",
-      "root": "apps/notification",
+      "root": "apps/notification-service",
       "entryFile": "main",
-      "sourceRoot": "apps/notification/src",
+      "sourceRoot": "apps/notification-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/notification/tsconfig.app.json"
+        "tsConfigPath": "apps/notification-service/tsconfig.app.json"
       }
     },
-    "payment": {
+    "payment-service": {
       "type": "application",
-      "root": "apps/payment",
+      "root": "apps/payment-service",
       "entryFile": "main",
-      "sourceRoot": "apps/payment/src",
+      "sourceRoot": "apps/payment-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/payment/tsconfig.app.json"
+        "tsConfigPath": "apps/payment-service/tsconfig.app.json"
       }
     },
-    "user": {
+    "user-service": {
       "type": "application",
-      "root": "apps/user",
+      "root": "apps/user-service",
       "entryFile": "main",
-      "sourceRoot": "apps/user/src",
+      "sourceRoot": "apps/user-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/user/tsconfig.app.json"
+        "tsConfigPath": "apps/user-service/tsconfig.app.json"
       }
     },
-    "auth": {
+    "auth-service": {
       "type": "application",
-      "root": "apps/auth",
+      "root": "apps/auth-service",
       "entryFile": "main",
-      "sourceRoot": "apps/auth/src",
+      "sourceRoot": "apps/auth-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/auth/tsconfig.app.json"
+        "tsConfigPath": "apps/auth-service/tsconfig.app.json"
       }
     }
   }

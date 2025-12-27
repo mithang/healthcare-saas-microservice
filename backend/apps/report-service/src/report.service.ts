@@ -1,18 +1,18 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class ReportService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-        await this.seedInitialData();
+export class ReportService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {        await this.seedInitialData();
     }
 
     private async seedInitialData() {
         // Seed overview if empty
-        const overviewCount = await this.systemOverview.count();
+        const overviewCount = await this.prisma.systemOverview.count();
         if (overviewCount === 0) {
-            await this.systemOverview.create({
+            await this.prisma.systemOverview.create({
                 data: {
                     totalRevenue: 125500000,
                     revenueTrend: '+12.5%',
@@ -27,9 +27,9 @@ export class ReportService extends PrismaClient implements OnModuleInit {
         }
 
         // Seed KPI if empty
-        const kpiCount = await this.educationKPI.count();
+        const kpiCount = await this.prisma.educationKPI.count();
         if (kpiCount === 0) {
-            await this.educationKPI.create({
+            await this.prisma.educationKPI.create({
                 data: {
                     totalEnrolled: 1240,
                     expectedEnrolled: 1500,
@@ -46,10 +46,10 @@ export class ReportService extends PrismaClient implements OnModuleInit {
         }
 
         // Seed Revenue Report if empty
-        const revCount = await this.revenueReport.count();
+        const revCount = await this.prisma.revenueReport.count();
         if (revCount === 0) {
             for (let i = 1; i <= 6; i++) {
-                await this.revenueReport.create({
+                await this.prisma.revenueReport.create({
                     data: {
                         month: `${i}/2024`,
                         revenue: 100000000 + i * 10000000,
@@ -62,7 +62,7 @@ export class ReportService extends PrismaClient implements OnModuleInit {
         }
 
         // Seed Export Tickets if empty
-        const exportCount = await this.exportTicket.count();
+        const exportCount = await this.prisma.exportTicket.count();
         if (exportCount === 0) {
             const reports = [
                 { title: 'Đã đăng ký - Chưa bắt đầu', description: 'Danh sách học viên đã đăng ký nhưng chưa xem bài học nào', count: 140, icon: 'flaticon-user', color: 'bg-yellow-500' },
@@ -71,36 +71,36 @@ export class ReportService extends PrismaClient implements OnModuleInit {
                 { title: 'Đã hoàn thành Toàn khóa', description: 'Học viên đạt tiêu chuẩn (video + quiz)', count: 420, icon: 'flaticon-checked', color: 'bg-green-500' },
             ];
             for (const r of reports) {
-                await this.exportTicket.create({ data: { ...r, status: 'completed' } });
+                await this.prisma.exportTicket.create({ data: { ...r, status: 'completed' } });
             }
         }
     }
 
     async getOverview() {
-        return this.systemOverview.findFirst({ orderBy: { updatedAt: 'desc' } });
+        return this.prisma.systemOverview.findFirst({ orderBy: { updatedAt: 'desc' } });
     }
 
     async getKPI() {
-        return this.educationKPI.findFirst({ orderBy: { updatedAt: 'desc' } });
+        return this.prisma.educationKPI.findFirst({ orderBy: { updatedAt: 'desc' } });
     }
 
     async getProgress() {
-        return this.learningProgress.findFirst({ orderBy: { updatedAt: 'desc' } });
+        return this.prisma.learningProgress.findFirst({ orderBy: { updatedAt: 'desc' } });
     }
 
     async getRevenue() {
-        return this.revenueReport.findMany({ orderBy: { createdAt: 'desc' } });
+        return this.prisma.revenueReport.findMany({ orderBy: { createdAt: 'desc' } });
     }
 
     async getUsersAnalytics() {
-        return this.userAnalytics.findFirst({ orderBy: { updatedAt: 'desc' } });
+        return this.prisma.userAnalytics.findFirst({ orderBy: { updatedAt: 'desc' } });
     }
 
     async getExportReports() {
-        return this.exportTicket.findMany({ orderBy: { createdAt: 'desc' } });
+        return this.prisma.exportTicket.findMany({ orderBy: { createdAt: 'desc' } });
     }
 
     async createExportTicket(data: any) {
-        return this.exportTicket.create({ data });
+        return this.prisma.exportTicket.create({ data });
     }
 }

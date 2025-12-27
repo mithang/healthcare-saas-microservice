@@ -1,17 +1,17 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class LiveService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-        await this.seedData();
+export class LiveService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {        await this.seedData();
     }
 
     private async seedData() {
-        const streamCount = await this.livestream.count();
+        const streamCount = await this.prisma.livestream.count();
         if (streamCount === 0) {
-            await this.livestream.create({
+            await this.prisma.livestream.create({
                 data: {
                     title: 'Hội thảo: Cập nhật điều trị Đái tháo đường 2024',
                     description: 'Chương trình đào tạo y khoa liên tục...',
@@ -22,9 +22,9 @@ export class LiveService extends PrismaClient implements OnModuleInit {
             });
         }
 
-        const chatCount = await this.liveChatMessage.count();
+        const chatCount = await this.prisma.liveChatMessage.count();
         if (chatCount === 0) {
-            await this.liveChatMessage.createMany({
+            await this.prisma.liveChatMessage.createMany({
                 data: [
                     { livestreamId: 1, userName: 'Dr. Hai', content: 'Chào mọi người!', userRole: 'Doctor' },
                     { livestreamId: 1, userName: 'Pharma Tien', content: 'Âm thanh rất rõ ạ.', userRole: 'Pharmacist' },
@@ -34,27 +34,27 @@ export class LiveService extends PrismaClient implements OnModuleInit {
     }
 
     async getLiveConfig() {
-        return this.livestream.findFirst({
+        return this.prisma.livestream.findFirst({
             orderBy: { updatedAt: 'desc' },
         });
     }
 
     async updateLiveConfig(id: number, data: any) {
-        return this.livestream.update({
+        return this.prisma.livestream.update({
             where: { id },
             data,
         });
     }
 
     async getLiveMessages(livestreamId: number) {
-        return this.liveChatMessage.findMany({
+        return this.prisma.liveChatMessage.findMany({
             where: { livestreamId },
             orderBy: { createdAt: 'asc' },
         });
     }
 
     async sendLiveMessage(data: any) {
-        return this.liveChatMessage.create({
+        return this.prisma.liveChatMessage.create({
             data,
         });
     }

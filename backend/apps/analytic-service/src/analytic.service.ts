@@ -1,17 +1,18 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class AnalyticService extends PrismaClient implements OnModuleInit {
+export class AnalyticService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) { }
+
     async onModuleInit() {
-        await this.$connect();
         await this.seedData();
     }
 
     private async seedData() {
-        const keywordCount = await this.searchKeyword.count();
+        const keywordCount = await this.prisma.searchKeyword.count();
         if (keywordCount === 0) {
-            await this.searchKeyword.createMany({
+            await this.prisma.searchKeyword.createMany({
                 data: [
                     { keyword: 'dau-dau', keywordVN: 'đau đầu', times: 15420 },
                     { keyword: 'cam-cum', keywordVN: 'cảm cúm', times: 12350 },
@@ -22,9 +23,9 @@ export class AnalyticService extends PrismaClient implements OnModuleInit {
             });
         }
 
-        const hashtagCount = await this.searchHashtag.count();
+        const hashtagCount = await this.prisma.searchHashtag.count();
         if (hashtagCount === 0) {
-            await this.searchHashtag.createMany({
+            await this.prisma.searchHashtag.createMany({
                 data: [
                     { hashtag: 'suckhoe', hashtagVN: 'sức khỏe', times: 25600 },
                     { hashtag: 'duocsi', hashtagVN: 'dược sĩ', times: 18900 },
@@ -37,26 +38,26 @@ export class AnalyticService extends PrismaClient implements OnModuleInit {
     }
 
     async getKeywords() {
-        return this.searchKeyword.findMany({
+        return this.prisma.searchKeyword.findMany({
             orderBy: { times: 'desc' },
         });
     }
 
     async getHashtags() {
-        return this.searchHashtag.findMany({
+        return this.prisma.searchHashtag.findMany({
             orderBy: { times: 'desc' },
         });
     }
 
     async updateKeywordStatus(id: number, status: boolean) {
-        return this.searchKeyword.update({
+        return this.prisma.searchKeyword.update({
             where: { id },
             data: { status },
         });
     }
 
     async updateHashtagStatus(id: number, status: boolean) {
-        return this.searchHashtag.update({
+        return this.prisma.searchHashtag.update({
             where: { id },
             data: { status },
         });

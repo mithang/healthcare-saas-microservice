@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from '@app/common';
+import { PrismaService } from './prisma';
 import { SeminarController } from './seminar.controller';
 import { SeminarService } from './seminar.service';
 
@@ -9,9 +9,8 @@ import { SeminarService } from './seminar.service';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        PrismaModule,
     ],
     controllers: [SeminarController],
-    providers: [SeminarService],
+    providers: [PrismaService, SeminarService],
 })
 export class SeminarModule { }

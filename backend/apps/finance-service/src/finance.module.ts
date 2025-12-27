@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from '@app/common';
+import { PrismaService } from './prisma';
 import { FinanceController } from './finance.controller';
 import { FinanceService } from './finance.service';
 
@@ -9,9 +9,8 @@ import { FinanceService } from './finance.service';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        PrismaModule,
     ],
     controllers: [FinanceController],
-    providers: [FinanceService],
+    providers: [PrismaService, FinanceService],
 })
 export class FinanceModule { }

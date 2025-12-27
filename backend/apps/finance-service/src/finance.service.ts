@@ -1,86 +1,86 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class FinanceService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-    }
+export class FinanceService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {    }
 
     // --- Commissions ---
     async getCommissions() {
-        return this.commission.findMany({
+        return this.prisma.commission.findMany({
             orderBy: { createdAt: 'desc' },
         });
     }
 
     async createCommission(data: any) {
-        return this.commission.create({ data });
+        return this.prisma.commission.create({ data });
     }
 
     async updateCommission(id: number, data: any) {
-        return this.commission.update({
+        return this.prisma.commission.update({
             where: { id },
             data,
         });
     }
 
     async deleteCommission(id: number) {
-        return this.commission.delete({
+        return this.prisma.commission.delete({
             where: { id },
         });
     }
 
     // --- Revenue ---
     async getRevenue() {
-        return this.revenue.findMany({
+        return this.prisma.revenue.findMany({
             orderBy: { timestamp: 'desc' },
         });
     }
 
     async createRevenue(data: any) {
-        return this.revenue.create({ data });
+        return this.prisma.revenue.create({ data });
     }
 
     async updateRevenue(id: number, data: any) {
-        return this.revenue.update({
+        return this.prisma.revenue.update({
             where: { id },
             data,
         });
     }
 
     async deleteRevenue(id: number) {
-        return this.revenue.delete({
+        return this.prisma.revenue.delete({
             where: { id },
         });
     }
 
     // --- Withdrawals ---
     async getWithdrawals() {
-        return this.withdrawal.findMany({
+        return this.prisma.withdrawal.findMany({
             orderBy: { requestDate: 'desc' },
         });
     }
 
     async getWithdrawalById(id: number) {
-        return this.withdrawal.findUnique({
+        return this.prisma.withdrawal.findUnique({
             where: { id },
         });
     }
 
     async createWithdrawal(data: any) {
-        return this.withdrawal.create({ data });
+        return this.prisma.withdrawal.create({ data });
     }
 
     async updateWithdrawal(id: number, data: any) {
-        return this.withdrawal.update({
+        return this.prisma.withdrawal.update({
             where: { id },
             data,
         });
     }
 
     async deleteWithdrawal(id: number) {
-        return this.withdrawal.delete({
+        return this.prisma.withdrawal.delete({
             where: { id },
         });
     }

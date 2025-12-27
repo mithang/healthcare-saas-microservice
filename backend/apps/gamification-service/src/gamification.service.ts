@@ -1,17 +1,17 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class GamificationService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-        await this.seedData();
+export class GamificationService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {        await this.seedData();
     }
 
     private async seedData() {
-        const badgeCount = await this.badge.count();
+        const badgeCount = await this.prisma.badge.count();
         if (badgeCount === 0) {
-            await this.badge.createMany({
+            await this.prisma.badge.createMany({
                 data: [
                     { name: 'Early Bird', description: 'Đăng nhập sớm 7 ngày liên tiếp', icon: '🌅', awarded: 234 },
                     { name: 'Health Champion', description: 'Hoàn thành 30 nhiệm vụ sức khỏe', icon: '🏆', awarded: 156 },
@@ -20,9 +20,9 @@ export class GamificationService extends PrismaClient implements OnModuleInit {
             });
         }
 
-        const ruleCount = await this.pointRule.count();
+        const ruleCount = await this.prisma.pointRule.count();
         if (ruleCount === 0) {
-            await this.pointRule.createMany({
+            await this.prisma.pointRule.createMany({
                 data: [
                     { action: 'Đăng nhập hàng ngày', points: 10 },
                     { action: 'Hoàn thành khóa học', points: 100 },
@@ -31,9 +31,9 @@ export class GamificationService extends PrismaClient implements OnModuleInit {
             });
         }
 
-        const userPointCount = await this.userPoint.count();
+        const userPointCount = await this.prisma.userPoint.count();
         if (userPointCount === 0) {
-            await this.userPoint.createMany({
+            await this.prisma.userPoint.createMany({
                 data: [
                     { userId: 1, userName: 'Nguyễn Văn A', points: 12500, badges: 15, level: 'Platinum' },
                     { userId: 2, userName: 'Trần Thị B', points: 11200, badges: 12, level: 'Gold' },
@@ -44,36 +44,36 @@ export class GamificationService extends PrismaClient implements OnModuleInit {
     }
 
     async getLeaderboard() {
-        return this.userPoint.findMany({
+        return this.prisma.userPoint.findMany({
             orderBy: { points: 'desc' },
             take: 20,
         });
     }
 
     async getBadges() {
-        return this.badge.findMany();
+        return this.prisma.badge.findMany();
     }
 
     async getPointRules() {
-        return this.pointRule.findMany();
+        return this.prisma.pointRule.findMany();
     }
 
     async createBadge(data: any) {
-        return this.badge.create({ data });
+        return this.prisma.badge.create({ data });
     }
 
     async updatePointRule(id: number, points: number) {
-        return this.pointRule.update({
+        return this.prisma.pointRule.update({
             where: { id },
             data: { points },
         });
     }
 
     async getGamificationStats() {
-        const totalPoints = await this.userPoint.aggregate({ _sum: { points: true } });
-        const totalPlayers = await this.userPoint.count();
-        const totalBadges = await this.badge.count();
-        const totalRules = await this.pointRule.count();
+        const totalPoints = await this.prisma.userPoint.aggregate({ _sum: { points: true } });
+        const totalPlayers = await this.prisma.userPoint.count();
+        const totalBadges = await this.prisma.badge.count();
+        const totalRules = await this.prisma.pointRule.count();
         return {
             totalPoints: totalPoints._sum.points || 0,
             totalPlayers,

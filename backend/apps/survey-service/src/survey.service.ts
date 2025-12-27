@@ -1,14 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class SurveyService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-    }
+export class SurveyService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {    }
 
     async getSurveys() {
-        return this.survey.findMany({
+        return this.prisma.survey.findMany({
             include: {
                 _count: {
                     select: { responses: true }
@@ -19,7 +19,7 @@ export class SurveyService extends PrismaClient implements OnModuleInit {
     }
 
     async getSurveyById(id: number) {
-        return this.survey.findUnique({
+        return this.prisma.survey.findUnique({
             where: { id },
             include: {
                 questions: {
@@ -34,7 +34,7 @@ export class SurveyService extends PrismaClient implements OnModuleInit {
 
     async createSurvey(data: any) {
         const { title, description, status, questions } = data;
-        return this.survey.create({
+        return this.prisma.survey.create({
             data: {
                 title,
                 description,
@@ -57,7 +57,7 @@ export class SurveyService extends PrismaClient implements OnModuleInit {
         const { title, description, status, questions } = data;
 
         // Simple update for survey metadata
-        const survey = await this.survey.update({
+        const survey = await this.prisma.survey.update({
             where: { id },
             data: { title, description, status }
         });
@@ -65,8 +65,8 @@ export class SurveyService extends PrismaClient implements OnModuleInit {
         // If questions are provided, we might want to sync them (delete/re-create or update)
         // For simplicity in this initial version, if questions are provided, we'll replace them
         if (questions) {
-            await this.question.deleteMany({ where: { surveyId: id } });
-            await this.question.createMany({
+            await this.prisma.question.deleteMany({ where: { surveyId: id } });
+            await this.prisma.question.createMany({
                 data: questions.map((q: any, index: number) => ({
                     surveyId: id,
                     text: q.text,
@@ -83,14 +83,14 @@ export class SurveyService extends PrismaClient implements OnModuleInit {
 
     async deleteSurvey(id: number) {
         // Delete questions and responses first due to constraints
-        await this.question.deleteMany({ where: { surveyId: id } });
-        await this.response.deleteMany({ where: { surveyId: id } });
-        return this.survey.delete({ where: { id } });
+        await this.prisma.question.deleteMany({ where: { surveyId: id } });
+        await this.prisma.response.deleteMany({ where: { surveyId: id } });
+        return this.prisma.survey.delete({ where: { id } });
     }
 
     async submitResponse(data: any) {
         const { surveyId, userId, answers } = data;
-        return this.response.create({
+        return this.prisma.response.create({
             data: {
                 surveyId,
                 userId,
@@ -100,7 +100,7 @@ export class SurveyService extends PrismaClient implements OnModuleInit {
     }
 
     async getResponses(surveyId: number) {
-        return this.response.findMany({
+        return this.prisma.response.findMany({
             where: { surveyId },
             orderBy: { createdAt: 'desc' }
         });

@@ -1,17 +1,17 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class AIService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-        await this.seedData();
+export class AIService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {        await this.seedData();
     }
 
     private async seedData() {
-        const recCount = await this.recommendation.count();
+        const recCount = await this.prisma.recommendation.count();
         if (recCount === 0) {
-            await this.recommendation.createMany({
+            await this.prisma.recommendation.createMany({
                 data: [
                     {
                         patientName: 'Nguyễn Văn A',
@@ -49,9 +49,9 @@ export class AIService extends PrismaClient implements OnModuleInit {
             });
         }
 
-        const statsCount = await this.aIStats.count();
+        const statsCount = await this.prisma.aIStats.count();
         if (statsCount === 0) {
-            await this.aIStats.create({
+            await this.prisma.aIStats.create({
                 data: {
                     accuracy: 0.92,
                     dailySuggestions: 1234,
@@ -61,9 +61,9 @@ export class AIService extends PrismaClient implements OnModuleInit {
             });
         }
 
-        const performanceCount = await this.modelPerformance.count();
+        const performanceCount = await this.prisma.modelPerformance.count();
         if (performanceCount === 0) {
-            await this.modelPerformance.create({
+            await this.prisma.modelPerformance.create({
                 data: {
                     precision: 0.91,
                     recall: 0.89,
@@ -75,27 +75,27 @@ export class AIService extends PrismaClient implements OnModuleInit {
 
     async getRecommendations(type?: string) {
         const where = type ? { type: type.toUpperCase() as any } : {};
-        return this.recommendation.findMany({
+        return this.prisma.recommendation.findMany({
             where,
             orderBy: { createdAt: 'desc' },
         });
     }
 
     async handleFeedback(id: number, status: string) {
-        return this.recommendation.update({
+        return this.prisma.recommendation.update({
             where: { id },
             data: { status: status.toUpperCase() as any },
         });
     }
 
     async getAIStats() {
-        return this.aIStats.findFirst({
+        return this.prisma.aIStats.findFirst({
             orderBy: { updatedAt: 'desc' },
         });
     }
 
     async getModelPerformance() {
-        return this.modelPerformance.findFirst({
+        return this.prisma.modelPerformance.findFirst({
             orderBy: { updatedAt: 'desc' },
         });
     }

@@ -1,93 +1,93 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client/booking';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class BookingService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-    }
+export class BookingService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {    }
 
     // --- Appointments ---
     async getAppointments() {
-        return this.appointment.findMany({ orderBy: { createdAt: 'desc' } });
+        return this.prisma.appointment.findMany({ orderBy: { createdAt: 'desc' } });
     }
 
     async getAppointment(id: number) {
-        return this.appointment.findUnique({ where: { id } });
+        return this.prisma.appointment.findUnique({ where: { id } });
     }
 
     async createAppointment(data: any) {
-        return this.appointment.create({ data });
+        return this.prisma.appointment.create({ data });
     }
 
     async updateAppointment(id: number, data: any) {
-        return this.appointment.update({ where: { id }, data });
+        return this.prisma.appointment.update({ where: { id }, data });
     }
 
     async deleteAppointment(id: number) {
-        return this.appointment.delete({ where: { id } });
+        return this.prisma.appointment.delete({ where: { id } });
     }
 
     // --- Lab Tests ---
     async getLabTests() {
-        return this.labTest.findMany({ orderBy: { createdAt: 'desc' } });
+        return this.prisma.labTest.findMany({ orderBy: { createdAt: 'desc' } });
     }
 
     async getLabTest(id: number) {
-        return this.labTest.findUnique({ where: { id } });
+        return this.prisma.labTest.findUnique({ where: { id } });
     }
 
     async createLabTest(data: any) {
-        return this.labTest.create({ data });
+        return this.prisma.labTest.create({ data });
     }
 
     async updateLabTest(id: number, data: any) {
-        return this.labTest.update({ where: { id }, data });
+        return this.prisma.labTest.update({ where: { id }, data });
     }
 
     async deleteLabTest(id: number) {
-        return this.labTest.delete({ where: { id } });
+        return this.prisma.labTest.delete({ where: { id } });
     }
 
     // --- Pharmacy Orders ---
     async getPharmacyOrders() {
-        return this.pharmacyOrder.findMany({ orderBy: { createdAt: 'desc' } });
+        return this.prisma.pharmacyOrder.findMany({ orderBy: { createdAt: 'desc' } });
     }
 
     async getPharmacyOrder(id: number) {
-        return this.pharmacyOrder.findUnique({ where: { id } });
+        return this.prisma.pharmacyOrder.findUnique({ where: { id } });
     }
 
     async createPharmacyOrder(data: any) {
-        return this.pharmacyOrder.create({ data });
+        return this.prisma.pharmacyOrder.create({ data });
     }
 
     async updatePharmacyOrder(id: number, data: any) {
-        return this.pharmacyOrder.update({ where: { id }, data });
+        return this.prisma.pharmacyOrder.update({ where: { id }, data });
     }
 
     async deletePharmacyOrder(id: number) {
-        return this.pharmacyOrder.delete({ where: { id } });
+        return this.prisma.pharmacyOrder.delete({ where: { id } });
     }
 
     // --- Refunds ---
     async getRefundRequests() {
-        return this.refundRequest.findMany({ orderBy: { createdAt: 'desc' } });
+        return this.prisma.refundRequest.findMany({ orderBy: { createdAt: 'desc' } });
     }
 
     async getRefundRequest(id: number) {
-        return this.refundRequest.findUnique({ where: { id } });
+        return this.prisma.refundRequest.findUnique({ where: { id } });
     }
 
     async createRefundRequest(data: any) {
-        return this.refundRequest.create({ data });
+        return this.prisma.refundRequest.create({ data });
     }
 
     async updateRefundRequest(id: number, data: any) {
-        return this.refundRequest.update({ where: { id }, data });
+        return this.prisma.refundRequest.update({ where: { id }, data });
     }
 
     async deleteRefundRequest(id: number) {
-        return this.refundRequest.delete({ where: { id } });
+        return this.prisma.refundRequest.delete({ where: { id } });
     }
 }

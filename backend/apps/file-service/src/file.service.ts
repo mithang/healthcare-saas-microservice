@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@app/common';
+import { PrismaService } from './prisma';
 import { createReadStream } from 'fs';
 import { join } from 'path';
 import * as fs from 'fs/promises';

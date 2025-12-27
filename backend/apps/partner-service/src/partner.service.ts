@@ -1,17 +1,17 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client/partner';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class PartnerService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-        await this.seedData();
+export class PartnerService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {        await this.seedData();
     }
 
     private async seedData() {
-        const doctorsCount = await this.doctor.count();
+        const doctorsCount = await this.prisma.doctor.count();
         if (doctorsCount === 0) {
-            await this.doctor.createMany({
+            await this.prisma.doctor.createMany({
                 data: [
                     { name: 'Dr. Nguyễn Văn A', specialty: 'Nội khoa', hospital: 'Bệnh viện Chợ Rẫy', phone: '0901234567', isVerified: true },
                     { name: 'Dr. Trần Thị B', specialty: 'Nhi khoa', hospital: 'Bệnh viện Nhi Đồng', phone: '0907654321', isVerified: false },
@@ -19,9 +19,9 @@ export class PartnerService extends PrismaClient implements OnModuleInit {
             });
         }
 
-        const pharmaciesCount = await this.pharmacy.count();
+        const pharmaciesCount = await this.prisma.pharmacy.count();
         if (pharmaciesCount === 0) {
-            await this.pharmacy.createMany({
+            await this.prisma.pharmacy.createMany({
                 data: [
                     {
                         name: 'Nhà thuốc Long Châu',
@@ -49,9 +49,9 @@ export class PartnerService extends PrismaClient implements OnModuleInit {
             });
         }
 
-        const pharmacistsCount = await this.pharmacist.count();
+        const pharmacistsCount = await this.prisma.pharmacist.count();
         if (pharmacistsCount === 0) {
-            await this.pharmacist.createMany({
+            await this.prisma.pharmacist.createMany({
                 data: [
                     {
                         fullName: 'Dược sĩ Nguyễn Văn A',
@@ -82,138 +82,138 @@ export class PartnerService extends PrismaClient implements OnModuleInit {
 
     // --- Doctors ---
     async getDoctors() {
-        return this.doctor.findMany();
+        return this.prisma.doctor.findMany();
     }
 
     async getDoctor(id: number) {
-        return this.doctor.findUnique({ where: { id } });
+        return this.prisma.doctor.findUnique({ where: { id } });
     }
 
     async createDoctor(data: any) {
-        return this.doctor.create({ data });
+        return this.prisma.doctor.create({ data });
     }
 
     async updateDoctor(id: number, data: any) {
-        return this.doctor.update({ where: { id }, data });
+        return this.prisma.doctor.update({ where: { id }, data });
     }
 
     async deleteDoctor(id: number) {
-        return this.doctor.delete({ where: { id } });
+        return this.prisma.doctor.delete({ where: { id } });
     }
 
     // --- Clinics ---
     async getClinics() {
-        return this.clinic.findMany();
+        return this.prisma.clinic.findMany();
     }
 
     async getClinic(id: number) {
-        return this.clinic.findUnique({ where: { id } });
+        return this.prisma.clinic.findUnique({ where: { id } });
     }
 
     async createClinic(data: any) {
-        return this.clinic.create({ data });
+        return this.prisma.clinic.create({ data });
     }
 
     async updateClinic(id: number, data: any) {
-        return this.clinic.update({ where: { id }, data });
+        return this.prisma.clinic.update({ where: { id }, data });
     }
 
     async deleteClinic(id: number) {
-        return this.clinic.delete({ where: { id } });
+        return this.prisma.clinic.delete({ where: { id } });
     }
 
     // --- Hospitals ---
     async getHospitals() {
-        return this.hospital.findMany();
+        return this.prisma.hospital.findMany();
     }
 
     async getHospital(id: number) {
-        return this.hospital.findUnique({ where: { id } });
+        return this.prisma.hospital.findUnique({ where: { id } });
     }
 
     async createHospital(data: any) {
-        return this.hospital.create({ data });
+        return this.prisma.hospital.create({ data });
     }
 
     async updateHospital(id: number, data: any) {
-        return this.hospital.update({ where: { id }, data });
+        return this.prisma.hospital.update({ where: { id }, data });
     }
 
     async deleteHospital(id: number) {
-        return this.hospital.delete({ where: { id } });
+        return this.prisma.hospital.delete({ where: { id } });
     }
 
     // --- Pharmacies ---
     async getPharmacies() {
-        return this.pharmacy.findMany();
+        return this.prisma.pharmacy.findMany();
     }
 
     async getPharmacy(id: number) {
-        return this.pharmacy.findUnique({ where: { id } });
+        return this.prisma.pharmacy.findUnique({ where: { id } });
     }
 
     async createPharmacy(data: any) {
-        return this.pharmacy.create({ data });
+        return this.prisma.pharmacy.create({ data });
     }
 
     async updatePharmacy(id: number, data: any) {
-        return this.pharmacy.update({ where: { id }, data });
+        return this.prisma.pharmacy.update({ where: { id }, data });
     }
 
     async deletePharmacy(id: number) {
-        return this.pharmacy.delete({ where: { id } });
+        return this.prisma.pharmacy.delete({ where: { id } });
     }
 
     // --- Pharmacists ---
     async getPharmacists() {
-        return this.pharmacist.findMany();
+        return this.prisma.pharmacist.findMany();
     }
 
     async getPharmacist(id: number) {
-        return this.pharmacist.findUnique({ where: { id } });
+        return this.prisma.pharmacist.findUnique({ where: { id } });
     }
 
     async createPharmacist(data: any) {
-        return this.pharmacist.create({ data });
+        return this.prisma.pharmacist.create({ data });
     }
 
     async updatePharmacist(id: number, data: any) {
-        return this.pharmacist.update({ where: { id }, data });
+        return this.prisma.pharmacist.update({ where: { id }, data });
     }
 
     async deletePharmacist(id: number) {
-        return this.pharmacist.delete({ where: { id } });
+        return this.prisma.pharmacist.delete({ where: { id } });
     }
 
     // --- Patients ---
     async getPatients() {
-        return this.patient.findMany();
+        return this.prisma.patient.findMany();
     }
 
     async getPatient(id: number) {
-        return this.patient.findUnique({ where: { id } });
+        return this.prisma.patient.findUnique({ where: { id } });
     }
 
     async createPatient(data: any) {
-        return this.patient.create({ data });
+        return this.prisma.patient.create({ data });
     }
 
     async updatePatient(id: number, data: any) {
-        return this.patient.update({ where: { id }, data });
+        return this.prisma.patient.update({ where: { id }, data });
     }
 
     async deletePatient(id: number) {
-        return this.patient.delete({ where: { id } });
+        return this.prisma.patient.delete({ where: { id } });
     }
 
     // --- Pending Partners (Cross-entity) ---
     async getPendingPartners() {
         const [doctors, clinics, hospitals, pharmacies, pharmacists] = await Promise.all([
-            this.doctor.findMany({ where: { isVerified: false } }),
-            this.clinic.findMany({ where: { isVerified: false } }),
-            this.hospital.findMany({ where: { isVerified: false } }),
-            this.pharmacy.findMany({ where: { isVerified: false } }),
-            this.pharmacist.findMany({ where: { isVerified: false } }),
+            this.prisma.doctor.findMany({ where: { isVerified: false } }),
+            this.prisma.clinic.findMany({ where: { isVerified: false } }),
+            this.prisma.hospital.findMany({ where: { isVerified: false } }),
+            this.prisma.pharmacy.findMany({ where: { isVerified: false } }),
+            this.prisma.pharmacist.findMany({ where: { isVerified: false } }),
         ]);
 
         return [

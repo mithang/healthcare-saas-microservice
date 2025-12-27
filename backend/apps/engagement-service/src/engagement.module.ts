@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from '@app/common';
+import { PrismaService } from './prisma';
 import { EngagementController } from './engagement.controller';
 import { EngagementService } from './engagement.service';
 
@@ -9,9 +9,8 @@ import { EngagementService } from './engagement.service';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        PrismaModule,
     ],
     controllers: [EngagementController],
-    providers: [EngagementService],
+    providers: [PrismaService, EngagementService],
 })
 export class EngagementModule { }

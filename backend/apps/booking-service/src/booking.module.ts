@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from '@app/common';
+import { PrismaService } from './prisma';
 import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
 
@@ -9,9 +9,8 @@ import { BookingService } from './booking.service';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        PrismaModule,
     ],
     controllers: [BookingController],
-    providers: [BookingService],
+    providers: [PrismaService, BookingService],
 })
 export class BookingModule { }

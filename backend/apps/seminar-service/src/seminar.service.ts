@@ -1,15 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from './prisma';
 
 @Injectable()
-export class SeminarService extends PrismaClient implements OnModuleInit {
-    async onModuleInit() {
-        await this.$connect();
-    }
+export class SeminarService implements OnModuleInit {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async onModuleInit() {    }
 
     // --- Seminars ---
     async getSeminars() {
-        return this.seminar.findMany({
+        return this.prisma.seminar.findMany({
             orderBy: { createdAt: 'desc' },
             include: {
                 banners: true,
@@ -20,7 +20,7 @@ export class SeminarService extends PrismaClient implements OnModuleInit {
     }
 
     async getSeminarById(id: number) {
-        return this.seminar.findUnique({
+        return this.prisma.seminar.findUnique({
             where: { id },
             include: {
                 banners: true,
@@ -31,112 +31,112 @@ export class SeminarService extends PrismaClient implements OnModuleInit {
     }
 
     async createSeminar(data: any) {
-        return this.seminar.create({ data });
+        return this.prisma.seminar.create({ data });
     }
 
     async updateSeminar(id: number, data: any) {
-        return this.seminar.update({
+        return this.prisma.seminar.update({
             where: { id },
             data,
         });
     }
 
     async deleteSeminar(id: number) {
-        return this.seminar.delete({
+        return this.prisma.seminar.delete({
             where: { id },
         });
     }
 
     // --- Banners ---
     async getBanners() {
-        return this.seminarBanner.findMany({
+        return this.prisma.seminarBanner.findMany({
             include: { seminar: true }
         });
     }
 
     async createBanner(data: any) {
-        return this.seminarBanner.create({ data });
+        return this.prisma.seminarBanner.create({ data });
     }
 
     async deleteBanner(id: number) {
-        return this.seminarBanner.delete({ where: { id } });
+        return this.prisma.seminarBanner.delete({ where: { id } });
     }
 
     // --- Attendees ---
     async getAttendees(seminarId?: number) {
         if (seminarId) {
-            return this.seminarAttendee.findMany({
+            return this.prisma.seminarAttendee.findMany({
                 where: { seminarId }
             });
         }
-        return this.seminarAttendee.findMany();
+        return this.prisma.seminarAttendee.findMany();
     }
 
     async createAttendee(data: any) {
-        return this.seminarAttendee.create({ data });
+        return this.prisma.seminarAttendee.create({ data });
     }
 
     async updateAttendee(id: number, data: any) {
-        return this.seminarAttendee.update({
+        return this.prisma.seminarAttendee.update({
             where: { id },
             data,
         });
     }
 
     async deleteAttendee(id: number) {
-        return this.seminarAttendee.delete({ where: { id } });
+        return this.prisma.seminarAttendee.delete({ where: { id } });
     }
 
     // --- Invitations ---
     async getInvitations() {
-        return this.seminarInvitation.findMany({
+        return this.prisma.seminarInvitation.findMany({
             include: { seminar: true }
         });
     }
 
     async createInvitation(data: any) {
-        return this.seminarInvitation.create({ data });
+        return this.prisma.seminarInvitation.create({ data });
     }
 
     // --- Sessions ---
     async getSessions() {
-        return this.seminarSession.findMany({
+        return this.prisma.seminarSession.findMany({
             include: { seminar: true }
         });
     }
 
     async createSession(data: any) {
-        return this.seminarSession.create({ data });
+        return this.prisma.seminarSession.create({ data });
     }
 
     async updateSession(id: number, data: any) {
-        return this.seminarSession.update({
+        return this.prisma.seminarSession.update({
             where: { id },
             data,
         });
     }
 
     async deleteSession(id: number) {
-        return this.seminarSession.delete({ where: { id } });
+        return this.prisma.seminarSession.delete({ where: { id } });
     }
 
     // --- Speakers ---
     async getSpeakers() {
-        return this.seminarSpeaker.findMany();
+        return this.prisma.seminarSpeaker.findMany();
     }
 
     async createSpeaker(data: any) {
-        return this.seminarSpeaker.create({ data });
+        return this.prisma.seminarSpeaker.create({ data });
     }
 
     async updateSpeaker(id: number, data: any) {
-        return this.seminarSpeaker.update({
+        return this.prisma.seminarSpeaker.update({
             where: { id },
             data,
         });
     }
 
     async deleteSpeaker(id: number) {
-        return this.seminarSpeaker.delete({ where: { id } });
+        return this.prisma.seminarSpeaker.delete({ where: { id } });
     }
 }

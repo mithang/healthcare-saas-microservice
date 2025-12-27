@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from '@app/common';
+import { PrismaService } from './prisma';
 import { MarketingController } from './marketing.controller';
 import { MarketingService } from './marketing.service';
 
@@ -9,9 +9,8 @@ import { MarketingService } from './marketing.service';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        PrismaModule,
     ],
     controllers: [MarketingController],
-    providers: [MarketingService],
+    providers: [PrismaService, MarketingService],
 })
 export class MarketingModule { }

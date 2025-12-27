@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@app/common';
+import { PrismaService } from './prisma';
 import {
   PaymentMethodType,
   Plan,

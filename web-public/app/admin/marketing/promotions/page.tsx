@@ -1,70 +1,50 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Promotion, PromotionStats, getStatusText, getStatusColor, getTypeText, getSystemSourceText } from '@/types/promotion';
+import marketingService from '@/services/marketing.service';
 
 export default function PromotionManagementPage() {
+    const [promotions, setPromotions] = useState<Promotion[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
 
-    // Mock data
-    const stats: PromotionStats = {
-        totalPromotions: 45,
-        activePromotions: 28,
-        inactivePromotions: 12,
-        systemPromotions: 15,
-        userPromotions: 30
+    const fetchPromotions = async () => {
+        try {
+            setLoading(true);
+            const data = await marketingService.getPromotions();
+            setPromotions(data as any);
+        } catch (error) {
+            console.error('Failed to fetch promotions', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const promotions: Promotion[] = [
-        {
-            id: 1,
-            code: 'SUMMER2024',
-            name: 'Khuyến mãi Hè 2024',
-            createDate: '2024-06-01',
-            endDate: '2024-08-31',
-            systemSource: 'admin',
-            link: 'https://healthcare.vn/promotions/summer2024',
-            type: 'discount',
-            key: 'promo_summer_2024_key_abc123',
-            isSystem: true,
-            updateDate: '2024-12-15',
-            description: 'Giảm giá 20% cho tất cả dịch vụ khám bệnh trong mùa hè',
-            imageLink: '/img/promotions/summer2024.jpg',
-            videoLink: 'https://youtube.com/watch?v=abc123',
-            status: '01',
-            userIdCreate: 'admin-001',
-            userNameCreate: 'Admin System',
-            userIdUpdate: 'admin-001',
-            userNameUpdate: 'Admin System',
-            dynamicLink: 'https://app.healthcare.vn/promo/summer',
-            bannerLandingPage: '/img/banners/summer2024.jpg'
-        },
-        {
-            id: 2,
-            code: 'NEWUSER50',
-            name: 'Ưu đãi Người dùng Mới',
-            createDate: '2024-01-15',
-            endDate: '2025-12-31',
-            systemSource: 'web',
-            link: 'https://healthcare.vn/promotions/newuser',
-            type: 'voucher',
-            key: 'promo_newuser_key_xyz789',
-            isSystem: false,
-            updateDate: '2024-12-10',
-            description: 'Giảm 50% cho lần khám đầu tiên',
-            imageLink: '/img/promotions/newuser.jpg',
-            status: '01',
-            userIdCreate: 'user-123',
-            userNameCreate: 'Nguyễn Văn A',
-            userIdUpdate: 'user-123',
-            userNameUpdate: 'Nguyễn Văn A',
-            dynamicLink: 'https://app.healthcare.vn/promo/newuser'
-        }
-    ];
+    useEffect(() => {
+        fetchPromotions();
+    }, []);
+
+    // Dynamic stats
+    const stats: PromotionStats = {
+        totalPromotions: promotions.length,
+        activePromotions: promotions.filter(p => p.status === '01').length,
+        inactivePromotions: promotions.filter(p => p.status === '02').length,
+        systemPromotions: promotions.filter(p => p.isSystem).length,
+        userPromotions: promotions.filter(p => !p.isSystem).length
+    };
 
     const handleEdit = (promo: Promotion) => {
         setSelectedPromotion(promo);
         setShowEditModal(true);
+    };
+
+    const handleDelete = async (id: number) => {
+        if (confirm('Bạn có chắc chắn muốn xóa chương trình này?')) {
+            await marketingService.deletePromotion(id);
+            fetchPromotions();
+        }
     };
 
     return (
@@ -74,7 +54,24 @@ export default function PromotionManagementPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Quản lý Khuyến mãi</h1>
                     <p className="text-gray-500 text-sm mt-1">Quản lý các chương trình khuyến mãi và ưu đãi</p>
                 </div>
-                <button className="px-4 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark">
+                <button
+                    onClick={async () => {
+                        await marketingService.createPromotion({
+                            code: 'NEW' + Math.floor(Math.random() * 1000),
+                            name: 'Chương trình mới ' + new Date().toLocaleTimeString(),
+                            createDate: new Date().toISOString(),
+                            endDate: '2025-12-31',
+                            systemSource: 'admin',
+                            link: '#',
+                            type: 'discount',
+                            isSystem: false,
+                            status: '01',
+                            userNameCreate: 'Admin'
+                        });
+                        fetchPromotions();
+                    }}
+                    className="px-4 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark"
+                >
                     <i className="fi flaticon-add mr-2"></i> Tạo khuyến mãi
                 </button>
             </div>
@@ -129,70 +126,87 @@ export default function PromotionManagementPage() {
 
             {/* Promotions Table */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-4 font-bold text-gray-700">Mã/Tên</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Loại</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Nguồn</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Ngày tạo</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Người tạo</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Trạng thái</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {promotions.map((promo) => (
-                            <tr key={promo.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4">
-                                    <div>
-                                        <p className="font-bold text-gray-900">{promo.code}</p>
-                                        <p className="text-xs text-gray-600">{promo.name}</p>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">
-                                        {getTypeText(promo.type)}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-600">{getSystemSourceText(promo.systemSource)}</span>
-                                        {promo.isSystem && (
-                                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-bold">
-                                                System
-                                            </span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-xs">
-                                    {new Date(promo.createDate).toLocaleDateString('vi-VN')}
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-xs">
-                                    {promo.userNameCreate}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(promo.status)}`}>
-                                        {getStatusText(promo.status)}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleEdit(promo)}
-                                            className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold"
-                                        >
-                                            Xem
-                                        </button>
-                                        <button className="px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">
-                                            Sửa
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <div className="min-h-[300px]">
+                    {loading ? (
+                        <div className="p-12 text-center text-gray-500">Đang tải dữ liệu...</div>
+                    ) : (
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Mã/Tên</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Loại</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Nguồn</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Ngày tạo</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Người tạo</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Trạng thái</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {promotions.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500 font-medium">
+                                            Chưa có khuyến mãi nào
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    promotions.map((promo) => (
+                                        <tr key={promo.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4">
+                                                <div>
+                                                    <p className="font-bold text-gray-900">{promo.code}</p>
+                                                    <p className="text-xs text-gray-600">{promo.name}</p>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">
+                                                    {getTypeText(promo.type)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-gray-600">{getSystemSourceText(promo.systemSource)}</span>
+                                                    {promo.isSystem && (
+                                                        <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-bold">
+                                                            System
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600 text-xs">
+                                                {new Date(promo.createDate).toLocaleDateString('vi-VN')}
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600 text-xs">
+                                                {promo.userNameCreate}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(promo.status)}`}>
+                                                    {getStatusText(promo.status)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleEdit(promo)}
+                                                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold"
+                                                    >
+                                                        Xem
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(promo.id!)}
+                                                        className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold"
+                                                    >
+                                                        Xóa
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
             </div>
 
             {/* Edit Modal */}
@@ -214,11 +228,11 @@ export default function PromotionManagementPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Tên chương trình *</label>
-                                <input type="text" value={selectedPromotion.name} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <input type="text" defaultValue={selectedPromotion.name} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Loại *</label>
-                                <select value={selectedPromotion.type} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
+                                <select defaultValue={selectedPromotion.type} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
                                     <option value="discount">Giảm giá</option>
                                     <option value="voucher">Voucher</option>
                                     <option value="gift">Quà tặng</option>
@@ -229,7 +243,7 @@ export default function PromotionManagementPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Nguồn hệ thống *</label>
-                                <select value={selectedPromotion.systemSource} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
+                                <select defaultValue={selectedPromotion.systemSource} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
                                     <option value="web">Website</option>
                                     <option value="mobile_ios">iOS App</option>
                                     <option value="mobile_android">Android App</option>
@@ -241,41 +255,41 @@ export default function PromotionManagementPage() {
                             {/* Links */}
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Link khuyến mãi *</label>
-                                <input type="text" value={selectedPromotion.link} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <input type="text" defaultValue={selectedPromotion.link} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Dynamic Link</label>
-                                <input type="text" value={selectedPromotion.dynamicLink} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <input type="text" defaultValue={selectedPromotion.dynamicLink} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
                             </div>
 
                             {/* Media */}
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Link ảnh</label>
-                                <input type="text" value={selectedPromotion.imageLink} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <input type="text" defaultValue={selectedPromotion.imageLink} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Link video</label>
-                                <input type="text" value={selectedPromotion.videoLink} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <input type="text" defaultValue={selectedPromotion.videoLink} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Banner Landing Page</label>
-                                <input type="text" value={selectedPromotion.bannerLandingPage} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <input type="text" defaultValue={selectedPromotion.bannerLandingPage} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
                             </div>
 
                             {/* Description */}
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Mô tả</label>
-                                <textarea value={selectedPromotion.description} className="w-full px-4 py-3 border border-gray-200 rounded-xl h-24" />
+                                <textarea defaultValue={selectedPromotion.description} className="w-full px-4 py-3 border border-gray-200 rounded-xl h-24" />
                             </div>
 
                             {/* System Info */}
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Key/Token *</label>
-                                <input type="text" value={selectedPromotion.key} className="w-full px-4 py-3 border border-gray-200 rounded-xl font-mono text-xs" readOnly />
+                                <input type="text" value={selectedPromotion.key || ''} className="w-full px-4 py-3 border border-gray-200 rounded-xl font-mono text-xs" readOnly />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Trạng thái *</label>
-                                <select value={selectedPromotion.status} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
+                                <select defaultValue={selectedPromotion.status} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
                                     <option value="01">Đang hoạt động</option>
                                     <option value="02">Tạm dừng</option>
                                     <option value="03">Đã kết thúc</option>
@@ -292,29 +306,9 @@ export default function PromotionManagementPage() {
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Ngày kết thúc</label>
                                 <input
                                     type="date"
-                                    value={selectedPromotion.endDate ? selectedPromotion.endDate : ''}
+                                    defaultValue={selectedPromotion.endDate || ''}
                                     className="w-full px-4 py-3 border border-gray-200 rounded-xl"
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Ngày cập nhật</label>
-                                <input type="text" value={new Date(selectedPromotion.updateDate).toLocaleString('vi-VN')} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50" readOnly />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Người tạo</label>
-                                <input type="text" value={selectedPromotion.userNameCreate} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50" readOnly />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Người cập nhật</label>
-                                <input type="text" value={selectedPromotion.userNameUpdate} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50" readOnly />
-                            </div>
-
-                            {/* System Flag */}
-                            <div className="md:col-span-2">
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" checked={selectedPromotion.isSystem} className="w-5 h-5" disabled />
-                                    <span className="text-sm font-bold text-gray-700">Tạo bởi hệ thống</span>
-                                </label>
                             </div>
                         </div>
 

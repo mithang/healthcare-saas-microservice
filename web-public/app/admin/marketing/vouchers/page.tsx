@@ -1,60 +1,93 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import StatusBadge from '@/components/admin/StatusBadge';
-
-const MOCK_DATA = Array.from({ length: 35 }, (_, i) => ({
-    id: i + 1,
-    code: `VOU${1000 + i}`,
-    name: `Voucher ${i % 3 === 0 ? 'Giảm 50k' : i % 2 === 0 ? 'Freeship' : 'Giảm 20%'}`,
-    discount: i % 3 === 0 ? '50.000đ' : i % 2 === 0 ? 'Freeship' : '20%',
-    minOrder: `${(i + 1) * 100}k`,
-    used: Math.floor(Math.random() * 200),
-    maxUses: 500,
-    expiry: `31/12/2024`,
-    status: i % 7 === 0 ? 'inactive' : 'active',
-}));
+import marketingService, { Voucher } from '@/services/marketing.service';
 
 export default function VouchersManagement() {
+    const [vouchers, setVouchers] = useState<Voucher[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const [searchQuery, setSearchQuery] = useState('');
     const itemsPerPage = 10;
 
-    const filteredData = MOCK_DATA.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.code.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const fetchVouchers = async () => {
+        try {
+            setLoading(true);
+            const data = await marketingService.getVouchers();
+            setVouchers(data);
+        } catch (error) {
+            console.error('Failed to fetch vouchers', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    useEffect(() => {
+        fetchVouchers();
+    }, []);
+
+    const totalPages = Math.ceil(vouchers.length / itemsPerPage);
+    const paginatedData = vouchers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const columns = [
-        { key: 'code', label: 'Mã', render: (val: string) => <span className="font-mono font-bold">{val}</span> },
-        { key: 'name', label: 'Tên voucher' },
-        { key: 'discount', label: 'Giảm giá', render: (val: string) => <span className="text-green-600 font-bold">{val}</span> },
+        { key: 'code', label: 'Mã Voucher', render: (val: string) => <span className="font-bold text-primary">{val}</span> },
+        { key: 'name', label: 'Tên chương trình' },
+        { key: 'discount', label: 'Giảm giá' },
         { key: 'minOrder', label: 'Đơn tối thiểu' },
-        { key: 'used', label: 'Đã dùng' },
-        { key: 'expiry', label: 'Hết hạn' },
+        { key: 'used', label: 'Đã dùng', render: (val: number, row: Voucher) => <span>{val}/{row.maxUses}</span> },
+        { key: 'expiry', label: 'Hạn dùng' },
         { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
-    const actions = (row: any) => (
-        <>
-            <button className="text-blue-600 hover:text-blue-800"><i className="fi flaticon-eye"></i></button>
-            <button className="text-green-600 hover:text-green-800"><i className="fi flaticon-edit"></i></button>
-        </>
+    const actions = (row: Voucher) => (
+        <div className="flex gap-2">
+            <button className="text-blue-600 hover:text-blue-800" title="Sửa"><i className="fi flaticon-edit"></i></button>
+            <button
+                onClick={async () => {
+                    if (confirm('Bạn có chắc chắn muốn xóa voucher này?')) {
+                        await marketingService.deleteVoucher(row.id);
+                        fetchVouchers();
+                    }
+                }}
+                className="text-red-600 hover:text-red-800"
+                title="Xóa"
+            >
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
     );
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Quản lý Voucher</h1>
-                    <p className="text-gray-500 mt-1">Tổng: {filteredData.length} voucher</p>
-                </div>
-                <button className="bg-primary text-white font-bold px-6 py-3 rounded-xl">+ Tạo voucher</button>
+                <h1 className="text-3xl font-bold text-gray-900">Quản lý Voucher</h1>
+                <button
+                    onClick={async () => {
+                        await marketingService.createVoucher({
+                            code: 'VOUCHER' + Math.floor(Math.random() * 1000),
+                            name: 'Voucher mới ' + new Date().toLocaleTimeString(),
+                            discount: '50.000 ₫',
+                            minOrder: '200.000 ₫',
+                            used: 0,
+                            maxUses: 100,
+                            expiry: '31/12/2025',
+                            status: 'published'
+                        });
+                        fetchVouchers();
+                    }}
+                    className="bg-primary text-white font-bold px-6 py-3 rounded-xl"
+                >
+                    + Tạo Voucher
+                </button>
             </div>
-            <DataTable columns={columns} data={paginatedData} actions={actions} searchable onSearch={setSearchQuery} pagination={{ currentPage, totalPages, onPageChange: setCurrentPage }} />
+            <DataTable
+                columns={columns}
+                data={paginatedData}
+                loading={loading}
+                actions={actions}
+                pagination={{ currentPage, totalPages, onPageChange: setCurrentPage }}
+            />
         </div>
     );
 }

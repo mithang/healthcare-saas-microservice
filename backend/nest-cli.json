@@ -162,6 +162,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/booking-service/tsconfig.app.json"
       }
+    },
+    "marketing-service": {
+      "type": "application",
+      "root": "apps/marketing-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/marketing-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/marketing-service/tsconfig.app.json"
+      }
     }
   }
 }

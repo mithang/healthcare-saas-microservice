@@ -16,6 +16,7 @@ import { EducationController } from './education.controller';
 import { PartnerController } from './partner.controller';
 import { CommunityController } from './community.controller';
 import { BookingController } from './booking.controller';
+import { MarketingController } from './marketing.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -177,7 +178,7 @@ import { AppService } from './app.service';
       },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController, MarketingController],
   providers: [AppService],
 })
 export class AppModule { }

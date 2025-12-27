@@ -18,6 +18,7 @@ import { CommunityController } from './community.controller';
 import { BookingController } from './booking.controller';
 import { MarketingController } from './marketing.controller';
 import { FinanceController } from './finance.controller';
+import { SeminarController } from './seminar.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -199,9 +200,20 @@ import { AppService } from './app.service';
           },
         },
       },
+      {
+        name: 'SEMINAR_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'seminar_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController, MarketingController, FinanceController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController, MarketingController, FinanceController, SeminarController],
   providers: [AppService],
 })
 export class AppModule { }

@@ -180,6 +180,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/finance-service/tsconfig.app.json"
       }
+    },
+    "seminar-service": {
+      "type": "application",
+      "root": "apps/seminar-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/seminar-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/seminar-service/tsconfig.app.json"
+      }
     }
   }
 }

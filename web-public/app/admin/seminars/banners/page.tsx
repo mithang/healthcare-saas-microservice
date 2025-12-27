@@ -1,13 +1,63 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import seminarService, { SeminarBanner, Seminar } from '@/services/seminar.service';
 
 export default function SeminarBannersPage() {
     const [showUploadForm, setShowUploadForm] = useState(false);
+    const [banners, setBanners] = useState<SeminarBanner[]>([]);
+    const [seminars, setSeminars] = useState<Seminar[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const banners = [
-        { id: 1, seminarId: 1, seminarTitle: 'Hội thảo Dược lâm sàng 2024', image: '/img/banner-1.jpg', priority: 1 },
-        { id: 2, seminarId: 2, seminarTitle: 'Cập nhật Điều trị Tim mạch', image: '/img/banner-2.jpg', priority: 2 },
-    ];
+    // Form fields
+    const [selectedSeminarId, setSelectedSeminarId] = useState<string>('');
+    const [priority, setPriority] = useState(1);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [bannerData, seminarData] = await Promise.all([
+                seminarService.getBanners(),
+                seminarService.getSeminars()
+            ]);
+            setBanners(bannerData);
+            setSeminars(seminarData);
+        } catch (error) {
+            console.error('Failed to fetch banner data', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const handleUpload = async () => {
+        if (!selectedSeminarId) return alert('Vui lòng chọn hội thảo');
+        try {
+            await seminarService.createBanner({
+                seminarId: parseInt(selectedSeminarId),
+                image: '/img/banner-1.jpg', // Placeholder for demo
+                priority: priority
+            });
+            setShowUploadForm(false);
+            fetchData();
+        } catch (error) {
+            console.error('Failed to upload banner', error);
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (confirm('Xóa banner này?')) {
+            try {
+                await seminarService.deleteBanner(id);
+                fetchData();
+            } catch (error) {
+                console.error('Failed to delete banner', error);
+            }
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -24,23 +74,32 @@ export default function SeminarBannersPage() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {banners.map((banner) => (
-                    <div key={banner.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        <img src={banner.image} alt={banner.seminarTitle} className="w-full h-48 object-cover" onError={(e) => (e.target as HTMLImageElement).src = '/styles/img/banner/banner-1.jpg'} />
-                        <div className="p-4">
-                            <p className="font-bold text-gray-900 mb-2">{banner.seminarTitle}</p>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-gray-600">Thứ tự: {banner.priority}</span>
-                                <div className="flex gap-2">
-                                    <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">Sửa</button>
-                                    <button className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">Xóa</button>
+            {loading ? (
+                <div className="p-8 text-center text-gray-500">Đang tải...</div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {banners.map((banner) => (
+                        <div key={banner.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <img src={banner.image} alt={banner.seminar?.title} className="w-full h-48 object-cover" onError={(e) => (e.target as HTMLImageElement).src = '/styles/img/banner/banner-1.jpg'} />
+                            <div className="p-4">
+                                <p className="font-bold text-gray-900 mb-2">{banner.seminar?.title}</p>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-600">Thứ tự: {banner.priority}</span>
+                                    <div className="flex gap-2">
+                                        <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">Sửa</button>
+                                        <button onClick={() => handleDelete(banner.id)} className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">Xóa</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                    {banners.length === 0 && (
+                        <div className="col-span-full p-8 text-center text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200">
+                            Chưa có banner nào
+                        </div>
+                    )}
+                </div>
+            )}
 
             {showUploadForm && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -49,9 +108,15 @@ export default function SeminarBannersPage() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Chọn Hội thảo</label>
-                                <select className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
-                                    <option>Hội thảo Dược lâm sàng 2024</option>
-                                    <option>Cập nhật Điều trị Tim mạch</option>
+                                <select
+                                    value={selectedSeminarId}
+                                    onChange={(e) => setSelectedSeminarId(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white"
+                                >
+                                    <option value="">-- Chọn hội thảo --</option>
+                                    {seminars.map(s => (
+                                        <option key={s.id} value={s.id}>{s.title}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>
@@ -60,11 +125,16 @@ export default function SeminarBannersPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Thứ tự ưu tiên</label>
-                                <input type="number" defaultValue={1} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <input
+                                    type="number"
+                                    value={priority}
+                                    onChange={(e) => setPriority(parseInt(e.target.value))}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                                />
                             </div>
                             <div className="flex gap-3">
                                 <button onClick={() => setShowUploadForm(false)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl">Hủy</button>
-                                <button className="flex-1 py-3 bg-primary text-white font-bold rounded-xl">Upload</button>
+                                <button onClick={handleUpload} className="flex-1 py-3 bg-primary text-white font-bold rounded-xl">Upload</button>
                             </div>
                         </div>
                     </div>

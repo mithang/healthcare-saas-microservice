@@ -21,63 +21,76 @@ export default function SeminarSpeakersPage() {
                 </button>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-4 font-bold text-gray-700">Diễn giả</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Chức danh</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Số hội thảo</th>
-                            <th className="px-6 py-4 font-bold text-gray-700">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {speakers.map((speaker) => (
-                            <tr key={speaker.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <img src={speaker.photo} alt={speaker.name} className="w-12 h-12 rounded-full object-cover" onError={(e) => (e.target as HTMLImageElement).src = '/styles/img/banner/banner-1.jpg'} />
-                                        <p className="font-medium text-gray-900">{speaker.name}</p>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600">{speaker.title}</td>
-                                <td className="px-6 py-4 font-bold text-gray-900">{speaker.seminars}</td>
-                                <td className="px-6 py-4">
-                                    <div className="flex gap-2">
-                                        <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">Sửa</button>
-                                        <button className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">Xóa</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            {loading ? (
+                <div className="p-8 text-center text-gray-500">Đang tải...</div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {speakers.map((speaker) => (
+                        <div key={speaker.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center group relative">
+                            <button
+                                onClick={() => handleDelete(speaker.id)}
+                                className="absolute top-2 right-2 p-2 text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition"
+                            >
+                                <i className="fi flaticon-delete"></i>
+                            </button>
+                            <img src={speaker.photo} alt={speaker.name} className="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-primary/10 object-cover" onError={(e) => (e.target as HTMLImageElement).src = 'https://i.pravatar.cc/150'} />
+                            <h3 className="font-bold text-gray-900">{speaker.name}</h3>
+                            <p className="text-sm text-gray-500 mb-2">{speaker.title}</p>
+                            <div className="flex items-center justify-center gap-2 text-primary font-bold text-xs">
+                                <i className="fi flaticon-calendar text-xs"></i>
+                                {speaker.seminars} Hội thảo
+                            </div>
+                        </div>
+                    ))}
+                    {speakers.length === 0 && (
+                        <div className="col-span-full p-8 text-center text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200">
+                            Chưa có diễn giả nào
+                        </div>
+                    )}
+                </div>
+            )}
 
-            {showAddForm && (
+            {showAddModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl p-8 max-w-2xl w-full">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6">Thêm Diễn giả</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">Thêm Diễn giả mới</h3>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Họ và tên</label>
-                                <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Ví dụ: TS. Nguyễn Văn A"
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                                />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Chức danh</label>
-                                <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Chức danh / Học hàm</label>
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="Ví dụ: Giám đốc Bệnh viện"
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                                />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Tiểu sử</label>
-                                <textarea rows={4} className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none"></textarea>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Tiểu sử tóm tắt</label>
+                                <textarea
+                                    rows={4}
+                                    value={bio}
+                                    onChange={(e) => setBio(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none"
+                                ></textarea>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Ảnh</label>
-                                <input type="file" accept="image/*" className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Ảnh đại diện</label>
+                                <input type="file" className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
                             </div>
-                            <div className="flex gap-3">
-                                <button onClick={() => setShowAddForm(false)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl">Hủy</button>
-                                <button className="flex-1 py-3 bg-primary text-white font-bold rounded-xl">Lưu</button>
+                            <div className="flex gap-3 pt-4">
+                                <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl">Hủy</button>
+                                <button onClick={handleAddSpeaker} className="flex-1 py-3 bg-primary text-white font-bold rounded-xl">Lưu</button>
                             </div>
                         </div>
                     </div>

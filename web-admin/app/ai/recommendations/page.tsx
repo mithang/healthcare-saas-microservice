@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Row, Col, Statistic, Progress, Tabs, List, Tooltip } from 'antd';
-import { RobotOutlined, CheckCircleOutlined, CloseCircleOutlined, AreaChartOutlined, SearchOutlined, RocketOutlined, AimOutlined, SyncOutlined } from '@ant-design/icons';
-import aiService, { Recommendation, AIStats, ModelPerformance, RecommendationStatus } from '@/services/ai.service';
+import { RobotOutlined, CheckCircleOutlined, CloseCircleOutlined, AreaChartOutlined, SearchOutlined, RocketOutlined, AimOutlined, SyncOutlined, EyeOutlined } from '@ant-design/icons';
+import aiService, { Recommendation, AIStats, ModelPerformance, RecommendationStatus, RecommendationType } from '@/services/ai.service';
 
 const { Title, Text } = Typography;
 
@@ -31,8 +31,8 @@ export default function AIRecommendationsPage() {
             setStats({ accuracy: 0.94, dailySuggestions: 2450, acceptanceRate: 0.82, modelVersion: 'GPT-4o-Med-v2' });
             setPerformance({ precision: 0.95, recall: 0.92, f1Score: 0.93 });
             setRecommendations([
-                { id: 1, patientName: 'Nguyễn Văn A', symptoms: 'Đau tức ngực, khó thở khi gắng sức', type: 'DOCTOR', confidence: 0.98, recommendedItem: 'BS. Trần Quang Minh (Tim mạch)', reason: 'Dựa trên triệu chứng cơ năng và tiền sử bệnh lý tim mạch.', status: 'PENDING' },
-                { id: 2, patientName: 'Lê Thị B', symptoms: 'Sốt cao, đau họng, nổi hạch cổ', type: 'DOCTOR', confidence: 0.85, recommendedItem: 'BS. Phạm Thanh Thủy (Tai Mũi Họng)', reason: 'Các triệu chứng điển hình của viêm họng cấp hoặc viêm Amidan.', status: 'ACCEPTED' }
+                { id: 1, patientName: 'Nguyễn Văn A', symptoms: 'Đau tức ngực, khó thở khi gắng sức', type: 'DOCTOR' as any, confidence: 0.98, recommendedItem: 'BS. Trần Quang Minh (Tim mạch)', reason: 'Dựa trên triệu chứng cơ năng và tiền sử bệnh lý tim mạch.', status: 'PENDING' as any, createdAt: '2024-12-20' },
+                { id: 2, patientName: 'Lê Thị B', symptoms: 'Sốt cao, đau họng, nổi hạch cổ', type: 'DOCTOR' as any, confidence: 0.85, recommendedItem: 'BS. Phạm Thanh Thủy (Tai Mũi Họng)', reason: 'Các triệu chứng điển hình của viêm họng cấp hoặc viêm Amidan.', status: 'ACCEPTED' as any, createdAt: '2024-12-21' }
             ]);
         } finally {
             setLoading(false);
@@ -176,7 +176,7 @@ export default function AIRecommendationsPage() {
                     />
                 </Col>
                 <Col span={8}>
-                    <Card title="Hiệu suất Model" icon={<AreaChartOutlined />}>
+                    <Card title={<Space><AreaChartOutlined /> Hiệu suất Model</Space>}>
                         <div style={{ marginBottom: '24px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                 <Text>Precision (Độ chuẩn xác)</Text>

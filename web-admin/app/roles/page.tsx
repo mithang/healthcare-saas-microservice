@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Table, Typography, Card, Space, Button, Modal, Form, Input, message, Popconfirm, Checkbox, Collapse, Tag, Breadcrumb, Row, Col, Statistic, Tooltip, Divider } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, SafetyCertificateOutlined, ShieldOutlined, LockOutlined, KeyOutlined, SearchOutlined, CheckSquareOutlined, BorderOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SafetyCertificateOutlined, SafetyOutlined, LockOutlined, KeyOutlined, SearchOutlined, CheckSquareOutlined, BorderOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import roleService, { Role } from '@/services/role.service';
 
@@ -177,7 +177,7 @@ export default function RolesPage() {
             key: 'name',
             render: (text) => (
                 <Space>
-                    <ShieldOutlined style={{ color: '#1890ff' }} />
+                    <SafetyOutlined style={{ color: '#1890ff' }} />
                     <Text strong>{text}</Text>
                 </Space>
             )
@@ -325,7 +325,7 @@ export default function RolesPage() {
                         </Col>
                     </Row>
 
-                    <Divider orientation="left">Thiết lập quyền hạn ({selectedPermissions.length})</Divider>
+                    <Divider>Thiết lập quyền hạn ({selectedPermissions.length})</Divider>
 
                     <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                         <Button size="small" icon={<CheckSquareOutlined />} onClick={handleSelectAll}>Chọn tất cả</Button>

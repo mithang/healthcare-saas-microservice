@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import apiService from './api';
 
 export type RecommendationType = 'DOCTOR' | 'DIAGNOSIS' | 'MEDICATION';
 export type RecommendationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
@@ -32,23 +30,19 @@ export interface ModelPerformance {
 
 class AIService {
     async getRecommendations(type?: string): Promise<Recommendation[]> {
-        const response = await axios.get(`${API_URL}/ai/recommendations`, { params: { type } });
-        return response.data;
+        return apiService.get<Recommendation[]>('/ai/recommendations', { type });
     }
 
     async handleFeedback(id: number, status: RecommendationStatus): Promise<Recommendation> {
-        const response = await axios.post(`${API_URL}/ai/recommendations/${id}/feedback`, { status });
-        return response.data;
+        return apiService.post<Recommendation>(`/ai/recommendations/${id}/feedback`, { status });
     }
 
     async getAIStats(): Promise<AIStats> {
-        const response = await axios.get(`${API_URL}/ai/stats`);
-        return response.data;
+        return apiService.get<AIStats>('/ai/stats');
     }
 
     async getModelPerformance(): Promise<ModelPerformance> {
-        const response = await axios.get(`${API_URL}/ai/performance`);
-        return response.data;
+        return apiService.get<ModelPerformance>('/ai/performance');
     }
 }
 

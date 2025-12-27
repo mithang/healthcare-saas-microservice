@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Row, Col, Statistic, List, Avatar, Badge, Tooltip } from 'antd';
-import { NotificationOutlined, SendOutlined, HistoryOutlined, TeamOutlined, TrophyOutlined, MedallionOutlined, GlobalOutlined, BarChartOutlined, MessageOutlined, ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { NotificationOutlined, SendOutlined, HistoryOutlined, TeamOutlined, TrophyOutlined, GlobalOutlined, BarChartOutlined, MessageOutlined, ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
@@ -108,7 +108,7 @@ export default function NotificationsPage() {
                     <Col span={6} key={type.id}>
                         <Card hoverable className="notif-type-card">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                <Avatar shape="rounded" size="large" icon={type.icon} style={{ backgroundColor: type.color }} />
+                                <Avatar shape="square" size="large" icon={type.icon} style={{ backgroundColor: type.color }} />
                                 <Text strong>{type.name}</Text>
                             </div>
                             <Text type="secondary" style={{ fontSize: '12px', display: 'block', height: '40px' }}>{type.desc}</Text>

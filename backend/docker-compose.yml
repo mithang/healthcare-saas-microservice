@@ -224,6 +224,230 @@ services:
     networks:
       - saas-network
 
+  ai-service:
+    build:
+      context: .
+      args:
+        APP_NAME: ai-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ai_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  analytic-service:
+    build:
+      context: .
+      args:
+        APP_NAME: analytic-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/analytic_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  booking-service:
+    build:
+      context: .
+      args:
+        APP_NAME: booking-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/booking_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  community-service:
+    build:
+      context: .
+      args:
+        APP_NAME: community-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/community_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  content-service:
+    build:
+      context: .
+      args:
+        APP_NAME: content-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/content_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  education-service:
+    build:
+      context: .
+      args:
+        APP_NAME: education-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/education_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  engagement-service:
+    build:
+      context: .
+      args:
+        APP_NAME: engagement-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/engagement_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  finance-service:
+    build:
+      context: .
+      args:
+        APP_NAME: finance-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/finance_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  gamification-service:
+    build:
+      context: .
+      args:
+        APP_NAME: gamification-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/gamification_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  live-service:
+    build:
+      context: .
+      args:
+        APP_NAME: live-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/live_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  marketing-service:
+    build:
+      context: .
+      args:
+        APP_NAME: marketing-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/marketing_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  partner-service:
+    build:
+      context: .
+      args:
+        APP_NAME: partner-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/partner_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  report-service:
+    build:
+      context: .
+      args:
+        APP_NAME: report-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/report_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  seminar-service:
+    build:
+      context: .
+      args:
+        APP_NAME: seminar-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/seminar_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  support-service:
+    build:
+      context: .
+      args:
+        APP_NAME: support-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/support_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  survey-service:
+    build:
+      context: .
+      args:
+        APP_NAME: survey-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/survey_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
 networks:
   saas-network:
     driver: bridge

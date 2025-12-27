@@ -15,6 +15,7 @@ export interface LiveChatMessage {
     id: number;
     userName: string;
     content: string;
+    userRole?: string;
 }
 
 class LiveService {

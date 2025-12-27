@@ -60,77 +60,66 @@ class BookingService {
 
     // Appointments
     async getAppointments(): Promise<Appointment[]> {
-        const response = await apiService.get(`${this.baseUrl}/appointments`);
-        return (response as any).data || response;
+        return apiService.get<Appointment[]>(`${this.baseUrl}/appointments`);
     }
 
     async getAppointment(id: number): Promise<Appointment> {
-        const response = await apiService.get(`${this.baseUrl}/appointments/${id}`);
-        return (response as any).data || response;
+        return apiService.get<Appointment>(`${this.baseUrl}/appointments/${id}`);
     }
 
     async createAppointment(data: Partial<Appointment>): Promise<Appointment> {
-        const response = await apiService.post(`${this.baseUrl}/appointments`, data);
-        return (response as any).data || response;
+        return apiService.post<Appointment>(`${this.baseUrl}/appointments`, data);
     }
 
     async updateAppointment(id: number, data: Partial<Appointment>): Promise<Appointment> {
-        const response = await apiService.put(`${this.baseUrl}/appointments/${id}`, data);
-        return (response as any).data || response;
+        return apiService.put<Appointment>(`${this.baseUrl}/appointments/${id}`, data);
     }
 
     async deleteAppointment(id: number): Promise<void> {
-        await apiService.delete(`${this.baseUrl}/appointments/${id}`);
+        return apiService.delete(`${this.baseUrl}/appointments/${id}`);
     }
 
     // Lab Tests
     async getLabTests(): Promise<LabTest[]> {
-        const response = await apiService.get(`${this.baseUrl}/lab-tests`);
-        return (response as any).data || response;
+        return apiService.get<LabTest[]>(`${this.baseUrl}/lab-tests`);
     }
 
     async createLabTest(data: Partial<LabTest>): Promise<LabTest> {
-        const response = await apiService.post(`${this.baseUrl}/lab-tests`, data);
-        return (response as any).data || response;
+        return apiService.post<LabTest>(`${this.baseUrl}/lab-tests`, data);
     }
 
     async updateLabTest(id: number, data: Partial<LabTest>): Promise<LabTest> {
-        const response = await apiService.put(`${this.baseUrl}/lab-tests/${id}`, data);
-        return (response as any).data || response;
+        return apiService.put<LabTest>(`${this.baseUrl}/lab-tests/${id}`, data);
     }
 
     async deleteLabTest(id: number): Promise<void> {
-        await apiService.delete(`${this.baseUrl}/lab-tests/${id}`);
+        return apiService.delete(`${this.baseUrl}/lab-tests/${id}`);
     }
 
     // Pharmacy Orders
     async getPharmacyOrders(): Promise<PharmacyOrder[]> {
-        const response = await apiService.get(`${this.baseUrl}/pharmacy-orders`);
-        return (response as any).data || response;
+        return apiService.get<PharmacyOrder[]>(`${this.baseUrl}/pharmacy-orders`);
     }
 
     async updatePharmacyOrder(id: number, data: Partial<PharmacyOrder>): Promise<PharmacyOrder> {
-        const response = await apiService.put(`${this.baseUrl}/pharmacy-orders/${id}`, data);
-        return (response as any).data || response;
+        return apiService.put<PharmacyOrder>(`${this.baseUrl}/pharmacy-orders/${id}`, data);
     }
 
     async deletePharmacyOrder(id: number): Promise<void> {
-        await apiService.delete(`${this.baseUrl}/pharmacy-orders/${id}`);
+        return apiService.delete(`${this.baseUrl}/pharmacy-orders/${id}`);
     }
 
     // Refunds
     async getRefundRequests(): Promise<RefundRequest[]> {
-        const response = await apiService.get(`${this.baseUrl}/refunds`);
-        return (response as any).data || response;
+        return apiService.get<RefundRequest[]>(`${this.baseUrl}/refunds`);
     }
 
     async updateRefundRequest(id: number, data: Partial<RefundRequest>): Promise<RefundRequest> {
-        const response = await apiService.put(`${this.baseUrl}/refunds/${id}`, data);
-        return (response as any).data || response;
+        return apiService.put<RefundRequest>(`${this.baseUrl}/refunds/${id}`, data);
     }
 
     async deleteRefundRequest(id: number): Promise<void> {
-        await apiService.delete(`${this.baseUrl}/refunds/${id}`);
+        return apiService.delete(`${this.baseUrl}/refunds/${id}`);
     }
 }
 

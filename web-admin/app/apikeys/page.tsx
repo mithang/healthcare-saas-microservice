@@ -15,55 +15,6 @@ interface ApiKey {
     createdAt: string;
 }
 
-const columns: ColumnsType<ApiKey> = [
-    {
-        title: 'ID',
-        dataIndex: 'id',
-        key: 'id',
-    },
-    {
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
-    },
-    {
-        title: 'Key',
-        dataIndex: 'key',
-        key: 'key',
-        render: (text) => <Typography.Text copyable>{text}</Typography.Text>,
-    },
-    {
-        title: 'Status',
-        dataIndex: 'isActive',
-        key: 'isActive',
-        render: (active) => (
-            <Tag color={active ? 'green' : 'red'}>{active ? 'Active' : 'Inactive'}</Tag>
-        ),
-    },
-    {
-        title: 'Created At',
-        dataIndex: 'createdAt',
-        key: 'createdAt',
-        render: (text) => new Date(text).toLocaleString(),
-    },
-    {
-        title: 'Actions',
-        key: 'actions',
-        render: (_, record) => (
-            <Popconfirm
-                title="Delete API Key"
-                description="Are you sure you want to delete this API key? This action cannot be undone."
-                onConfirm={() => handleDelete(record.id)}
-                okText="Yes"
-                cancelText="No"
-            >
-                <Button type="link" danger icon={<DeleteOutlined />}>
-                    Delete
-                </Button>
-            </Popconfirm>
-        ),
-    },
-];
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -133,6 +84,56 @@ export default function ApiKeysPage() {
             message.error('An error occurred');
         }
     };
+
+    const columns: ColumnsType<ApiKey> = [
+        {
+            title: 'ID',
+            dataIndex: 'id',
+            key: 'id',
+        },
+        {
+            title: 'Name',
+            dataIndex: 'name',
+            key: 'name',
+        },
+        {
+            title: 'Key',
+            dataIndex: 'key',
+            key: 'key',
+            render: (text) => <Typography.Text copyable>{text}</Typography.Text>,
+        },
+        {
+            title: 'Status',
+            dataIndex: 'isActive',
+            key: 'isActive',
+            render: (active) => (
+                <Tag color={active ? 'green' : 'red'}>{active ? 'Active' : 'Inactive'}</Tag>
+            ),
+        },
+        {
+            title: 'Created At',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
+            render: (text) => new Date(text).toLocaleString(),
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (_, record) => (
+                <Popconfirm
+                    title="Delete API Key"
+                    description="Are you sure you want to delete this API key? This action cannot be undone."
+                    onConfirm={() => handleDelete(record.id)}
+                    okText="Yes"
+                    cancelText="No"
+                >
+                    <Button type="link" danger icon={<DeleteOutlined />}>
+                        Delete
+                    </Button>
+                </Popconfirm>
+            ),
+        },
+    ];
 
     return (
         <div style={{ padding: '24px' }}>

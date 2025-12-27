@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Table, Typography, Card, Space, Button, Modal, Form, Input, message, Popconfirm, Select, Switch, Tag, Row, Col, Statistic, Avatar, Breadcrumb, Tooltip } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, UserOutlined, TeamOutlined, UserCheckOutlined, UserDeleteOutlined, SearchOutlined, FilterOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, UserOutlined, TeamOutlined, CheckCircleOutlined, StopOutlined, SearchOutlined, FilterOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import userService, { User } from '@/services/user.service';
 import roleService, { Role } from '@/services/role.service';
@@ -234,12 +234,12 @@ export default function UsersPage() {
                 </Col>
                 <Col span={6}>
                     <Card bordered={false}>
-                        <Statistic title="Đang hoạt động" value={stats.active} prefix={<UserCheckOutlined style={{ color: '#52c41a' }} />} />
+                        <Statistic title="Đang hoạt động" value={stats.active} prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />} />
                     </Card>
                 </Col>
                 <Col span={6}>
                     <Card bordered={false}>
-                        <Statistic title="Đã khóa" value={stats.inactive} prefix={<UserDeleteOutlined style={{ color: '#ff4d4f' }} />} />
+                        <Statistic title="Đã khóa" value={stats.inactive} prefix={<StopOutlined style={{ color: '#ff4d4f' }} />} />
                     </Card>
                 </Col>
                 <Col span={6}>

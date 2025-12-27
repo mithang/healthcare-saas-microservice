@@ -46,6 +46,7 @@ export interface Course {
     thumbnail?: string;
     lecturerId: string;
     lecturer?: Lecturer;
+    students?: number;
     lessons?: Lesson[];
     quizzes?: Quiz[];
 }

@@ -57,92 +57,78 @@ class CommunityService {
 
     // Forum
     async getForumTopics(): Promise<ForumTopic[]> {
-        const response = await apiService.get(`${this.baseUrl}/forum/topics`);
-        return (response as any).data || response;
+        return apiService.get<ForumTopic[]>(`${this.baseUrl}/forum/topics`);
     }
 
     async getForumTopic(id: number): Promise<ForumTopic> {
-        const response = await apiService.get(`${this.baseUrl}/forum/topics/${id}`);
-        return (response as any).data || response;
+        return apiService.get<ForumTopic>(`${this.baseUrl}/forum/topics/${id}`);
     }
 
     async createForumTopic(data: Partial<ForumTopic>): Promise<ForumTopic> {
-        const response = await apiService.post(`${this.baseUrl}/forum/topics`, data);
-        return (response as any).data || response;
+        return apiService.post<ForumTopic>(`${this.baseUrl}/forum/topics`, data);
     }
 
     async updateForumTopic(id: number, data: Partial<ForumTopic>): Promise<ForumTopic> {
-        const response = await apiService.put(`${this.baseUrl}/forum/topics/${id}`, data);
-        return (response as any).data || response;
+        return apiService.put<ForumTopic>(`${this.baseUrl}/forum/topics/${id}`, data);
     }
 
     async deleteForumTopic(id: number): Promise<void> {
-        await apiService.delete(`${this.baseUrl}/forum/topics/${id}`);
+        return apiService.delete(`${this.baseUrl}/forum/topics/${id}`);
     }
 
     // QA
     async getQAQuestions(): Promise<QAQuestion[]> {
-        const response = await apiService.get(`${this.baseUrl}/qa/questions`);
-        return (response as any).data || response;
+        return apiService.get<QAQuestion[]>(`${this.baseUrl}/qa/questions`);
     }
 
     async getQAQuestion(id: number): Promise<QAQuestion> {
-        const response = await apiService.get(`${this.baseUrl}/qa/questions/${id}`);
-        return (response as any).data || response;
+        return apiService.get<QAQuestion>(`${this.baseUrl}/qa/questions/${id}`);
     }
 
     async createQAQuestion(data: Partial<QAQuestion>): Promise<QAQuestion> {
-        const response = await apiService.post(`${this.baseUrl}/qa/questions`, data);
-        return (response as any).data || response;
+        return apiService.post<QAQuestion>(`${this.baseUrl}/qa/questions`, data);
     }
 
     async updateQAQuestion(id: number, data: Partial<QAQuestion>): Promise<QAQuestion> {
-        const response = await apiService.put(`${this.baseUrl}/qa/questions/${id}`, data);
-        return (response as any).data || response;
+        return apiService.put<QAQuestion>(`${this.baseUrl}/qa/questions/${id}`, data);
     }
 
     async deleteQAQuestion(id: number): Promise<void> {
-        await apiService.delete(`${this.baseUrl}/qa/questions/${id}`);
+        return apiService.delete(`${this.baseUrl}/qa/questions/${id}`);
     }
 
     // Support Groups
     async getSupportGroups(): Promise<SupportGroup[]> {
-        const response = await apiService.get(`${this.baseUrl}/groups`);
-        return (response as any).data || response;
+        return apiService.get<SupportGroup[]>(`${this.baseUrl}/groups`);
     }
 
     async getSupportGroup(id: number): Promise<SupportGroup> {
-        const response = await apiService.get(`${this.baseUrl}/groups/${id}`);
-        return (response as any).data || response;
+        return apiService.get<SupportGroup>(`${this.baseUrl}/groups/${id}`);
     }
 
     async createSupportGroup(data: Partial<SupportGroup>): Promise<SupportGroup> {
-        const response = await apiService.post(`${this.baseUrl}/groups`, data);
-        return (response as any).data || response;
+        return apiService.post<SupportGroup>(`${this.baseUrl}/groups`, data);
     }
 
     async updateSupportGroup(id: number, data: Partial<SupportGroup>): Promise<SupportGroup> {
-        const response = await apiService.put(`${this.baseUrl}/groups/${id}`, data);
-        return (response as any).data || response;
+        return apiService.put<SupportGroup>(`${this.baseUrl}/groups/${id}`, data);
     }
 
     async deleteSupportGroup(id: number): Promise<void> {
-        await apiService.delete(`${this.baseUrl}/groups/${id}`);
+        return apiService.delete(`${this.baseUrl}/groups/${id}`);
     }
 
     // Moderation
     async getModerationReports(): Promise<ModerationReport[]> {
-        const response = await apiService.get(`${this.baseUrl}/moderation/reports`);
-        return (response as any).data || response;
+        return apiService.get<ModerationReport[]>(`${this.baseUrl}/moderation/reports`);
     }
 
     async updateModerationReport(id: number, data: Partial<ModerationReport>): Promise<ModerationReport> {
-        const response = await apiService.put(`${this.baseUrl}/moderation/reports/${id}`, data);
-        return (response as any).data || response;
+        return apiService.put<ModerationReport>(`${this.baseUrl}/moderation/reports/${id}`, data);
     }
 
     async deleteModerationReport(id: number): Promise<void> {
-        await apiService.delete(`${this.baseUrl}/moderation/reports/${id}`);
+        return apiService.delete(`${this.baseUrl}/moderation/reports/${id}`);
     }
 }
 

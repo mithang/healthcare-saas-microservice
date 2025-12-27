@@ -131,7 +131,7 @@ export default function PharmacistsPage() {
             dataIndex: 'memberRank',
             key: 'memberRank',
             render: (rank) => {
-                const rankInfo = MEMBER_RANKS[(rank as any) || 'bronze'];
+                const rankInfo = (MEMBER_RANKS as any)[(rank as any) || 'bronze'];
                 return (
                     <Space>
                         <span style={{ fontSize: '18px' }}>{rankInfo.icon}</span>

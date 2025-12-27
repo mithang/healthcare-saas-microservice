@@ -32,13 +32,11 @@ export default function FileManagerPage() {
         }
     };
 
-    const fileMenu = (
-        <Menu items={[
-            { key: 'download', label: 'Tải xuống' },
-            { key: 'rename', label: 'Đổi tên' },
-            { key: 'delete', label: 'Xóa', danger: true },
-        ]} />
-    );
+    const menuItems = [
+        { key: 'download', label: 'Tải xuống' },
+        { key: 'rename', label: 'Đổi tên' },
+        { key: 'delete', label: 'Xóa', danger: true },
+    ];
 
     return (
         <div style={{ padding: '0px' }}>
@@ -83,7 +81,7 @@ export default function FileManagerPage() {
                         <List.Item
                             style={{ padding: '12px 24px' }}
                             actions={[
-                                <Dropdown overlay={fileMenu} trigger={['click']}>
+                                <Dropdown menu={{ items: menuItems }} trigger={['click']}>
                                     <Button type="text" icon={<MoreOutlined />} />
                                 </Dropdown>
                             ]}

@@ -167,7 +167,7 @@ export default function PaymentGatewaysPage() {
                                 </Row>
                             </div>
 
-                            <Space grow style={{ width: '100%' }}>
+                            <Space style={{ width: '100%' }}>
                                 <Button block style={{ flex: 1 }}>Cấu hình</Button>
                                 <Button block style={{ flex: 1 }} type="dashed">Xem Logs</Button>
                             </Space>

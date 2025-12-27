@@ -30,6 +30,39 @@ export interface Pharmacy {
     createdAt?: string;
 }
 
+export interface Clinic {
+    id: number;
+    name: string;
+    address: string;
+    phone: string;
+    email?: string;
+    website?: string;
+    description?: string;
+    rating?: number;
+    specialty?: string;
+    isVerified?: boolean;
+    thumbnail?: string;
+    status?: string;
+    createdAt?: string;
+}
+
+export interface Hospital {
+    id: number;
+    name: string;
+    address: string;
+    phone: string;
+    email?: string;
+    website?: string;
+    description?: string;
+    rating?: number;
+    level?: string;
+    beds?: number;
+    isVerified?: boolean;
+    thumbnail?: string;
+    status?: string;
+    createdAt?: string;
+}
+
 export interface Pharmacist {
     id: number;
     fullName: string;

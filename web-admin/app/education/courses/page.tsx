@@ -22,8 +22,8 @@ export default function EducationCoursesPage() {
             console.error('Failed to fetch courses:', error);
             // Fallback mock
             setCourses([
-                { id: 'CME-001', name: 'Kỹ thuật chẩn đoán hình ảnh nâng cao', provider: 'BV Chợ Rẫy', type: 'CME', credits: 24, price: 5000000, students: 45, status: 'published' },
-                { id: 'CME-002', name: 'Quản lý an toàn người bệnh', provider: 'ĐH Y Dược', type: 'CPE', credits: 12, price: 0, students: 120, status: 'published' }
+                { id: 'CME-001', code: 'CME001', name: 'Kỹ thuật chẩn đoán hình ảnh nâng cao', provider: 'BV Chợ Rẫy', type: 'CME', credits: 24, price: 5000000, students: 45, status: 'published', lecturerId: 'LEC001' },
+                { id: 'CME-002', code: 'CPE002', name: 'Quản lý an toàn người bệnh', provider: 'ĐH Y Dược', type: 'CPE', credits: 12, price: 0, students: 120, status: 'published', lecturerId: 'LEC002' }
             ]);
         } finally {
             setLoading(false);

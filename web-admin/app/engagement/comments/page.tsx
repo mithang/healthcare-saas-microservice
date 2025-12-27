@@ -93,7 +93,7 @@ export default function CommentsPage() {
                 <div style={{ maxWidth: '400px' }}>
                     <Text>{record.content}</Text>
                     <br />
-                    <Text type="secondary" style={{ fontSize: '12px' }}>Trên: <Text type="link">{record.postTitle}</Text></Text>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>Trên: <a href="#">{record.postTitle}</a></Text>
                 </div>
             ),
         },

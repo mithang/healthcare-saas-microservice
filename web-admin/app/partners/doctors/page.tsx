@@ -71,7 +71,7 @@ export default function DoctorsPage() {
             dataIndex: 'rating',
             key: 'rating',
             render: (rating) => (
-                <Space segment="horizontal" size={4}>
+                <Space size={4}>
                     <StarFilled style={{ color: '#fadb14' }} />
                     <Text strong>{rating || 'N/A'}</Text>
                 </Space>

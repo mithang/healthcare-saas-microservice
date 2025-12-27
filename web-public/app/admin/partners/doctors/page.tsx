@@ -1,26 +1,33 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-
-const DOCTORS = Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    name: `${['BS.', 'ThS.BS', 'TS.BS'][i % 3]} ${['Nguyễn', 'Trần', 'Lê'][i % 3]} ${String.fromCharCode(65 + i)}`,
-    specialty: ['Tim mạch', 'Nhi khoa', 'Tiêu hóa', 'Da liễu', 'Thần kinh'][i % 5],
-    hospital: ['BV Chợ Rẫy', 'BV Nhi Đồng 1', 'BV Đại học Y'][i % 3],
-    patients: Math.floor(Math.random() * 500),
-    rating: (4.5 + Math.random() * 0.5).toFixed(1),
-    status: i % 4 === 0 ? 'inactive' : 'active',
-}));
+import partnerService, { Doctor } from '@/services/partner.service';
 
 export default function DoctorsManagement() {
+    const [doctors, setDoctors] = useState<Doctor[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [filter, setFilter] = useState({ specialty: 'all', status: 'all', search: '' });
     const itemsPerPage = 10;
 
-    const filteredDoctors = DOCTORS.filter(doctor => {
+    useEffect(() => {
+        const fetchDoctors = async () => {
+            try {
+                const data = await partnerService.getDoctors();
+                setDoctors(data);
+            } catch (error) {
+                console.error('Failed to fetch doctors', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDoctors();
+    }, []);
+
+    const filteredDoctors = doctors.filter(doctor => {
         if (filter.specialty !== 'all' && doctor.specialty !== filter.specialty) return false;
-        if (filter.status !== 'all' && doctor.status !== filter.status) return false;
+        // status filtering might need adjustment based on backend data, assuming backend returns all
         if (filter.search && !doctor.name.toLowerCase().includes(filter.search.toLowerCase())) return false;
         return true;
     });
@@ -29,6 +36,8 @@ export default function DoctorsManagement() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedDoctors = filteredDoctors.slice(startIndex, startIndex + itemsPerPage);
 
+    if (loading) return <div className="p-8 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div></div>;
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -36,7 +45,7 @@ export default function DoctorsManagement() {
                     <h1 className="text-3xl font-bold text-gray-900">Quản lý Bác sĩ</h1>
                     <p className="text-gray-500 mt-1">Tổng: {filteredDoctors.length} bác sĩ</p>
                 </div>
-                <Link href="/admin/users/doctors/create" className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-dark">
+                <Link href="/admin/partners/doctors/create" className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-dark">
                     + Thêm bác sĩ mới
                 </Link>
             </div>
@@ -97,31 +106,25 @@ export default function DoctorsManagement() {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-gray-600">{doctor.specialty}</td>
-                                <td className="px-6 py-4 text-gray-600">{doctor.hospital}</td>
-                                <td className="px-6 py-4 text-gray-600">{doctor.patients}</td>
+                                <td className="px-6 py-4 text-gray-600">{doctor.hospital || 'Tự do'}</td>
+                                <td className="px-6 py-4 text-gray-600">N/A</td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-1">
                                         <i className="fi flaticon-star text-yellow-500 text-sm"></i>
-                                        <span className="font-bold text-gray-900">{doctor.rating}</span>
+                                        <span className="font-bold text-gray-900">{doctor.rating || 'N/A'}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${doctor.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${doctor.isVerified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                                         }`}>
-                                        {doctor.status === 'active' ? 'Hoạt động' : 'Tạm ngưng'}
+                                        {doctor.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex gap-2">
-                                        <Link href={`/admin/users/doctors/${doctor.id}`} className="text-blue-600 hover:text-blue-800">
-                                            <i className="fi flaticon-eye"></i>
-                                        </Link>
-                                        <Link href={`/admin/users/doctors/${doctor.id}/edit`} className="text-green-600 hover:text-green-800">
+                                        <Link href={`/admin/partners/doctors/${doctor.id}/edit`} className="text-green-600 hover:text-green-800">
                                             <i className="fi flaticon-edit"></i>
                                         </Link>
-                                        <button className="text-red-600 hover:text-red-800">
-                                            <i className="fi flaticon-delete"></i>
-                                        </button>
                                     </div>
                                 </td>
                             </tr>

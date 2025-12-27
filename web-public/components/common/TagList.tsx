@@ -1,27 +1,32 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import _ from 'lodash';
-import { useQuery } from '@apollo/client/react';
-import { GET_TOP_SEARCH_KEYWORDS } from '@/graphql/search';
-
-interface SearchKeyword {
-  id: string;
-  keyword: string;
-  searchTimes: number;
-  isActive: boolean;
-}
+import contentService, { TopSearchKeyword } from '@/services/content.service';
 
 const TagList: React.FC = () => {
-  const { data, loading, error } = useQuery<any>(GET_TOP_SEARCH_KEYWORDS);
+  const [keywords, setKeywords] = useState<TopSearchKeyword[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (loading || error) return null;
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const data = await contentService.getTopSearches();
+        setKeywords(data.filter(k => k.isActive));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTags();
+  }, []);
 
-  const keywords = data?.topSearchKeywords?.filter((k: SearchKeyword) => k.isActive) || [];
+  if (loading) return null;
 
   return (
     <Fragment>
       <h6 className="hidden md:block text-sm font-semibold text-white md:text-gray-700 mb-2 md:mb-3 uppercase tracking-wide">Tìm nhiều nhất:</h6>
       <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-        {keywords.map((item: SearchKeyword, i: number) => (
+        {keywords.map((item, i) => (
           <a
             href={`search/keyword=${item.keyword}`}
             key={item.id || i}

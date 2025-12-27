@@ -2,54 +2,61 @@
 
 import React, { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_USER, UPDATE_USER } from '@/graphql/users';
-import { GET_ALL_ROLES } from '@/graphql/roles';
+import userService, { User } from '@/services/user.service';
+import roleService from '@/services/role.service';
 import FormBuilder from '@/components/admin/FormBuilder';
 
 export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
 
-    // Fetch user details
-    const { data: userData, loading: userLoading } = useQuery(GET_USER, {
-        variables: { id },
-        skip: !id
-    });
+    const [user, setUser] = useState<User | null>(null);
+    const [roles, setRoles] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
-    // Fetch roles for selection
-    const { data: rolesData, loading: rolesLoading } = useQuery(GET_ALL_ROLES);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [userData, rolesData] = await Promise.all([
+                    userService.getUser(parseInt(id)),
+                    roleService.getRoles()
+                ]);
+                setUser(userData);
+                setRoles(rolesData);
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (id) fetchData();
+    }, [id]);
 
-    const [updateUser, { loading: submitting }] = useMutation(UPDATE_USER);
-
-    // Prepare role options
-    const roleOptions = (rolesData as any)?.getAllRoles?.map((r: any) => ({
+    const roleOptions = roles.map((r: any) => ({
         label: r.name,
-        value: r.id
-    })) || [];
+        value: r.id.toString()
+    }));
 
     const handleSubmit = async (values: any) => {
         try {
-            await updateUser({
-                variables: {
-                    id,
-                    input: {
-                        fullName: values.fullName,
-                        roleId: values.roleId, // Expecting roleId from select
-                        isActive: values.isActive === 'true' // Convert from radio/select if needed, or check FormBuilder boolean support
-                    }
-                }
+            setSubmitting(true);
+            await userService.updateUser(parseInt(id), {
+                name: values.fullName,
+                roleId: parseInt(values.roleId),
+                isActive: values.isActive === 'true',
+                phone: values.phone
             });
             router.push('/admin/users/admins');
         } catch (error: any) {
             console.error(error);
-            alert('Lỗi cập nhật: ' + error.message);
+            alert('Lỗi cập nhật: ' + (error.message || 'Unknown error'));
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    if (userLoading || rolesLoading) return <div>Loading...</div>;
-
-    const user = (userData as any)?.getUser;
+    if (loading) return <div>Loading...</div>;
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -59,13 +66,15 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
                 <FormBuilder
                     initialValues={{
                         email: user.email,
-                        fullName: user.fullName,
-                        roleId: user.role?.id,
+                        fullName: user.name,
+                        roleId: user.roleId?.toString(),
+                        phone: user.phone,
                         isActive: user.isActive ? 'true' : 'false'
                     }}
                     fields={[
                         { name: 'email', label: 'Email', type: 'text', disabled: true },
                         { name: 'fullName', label: 'Họ tên', type: 'text', required: true },
+                        { name: 'phone', label: 'Số điện thoại', type: 'text' },
                         {
                             name: 'roleId',
                             label: 'Vai trò',

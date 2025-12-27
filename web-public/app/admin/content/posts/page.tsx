@@ -2,27 +2,32 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_ALL_NEWS, DELETE_NEWS } from '@/graphql/news';
+import contentService, { Post } from '@/services/content.service';
 
 export default function NewsManagement() {
-    const [isMounted, setIsMounted] = useState(false);
-    useEffect(() => { setIsMounted(true); }, []);
-
-    const { data, loading, error, refetch } = useQuery<any>(GET_ALL_NEWS, { skip: !isMounted });
-    const [deleteNews] = useMutation(DELETE_NEWS);
-
+    const [allNews, setAllNews] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [filter, setFilter] = useState({ category: 'all', status: 'all', search: '' });
     const itemsPerPage = 10;
 
-    if (!isMounted || loading) return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
-    if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error.message}</div>;
+    const fetchNews = async () => {
+        try {
+            const data = await contentService.getPosts();
+            setAllNews(data);
+        } catch (error) {
+            console.error('Failed to fetch news', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const allNews = data?.getAllNews || [];
+    useEffect(() => {
+        fetchNews();
+    }, []);
 
     // Filter logic
-    const filteredNews = allNews.filter((news: any) => {
+    const filteredNews = allNews.filter((news) => {
         if (filter.category !== 'all' && news.category !== filter.category) return false;
         if (filter.status !== 'all') {
             const isActive = filter.status === 'published';
@@ -40,16 +45,18 @@ export default function NewsManagement() {
     const handleDelete = async (id: string) => {
         if (confirm('Bạn có chắc chắn muốn xóa tin tức này?')) {
             try {
-                await deleteNews({ variables: { id } });
+                await contentService.deletePost(id);
+                fetchNews();
                 alert('Xóa thành công!');
-                refetch();
-            } catch (err) {
-                alert('Xóa thất bại: ' + err);
+            } catch (err: any) {
+                alert('Xóa thất bại: ' + (err.message || 'Unknown error'));
             }
         }
     };
 
-    const categories = Array.from(new Set(allNews.map((n: any) => n.category))).filter(Boolean);
+    const categories = Array.from(new Set(allNews.map((n) => n.category))).filter((c): c is string => !!c);
+
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
 
     return (
         <div className="space-y-6">
@@ -71,7 +78,7 @@ export default function NewsManagement() {
                     className="border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
                 >
                     <option value="all">Tất cả danh mục</option>
-                    {categories.map((cat: any) => (
+                    {categories.map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>
                     ))}
                 </select>
@@ -112,7 +119,7 @@ export default function NewsManagement() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {paginatedNews.map((news: any, idx: number) => (
+                        {paginatedNews.map((news, idx) => (
                             <tr key={news.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 text-gray-500 text-sm">{startIndex + idx + 1}</td>
                                 <td className="px-6 py-4 max-w-md">
@@ -128,8 +135,8 @@ export default function NewsManagement() {
                                         {news.category}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm font-medium">{news.authorName}</td>
-                                <td className="px-6 py-4 text-gray-500 text-sm">{news.publishDate}</td>
+                                <td className="px-6 py-4 text-gray-600 text-sm font-medium">{news.author}</td>
+                                <td className="px-6 py-4 text-gray-500 text-sm">{news.date}</td>
                                 <td className="px-6 py-4 text-center">
                                     <span className="text-gray-900 font-bold">{news.view.toLocaleString()}</span>
                                 </td>

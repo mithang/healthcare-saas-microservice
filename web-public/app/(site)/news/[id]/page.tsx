@@ -1,24 +1,32 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Aside from '@/components/layout/Aside';
 import TagList from '@/components/common/TagList';
 import CommentSection from '@/app/(site)/news/components/CommentSection';
 import RelatedNews from '@/app/(site)/news/components/RelatedNews';
-import { useQuery } from '@apollo/client/react';
-import { GET_NEWS_BY_ID } from '@/graphql/news';
+import contentService, { Post } from '@/services/content.service';
 
-const NewsDetailPage: React.FC = () => {
-  const params = useParams();
-  const id = params?.id as string;
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => { setIsMounted(true); }, []);
+const NewsDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const resolvedParams = use(params);
+  const id = resolvedParams.id;
+  const [newsItem, setNewsItem] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data, loading, error } = useQuery<any>(GET_NEWS_BY_ID, {
-    variables: { id },
-    skip: !isMounted || !id
-  });
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const item = await contentService.getPost(id);
+        setNewsItem(item);
+      } catch (err: any) {
+        setError(err.message || 'Error loading post');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (id) fetchPost();
+  }, [id]);
 
   const [fixed, setAtsideFixed] = useState<boolean>(false);
 
@@ -31,7 +39,7 @@ const NewsDetailPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (!isMounted || loading) {
+  if (loading) {
     return (
       <div className="bg-gray-50 min-h-screen py-20 text-center">
         <div className="animate-pulse flex flex-col items-center">
@@ -42,7 +50,7 @@ const NewsDetailPage: React.FC = () => {
     );
   }
 
-  if (error || !data?.getNewsById) {
+  if (error || !newsItem) {
     return (
       <div className="container py-20 text-center min-h-[60vh] flex flex-col items-center justify-center">
         <div className="text-6xl mb-6">🔍</div>
@@ -54,8 +62,6 @@ const NewsDetailPage: React.FC = () => {
       </div>
     );
   }
-
-  const newsItem = data.getNewsById;
 
   return (
     <section className="news-details py-12 bg-gray-50/30 min-h-screen">
@@ -76,7 +82,7 @@ const NewsDetailPage: React.FC = () => {
             <div className="bg-white p-6 md:p-10 lg:p-14 rounded-[2.5rem] shadow-sm border border-gray-100/60 transition-all hover:shadow-xl hover:shadow-gray-200/40">
               <div className="mb-6">
                 <span className="inline-block px-4 py-1.5 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-primary/10 mb-6 group-hover:bg-primary group-hover:text-white transition-all">
-                  {newsItem.category?.name}
+                  {newsItem.category}
                 </span>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-[1.15] mb-8 font-poppins">
                   {newsItem.title}
@@ -87,12 +93,12 @@ const NewsDetailPage: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-6 border-y border-gray-50 py-8 mb-10">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-gray-50 overflow-hidden border-2 border-white shadow-sm ring-1 ring-gray-100">
-                    <img src={newsItem.authorAvatar || '/img/user/default.png'} alt={newsItem.authorName} className="w-full h-full object-cover" />
+                    <img src={'/img/user/default.png'} alt={newsItem.author} className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <span className="block text-lg font-bold text-gray-900 leading-tight">{newsItem.authorName || 'Ban biên tập'}</span>
+                    <span className="block text-lg font-bold text-gray-900 leading-tight">{newsItem.author || 'Ban biên tập'}</span>
                     <div className="flex items-center gap-3 text-sm text-gray-400 font-medium mt-1">
-                      <span>{newsItem.publishDate}</span>
+                      <span>{newsItem.date}</span>
                       <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                       <span>👁️ {newsItem.view?.toLocaleString() || 0} lượt xem</span>
                     </div>

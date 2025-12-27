@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_NEWS_BY_ID, UPDATE_NEWS, GET_NEWS_CATEGORIES_FULL } from '@/graphql/news';
+import { useRouter } from 'next/navigation';
+import contentService, { Category } from '@/services/content.service';
 
-export default function EditNews() {
-    const params = useParams<{ id: string }>();
+export default function EditNews({ params }: { params: Promise<{ id: string }> }) {
+    const resolvedParams = use(params);
+    const id = resolvedParams.id;
     const router = useRouter();
-    const { data, loading: queryLoading, error: queryError } = useQuery<any>(GET_NEWS_BY_ID, {
-        variables: { id: params.id }
-    });
-    const { data: catData, loading: catLoading } = useQuery<any>(GET_NEWS_CATEGORIES_FULL);
-    const [updateNews, { loading: updateLoading }] = useMutation(UPDATE_NEWS);
+    const [loading, setLoading] = useState(true);
+    const [updateLoading, setUpdateLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [catLoading, setCatLoading] = useState(true);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -22,38 +23,53 @@ export default function EditNews() {
         isActive: true,
         thumbnail: '',
         desc: '',
-        authorName: '',
+        author: '',
     });
 
     useEffect(() => {
-        if (data?.getNewsById) {
-            const { title, categoryId, content, isActive, thumbnail, desc, authorName } = data.getNewsById;
-            setFormData({ title, categoryId, content, isActive, thumbnail, desc, authorName });
-        }
-    }, [data]);
+        const fetchData = async () => {
+            try {
+                const [post, cats] = await Promise.all([
+                    contentService.getPost(id),
+                    contentService.getCategories()
+                ]);
+
+                setCategories(cats);
+                setFormData({
+                    title: post.title,
+                    categoryId: post.categoryId,
+                    content: post.content,
+                    isActive: post.isActive,
+                    thumbnail: post.thumbnail,
+                    desc: post.desc,
+                    author: post.author,
+                });
+            } catch (err: any) {
+                setError(err.message || 'Error loading data');
+            } finally {
+                setLoading(false);
+                setCatLoading(false);
+            }
+        };
+        fetchData();
+    }, [id]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setUpdateLoading(true);
         try {
-            await updateNews({
-                variables: {
-                    input: {
-                        id: params.id,
-                        ...formData
-                    }
-                }
-            });
+            await contentService.updatePost(id, formData);
             alert('Tin tức đã được cập nhật thành công!');
             router.push('/admin/content/posts');
-        } catch (err) {
-            alert('Lỗi khi cập nhật tin tức: ' + err);
+        } catch (err: any) {
+            alert('Lỗi khi cập nhật tin tức: ' + (err.message || err));
+        } finally {
+            setUpdateLoading(false);
         }
     };
 
-    if (queryLoading) return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
-    if (queryError) return <div className="p-8 text-center text-red-500">Lỗi: {queryError.message}</div>;
-
-    const categories = catData?.getNewsCategoriesFull || [];
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
+    if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error}</div>;
 
     return (
         <div className="space-y-6">
@@ -162,8 +178,8 @@ export default function EditNews() {
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Tác giả</label>
                                 <input
                                     type="text"
-                                    value={formData.authorName || ''}
-                                    onChange={(e) => setFormData({ ...formData, authorName: e.target.value })}
+                                    value={formData.author || ''}
+                                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                                     className="w-full border border-gray-200 rounded-xl p-3 outline-none bg-gray-50/50"
                                 />
                             </div>

@@ -1,13 +1,12 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation } from '@apollo/client/react';
-import { CREATE_HOSPITAL } from '@/graphql/hospitals';
+import partnerService from '@/services/partner.service';
 import Link from 'next/link';
 
 export default function CreateHospitalPage() {
     const router = useRouter();
-    const [createHospital, { loading }] = useMutation(CREATE_HOSPITAL);
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         address: '',
@@ -23,12 +22,15 @@ export default function CreateHospitalPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
         try {
-            await createHospital({ variables: { input: formData } });
+            await partnerService.createHospital(formData);
             alert('Tạo bệnh viện thành công!');
             router.push('/admin/partners/hospitals');
-        } catch (error) {
-            alert('Lỗi: ' + error);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
         }
     };
 

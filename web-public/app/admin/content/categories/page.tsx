@@ -1,17 +1,30 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_NEWS_CATEGORIES_FULL, CREATE_NEWS_CATEGORY, DELETE_NEWS_CATEGORY } from '@/graphql/news';
+import contentService, { Category } from '@/services/content.service';
 
 export default function NewsCategoriesAdmin() {
-    const { data, loading, refetch } = useQuery<any>(GET_NEWS_CATEGORIES_FULL);
-    const [createCategory] = useMutation(CREATE_NEWS_CATEGORY);
-    const [deleteCategory] = useMutation(DELETE_NEWS_CATEGORY);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const [newName, setNewName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+
+    const fetchCategories = async () => {
+        try {
+            const data = await contentService.getCategories();
+            setCategories(data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,12 +32,12 @@ export default function NewsCategoriesAdmin() {
 
         setIsCreating(true);
         try {
-            await createCategory({ variables: { name: newName } });
+            await contentService.createCategory(newName);
             setNewName('');
-            refetch();
+            await fetchCategories();
             alert('Đã thêm danh mục mới!');
-        } catch (err) {
-            alert('Lỗi: ' + err);
+        } catch (err: any) {
+            alert('Lỗi: ' + (err.message || err));
         } finally {
             setIsCreating(false);
         }
@@ -34,17 +47,15 @@ export default function NewsCategoriesAdmin() {
         if (!confirm(`Bạn có chắc chắn muốn xóa danh mục "${name}"?`)) return;
 
         try {
-            await deleteCategory({ variables: { id } });
-            refetch();
+            await contentService.deleteCategory(id);
+            await fetchCategories();
             alert('Đã xóa danh mục!');
-        } catch (err) {
-            alert('Lỗi: ' + err);
+        } catch (err: any) {
+            alert('Lỗi: ' + (err.message || err));
         }
     };
 
     if (loading) return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
-
-    const categories = data?.getNewsCategoriesFull || [];
 
     return (
         <div className="space-y-6">

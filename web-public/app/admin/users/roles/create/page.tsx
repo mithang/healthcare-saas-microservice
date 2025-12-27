@@ -1,10 +1,12 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import FormBuilder from '@/components/admin/FormBuilder';
 import { useRouter } from 'next/navigation';
+import roleService from '@/services/role.service';
 
 export default function CreateRole() {
     const router = useRouter();
+    const [submitting, setSubmitting] = useState(false);
 
     const fields = [
         { name: 'name', label: 'Tên vai trò', type: 'text' as const, required: true, placeholder: 'Ví dụ: Content Manager' },
@@ -16,6 +18,10 @@ export default function CreateRole() {
                 { value: 'users.create', label: 'Tạo User' },
                 { value: 'users.edit', label: 'Sửa User' },
                 { value: 'users.delete', label: 'Xóa User' },
+                { value: 'roles.view', label: 'Xem danh sách Role' },
+                { value: 'roles.create', label: 'Tạo Role' },
+                { value: 'roles.edit', label: 'Sửa Role' },
+                { value: 'roles.delete', label: 'Xóa Role' },
                 { value: 'content.view', label: 'Xem Nội dung' },
                 { value: 'content.create', label: 'Tạo Nội dung' },
                 { value: 'content.edit', label: 'Sửa Nội dung' },
@@ -34,12 +40,21 @@ export default function CreateRole() {
         },
     ];
 
-    const handleSubmit = (data: any) => {
-        console.log('Creating role:', data);
-        setTimeout(() => {
+    const handleSubmit = async (data: any) => {
+        try {
+            setSubmitting(true);
+            await roleService.createRole({
+                name: data.name,
+                description: data.description,
+                permissions: data.permissions
+            });
             alert('Tạo vai trò mới thành công!');
             router.push('/admin/users/roles');
-        }, 500);
+        } catch (error: any) {
+            alert('Lỗi khi tạo vai trò: ' + (error.message || 'Unknown error'));
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -49,7 +64,8 @@ export default function CreateRole() {
                 <FormBuilder
                     fields={fields}
                     onSubmit={handleSubmit}
-                    submitLabel="Tạo vai trò"
+                    submitLabel={submitting ? "Đang tạo..." : "Tạo vai trò"}
+                    loading={submitting}
                     columns={1}
                 />
             </div>

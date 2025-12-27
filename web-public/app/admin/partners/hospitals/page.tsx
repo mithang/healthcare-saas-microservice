@@ -1,8 +1,7 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_ALL_HOSPITALS, DELETE_HOSPITAL } from '@/graphql/hospitals';
+import partnerService, { Hospital } from '@/services/partner.service';
 
 // Custom Modal Component for Delete Confirmation
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; itemName: string }) => {
@@ -40,18 +39,33 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isO
 };
 
 export default function HospitalsManagement() {
-    const { data, loading, refetch } = useQuery<any>(GET_ALL_HOSPITALS);
-    const [deleteHospital] = useMutation(DELETE_HOSPITAL);
+    const [hospitals, setHospitals] = useState<Hospital[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<{ id: any; name: string } | null>(null);
 
-    const hospitals = data?.getAllHospitals || [];
-    const filteredData = hospitals.filter((item: any) =>
+    const fetchHospitals = async () => {
+        try {
+            setLoading(true);
+            const data = await partnerService.getHospitals();
+            setHospitals(data);
+        } catch (error) {
+            console.error('Failed to fetch hospitals', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchHospitals();
+    }, []);
+
+    const filteredData = hospitals.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.address.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -59,7 +73,7 @@ export default function HospitalsManagement() {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    const openDeleteModal = (id: string, name: string) => {
+    const openDeleteModal = (id: any, name: string) => {
         setItemToDelete({ id, name });
         setIsDeleteModalOpen(true);
     };
@@ -67,12 +81,12 @@ export default function HospitalsManagement() {
     const confirmDelete = async () => {
         if (!itemToDelete) return;
         try {
-            await deleteHospital({ variables: { id: itemToDelete.id } });
-            refetch();
+            await partnerService.deleteHospital(itemToDelete.id);
+            fetchHospitals();
             setIsDeleteModalOpen(false);
             setItemToDelete(null);
-        } catch (error) {
-            alert('Lỗi: ' + error);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
         }
     };
 

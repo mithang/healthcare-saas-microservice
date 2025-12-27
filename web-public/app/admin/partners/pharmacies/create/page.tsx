@@ -1,23 +1,25 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation } from '@apollo/client/react';
-import { CREATE_PHARMACY } from '@/graphql/pharmacies';
+import partnerService from '@/services/partner.service';
 import Link from 'next/link';
 
 export default function CreatePharmacyPage() {
     const router = useRouter();
-    const [createPharmacy, { loading }] = useMutation(CREATE_PHARMACY);
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({ name: '', address: '', phone: '', email: '', description: '' });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
         try {
-            await createPharmacy({ variables: { input: formData } });
+            await partnerService.createPharmacy(formData);
             alert('Tạo nhà thuốc thành công!');
             router.push('/admin/partners/pharmacies');
-        } catch (error) {
-            alert('Lỗi: ' + error);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
         }
     };
 

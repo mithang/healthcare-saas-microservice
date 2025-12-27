@@ -4,16 +4,28 @@ import Link from 'next/link';
 import Banner from '@/components/common/Banner';
 import Aside from '@/components/layout/Aside';
 import TagList from '@/components/common/TagList';
-import { useQuery } from '@apollo/client/react';
-import { GET_ALL_NEWS } from '@/graphql/news';
+import contentService, { Post } from '@/services/content.service';
 
 const NewsCategory = () => {
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => { setIsMounted(true); }, []);
+  const [allArticles, setAllArticles] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data, loading, error } = useQuery<any>(GET_ALL_NEWS, { skip: !isMounted });
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const data = await contentService.getPosts();
+        setAllArticles(data.filter(item => item.isActive));
+      } catch (err: any) {
+        setError(err.message || 'Failed to load news');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNews();
+  }, []);
 
-  if (!isMounted || loading) {
+  if (loading) {
     return (
       <div className="bg-gray-50 min-h-screen py-20 text-center">
         <div className="animate-pulse flex flex-col items-center">
@@ -24,9 +36,7 @@ const NewsCategory = () => {
     );
   }
 
-  if (error) return <div className="p-20 text-center text-red-500">Lỗi: {error.message}</div>;
-
-  const allArticles = (data?.getAllNews || []).filter((item: any) => item.isActive);
+  if (error) return <div className="p-20 text-center text-red-500">Lỗi: {error}</div>;
 
   // Hero Section Data (Top 3)
   const heroMain = allArticles[0];
@@ -37,9 +47,10 @@ const NewsCategory = () => {
 
   // Group by category for SECTION 3
   const categoriesMap = allArticles.reduce((acc: any, article: any) => {
-    if (!article.category?.name) return acc;
-    if (!acc[article.category.name]) acc[article.category.name] = [];
-    acc[article.category.name].push(article);
+    // Determine category name (either direct string or derived)
+    const catName = article.category || 'Tin tức chung';
+    if (!acc[catName]) acc[catName] = [];
+    acc[catName].push(article);
     return acc;
   }, {});
 
@@ -74,8 +85,8 @@ const NewsCategory = () => {
                           <Link href={`/news/${heroMain.id}`}>{heroMain.title}</Link>
                         </h3>
                         <div className="flex items-center text-gray-300 text-sm gap-4">
-                          <span className="font-bold text-white">{heroMain.authorName}</span>
-                          <span>• {heroMain.publishDate}</span>
+                          <span className="font-bold text-white">{heroMain.author}</span>
+                          <span>• {heroMain.date}</span>
                           <span className="flex items-center gap-1">👁️ {heroMain.view || 0}</span>
                         </div>
                       </div>
@@ -91,7 +102,7 @@ const NewsCategory = () => {
                             <h4 className="text-lg font-bold text-white leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                               <Link href={`/news/${item.id}`}>{item.title}</Link>
                             </h4>
-                            <span className="text-xs text-gray-300 block font-medium">{item.publishDate}</span>
+                            <span className="text-xs text-gray-300 block font-medium">{item.date}</span>
                           </div>
                         </div>
                       ))}
@@ -117,7 +128,7 @@ const NewsCategory = () => {
                         <div className="flex-1 flex flex-col">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/5 px-2 py-0.5 rounded border border-primary/10">Tin tức</span>
-                            <span className="text-[10px] text-gray-400 font-medium">{item.publishDate}</span>
+                            <span className="text-[10px] text-gray-400 font-medium">{item.date}</span>
                           </div>
                           <h3 className="text-sm font-bold text-gray-900 leading-snug mb-2 line-clamp-3 group-hover:text-primary transition-colors">
                             <Link href={`/news/${item.id}`}>{item.title}</Link>
@@ -158,8 +169,8 @@ const NewsCategory = () => {
                             {articles[0].authorAvatar && (
                               <img src={articles[0].authorAvatar} className="w-6 h-6 rounded-full object-cover border border-gray-200" alt="" />
                             )}
-                            <span className="font-bold text-gray-700">{articles[0].authorName}</span>
-                            <span>• {articles[0].publishDate}</span>
+                            <span className="font-bold text-gray-700">{articles[0].author}</span>
+                            <span>• {articles[0].date}</span>
                           </div>
                         </div>
                       )}
@@ -176,7 +187,7 @@ const NewsCategory = () => {
                                 <Link href={`/news/${article.id}`}>{article.title}</Link>
                               </h4>
                               <div className="flex items-center gap-3 text-[10px] text-gray-500 font-medium">
-                                <span>{article.publishDate}</span>
+                                <span>{article.date}</span>
                                 <span>• 👁️ {article.view}</span>
                               </div>
                             </div>

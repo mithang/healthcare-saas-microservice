@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQuery } from '@apollo/client/react';
-import { CREATE_NEWS, GET_NEWS_CATEGORIES_FULL } from '@/graphql/news';
+import contentService, { Category } from '@/services/content.service';
 
 export default function CreateNews() {
     const router = useRouter();
-    const [createNews, { loading: creating }] = useMutation(CREATE_NEWS);
-    const { data: catData, loading: catLoading } = useQuery<any>(GET_NEWS_CATEGORIES_FULL);
+    const [creating, setCreating] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [catLoading, setCatLoading] = useState(true);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -18,36 +18,44 @@ export default function CreateNews() {
         isActive: true,
         thumbnail: '',
         desc: '',
-        authorName: 'Admin',
+        author: 'Admin',
         type: 'article'
     });
 
     // Set initial category when data arrives
     useEffect(() => {
-        if (catData?.getNewsCategoriesFull?.length > 0 && !formData.categoryId) {
-            setFormData(prev => ({ ...prev, categoryId: catData.getNewsCategoriesFull[0].id }));
-        }
-    }, [catData]);
+        const fetchCategories = async () => {
+            try {
+                const cats = await contentService.getCategories();
+                setCategories(cats);
+                if (cats.length > 0 && !formData.categoryId) {
+                    setFormData(prev => ({ ...prev, categoryId: cats[0].id }));
+                }
+            } catch (error) {
+                console.error("Failed to fetch categories", error);
+            } finally {
+                setCatLoading(false);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setCreating(true);
         try {
-            await createNews({
-                variables: {
-                    input: {
-                        ...formData,
-                        publishDate: new Date().toLocaleDateString('vi-VN')
-                    }
-                }
+            await contentService.createPost({
+                ...formData,
+                type: 'article',
             });
             alert('Tin tức đã được tạo thành công!');
             router.push('/admin/content/posts');
-        } catch (err) {
-            alert('Lỗi khi tạo tin tức: ' + err);
+        } catch (err: any) {
+            alert('Lỗi khi tạo tin tức: ' + (err.message || err));
+        } finally {
+            setCreating(false);
         }
     };
-
-    const categories = catData?.getNewsCategoriesFull || [];
 
     return (
         <div className="space-y-6">
@@ -162,8 +170,8 @@ export default function CreateNews() {
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Tác giả</label>
                                 <input
                                     type="text"
-                                    value={formData.authorName}
-                                    onChange={(e) => setFormData({ ...formData, authorName: e.target.value })}
+                                    value={formData.author}
+                                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                                     className="w-full border border-gray-200 rounded-xl p-3 outline-none bg-gray-50/50"
                                 />
                             </div>

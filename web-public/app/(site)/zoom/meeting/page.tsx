@@ -31,12 +31,12 @@ const Meeting: React.FC = () => {
   const pwd = searchParams.get('pwd');
   const fullname = searchParams.get('fullname');
   const email = searchParams.get('email');
-  
+
   const mtConfig = useSetting(id || "", pwd || "", fullname || "", email || "");
 
   const joinMeeting = (signature: string, meetConfig: MeetConfig): void => {
     if (!ZoomMtg) return;
-    
+
     ZoomMtg.init({
       leaveUrl: "http://localhost:3000/",
       isSupportAV: true,
@@ -64,14 +64,14 @@ const Meeting: React.FC = () => {
       try {
         const ZoomMtgModule = await import('@zoomus/websdk');
         const { ZoomMtg } = ZoomMtgModule;
-        
+
         ZoomMtg.setZoomJSLib('https://source.zoom.us/2.7.0/lib', '/av');
         ZoomMtg.preLoadWasm();
         // ZoomMtg.prepareJssdk(); // Commented out as this method doesn't exist in current version
         setZoomMtg(ZoomMtg);
 
         if (!_.isEmpty(mtConfig)) {
-          ZoomMtg.generateSignature({
+          ZoomMtg.generateSDKSignature({
             meetingNumber: mtConfig.meetingNumber,
             apiKey: apiKeys.apiKey,
             apiSecret: apiKeys.apiSecret,

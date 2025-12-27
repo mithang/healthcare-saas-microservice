@@ -1,16 +1,27 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@apollo/client/react';
-import { GET_ALL_NEWS } from '@/graphql/news';
+import contentService, { Post } from '@/services/content.service';
 
 const RelatedNews: React.FC = () => {
-    const [isMounted, setIsMounted] = useState(false);
-    useEffect(() => { setIsMounted(true); }, []);
+    const [relatedItems, setRelatedItems] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const { data, loading } = useQuery<any>(GET_ALL_NEWS, { skip: !isMounted });
+    useEffect(() => {
+        const fetchNews = async () => {
+            try {
+                const data = await contentService.getPosts();
+                setRelatedItems(data.filter(item => item.isActive).slice(0, 3));
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchNews();
+    }, []);
 
-    if (!isMounted || loading) {
+    if (loading) {
         return (
             <div className="mt-12 animate-pulse">
                 <div className="h-8 w-48 bg-gray-200 rounded mb-6"></div>
@@ -25,10 +36,6 @@ const RelatedNews: React.FC = () => {
             </div>
         );
     }
-
-    const relatedItems = (data?.getAllNews || [])
-        .filter((item: any) => item.isActive)
-        .slice(0, 3);
 
     if (relatedItems.length === 0) return null;
 
@@ -51,7 +58,7 @@ const RelatedNews: React.FC = () => {
                             {item.title}
                         </h4>
                         <div className="flex items-center gap-2 mt-2">
-                            <span className="text-[10px] text-gray-400 font-medium">{item.publishDate}</span>
+                            <span className="text-[10px] text-gray-400 font-medium">{item.date}</span>
                             <span className="text-[10px] text-gray-400 opacity-50">•</span>
                             <span className="text-[10px] text-gray-400 font-medium">👁️ {item.view || 0}</span>
                         </div>

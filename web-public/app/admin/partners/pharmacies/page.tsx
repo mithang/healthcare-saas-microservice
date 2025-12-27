@@ -1,8 +1,7 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_ALL_PHARMACIES, DELETE_PHARMACY } from '@/graphql/pharmacies';
+import partnerService, { Pharmacy } from '@/services/partner.service';
 
 // Custom Modal Component for Delete Confirmation
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; itemName: string }) => {
@@ -40,18 +39,32 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isO
 };
 
 export default function PharmaciesManagement() {
-    const { data, loading, refetch } = useQuery<any>(GET_ALL_PHARMACIES);
-    const [deletePharmacy] = useMutation(DELETE_PHARMACY);
+    const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<{ id: number; name: string } | null>(null);
 
-    const pharmacies = data?.getAllPharmacies || [];
-    const filteredData = pharmacies.filter((item: any) =>
+    const fetchPharmacies = async () => {
+        try {
+            const data = await partnerService.getPharmacies();
+            setPharmacies(data);
+        } catch (error) {
+            console.error('Failed to fetch pharmacies', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPharmacies();
+    }, []);
+
+    const filteredData = pharmacies.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.address.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -59,7 +72,7 @@ export default function PharmaciesManagement() {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    const openDeleteModal = (id: string, name: string) => {
+    const openDeleteModal = (id: number, name: string) => {
         setItemToDelete({ id, name });
         setIsDeleteModalOpen(true);
     };
@@ -67,12 +80,12 @@ export default function PharmaciesManagement() {
     const confirmDelete = async () => {
         if (!itemToDelete) return;
         try {
-            await deletePharmacy({ variables: { id: itemToDelete.id } });
-            refetch();
+            await partnerService.deletePharmacy(itemToDelete.id);
+            fetchPharmacies();
             setIsDeleteModalOpen(false);
             setItemToDelete(null);
-        } catch (error) {
-            alert('Lỗi: ' + error);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
         }
     };
 

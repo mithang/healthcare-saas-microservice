@@ -1,26 +1,39 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/admin/ui/Button';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_ALL_ROLES, DELETE_ROLE } from '@/graphql/roles';
+import roleService, { Role } from '@/services/role.service';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 
 export default function RolesManagement() {
     const router = useRouter();
-    const { data, loading, refetch } = useQuery(GET_ALL_ROLES);
-    const [deleteRole] = useMutation(DELETE_ROLE);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedRole, setSelectedRole] = useState<any>(null);
 
-    const roles = (data as any)?.getAllRoles || [];
+    const fetchRoles = async () => {
+        try {
+            setLoading(true);
+            const data = await roleService.getRoles();
+            setRoles(data);
+        } catch (error) {
+            console.error('Failed to fetch roles:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRoles();
+    }, []);
 
     const columns = [
         { key: 'name', label: 'Tên vai trò', render: (val: string) => <span className="font-bold text-gray-900">{val}</span> },
         { key: 'description', label: 'Mô tả', width: '400px' },
-        { key: 'users', label: 'Số người dùng', render: (val: any[]) => <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-xs font-bold">{val?.length || 0} users</span> },
+        { key: 'permissions', label: 'Số quyền', render: (val: string[]) => <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-xs font-bold">{val?.length || 0} permissions</span> },
         { key: 'createdAt', label: 'Ngày tạo', render: (val: string) => new Date(val).toLocaleDateString('vi-VN') },
     ];
 
@@ -28,7 +41,7 @@ export default function RolesManagement() {
         router.push('/admin/users/roles/create');
     };
 
-    const handleEdit = (id: string) => {
+    const handleEdit = (id: number) => {
         router.push(`/admin/users/roles/${id}/edit`);
     };
 
@@ -40,12 +53,12 @@ export default function RolesManagement() {
     const handleDelete = async () => {
         if (!selectedRole) return;
         try {
-            await deleteRole({ variables: { id: selectedRole.id } });
-            refetch();
+            await roleService.deleteRole(selectedRole.id);
+            fetchRoles();
             setDeleteModalOpen(false);
             setSelectedRole(null);
         } catch (error: any) {
-            alert('Lỗi khi xóa vai trò: ' + error.message);
+            alert('Lỗi khi xóa vai trò: ' + (error.message || 'Unknown error'));
         }
     };
 
@@ -88,8 +101,7 @@ export default function RolesManagement() {
                 )}
             />
 
-            {/* Custom Delete Modal - We can use a shared Modal component if available, or build inline. 
-                Using the imported Modal component if it exists in components/admin/Modal.tsx */}
+            {/* Delete Modal */}
             {deleteModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">

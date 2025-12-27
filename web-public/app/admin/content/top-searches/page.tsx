@@ -1,28 +1,17 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_TOP_SEARCH_KEYWORDS, DELETE_TOP_SEARCH_KEYWORD, UPDATE_TOP_SEARCH_KEYWORD, CREATE_TOP_SEARCH_KEYWORD } from '@/graphql/search';
+import React, { useState, useEffect } from 'react';
+import contentService, { TopSearchKeyword } from '@/services/content.service';
 
 export default function TopSearchesManagement() {
-    const [isMounted, setIsMounted] = useState(false);
-
-    React.useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    const { data, loading, error, refetch } = useQuery<any>(GET_TOP_SEARCH_KEYWORDS, {
-        skip: !isMounted
-    });
-    const [deleteKeyword] = useMutation(DELETE_TOP_SEARCH_KEYWORD);
-    const [updateKeyword] = useMutation(UPDATE_TOP_SEARCH_KEYWORD);
-    const [createKeyword] = useMutation(CREATE_TOP_SEARCH_KEYWORD);
+    const [keywords, setKeywords] = useState<TopSearchKeyword[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [keywordToDelete, setKeywordToDelete] = useState<any>(null);
-    const [editingKeyword, setEditingKeyword] = useState<any>(null);
+    const [keywordToDelete, setKeywordToDelete] = useState<TopSearchKeyword | null>(null);
+    const [editingKeyword, setEditingKeyword] = useState<TopSearchKeyword | null>(null);
     const [newKeyword, setNewKeyword] = useState({ keyword: '', searchTimes: 0 });
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -31,37 +20,43 @@ export default function TopSearchesManagement() {
         setTimeout(() => setMessage(null), 3000);
     };
 
-    if (!isMounted || loading) return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
-    if (error) return <div className="p-8 text-center text-red-500">Lỗi: {error.message}</div>;
+    const fetchKeywords = async () => {
+        try {
+            const data = await contentService.getTopSearches();
+            setKeywords(data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const keywords = data?.topSearchKeywords || [];
+    useEffect(() => {
+        fetchKeywords();
+    }, []);
 
-    const filteredKeywords = keywords.filter((k: any) =>
+    const filteredKeywords = keywords.filter((k) =>
         k.keyword.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleDelete = async () => {
         if (!keywordToDelete) return;
         try {
-            await deleteKeyword({ variables: { id: keywordToDelete.id } });
+            await contentService.deleteTopSearch(keywordToDelete.id);
             showMessage('Đã xóa từ khóa thành công');
             setIsDeleteModalOpen(false);
             setKeywordToDelete(null);
-            refetch();
+            fetchKeywords();
         } catch (err) {
             showMessage('Xóa thất bại', 'error');
         }
     };
 
-    const handleToggleStatus = async (keyword: any) => {
+    const handleToggleStatus = async (keyword: TopSearchKeyword) => {
         try {
-            await updateKeyword({
-                variables: {
-                    input: { id: keyword.id, isActive: !keyword.isActive }
-                }
-            });
+            await contentService.updateTopSearch(keyword.id, { isActive: !keyword.isActive });
             showMessage(`Đã ${!keyword.isActive ? 'hiện' : 'ẩn'} từ khóa`);
-            refetch();
+            fetchKeywords();
         } catch (err) {
             showMessage('Cập nhật thất bại', 'error');
         }
@@ -70,46 +65,39 @@ export default function TopSearchesManagement() {
     const handleSave = async () => {
         try {
             if (editingKeyword) {
-                await updateKeyword({
-                    variables: {
-                        input: {
-                            id: editingKeyword.id,
-                            keyword: newKeyword.keyword,
-                            searchTimes: parseInt(newKeyword.searchTimes.toString())
-                        }
-                    }
+                await contentService.updateTopSearch(editingKeyword.id, {
+                    keyword: newKeyword.keyword,
+                    searchTimes: parseInt(newKeyword.searchTimes.toString())
                 });
                 showMessage('Đã cập nhật từ khóa');
             } else {
-                await createKeyword({
-                    variables: {
-                        input: {
-                            keyword: newKeyword.keyword,
-                            searchTimes: parseInt(newKeyword.searchTimes.toString())
-                        }
-                    }
-                });
+                await contentService.createTopSearch(
+                    newKeyword.keyword,
+                    parseInt(newKeyword.searchTimes.toString())
+                );
                 showMessage('Đã thêm từ khóa mới');
             }
             setIsModalOpen(false);
             setEditingKeyword(null);
             setNewKeyword({ keyword: '', searchTimes: 0 });
-            refetch();
+            fetchKeywords();
         } catch (err) {
             showMessage('Lưu thất bại', 'error');
         }
     };
 
-    const openEditModal = (keyword: any) => {
+    const openEditModal = (keyword: TopSearchKeyword) => {
         setEditingKeyword(keyword);
         setNewKeyword({ keyword: keyword.keyword, searchTimes: keyword.searchTimes });
         setIsModalOpen(true);
     };
 
-    const openDeleteModal = (keyword: any) => {
+    const openDeleteModal = (keyword: TopSearchKeyword) => {
         setKeywordToDelete(keyword);
         setIsDeleteModalOpen(true);
     };
+
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
 
     return (
         <div className="space-y-6">
@@ -166,7 +154,7 @@ export default function TopSearchesManagement() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredKeywords.map((k: any, idx: number) => (
+                        {filteredKeywords.map((k, idx) => (
                             <tr key={k.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 text-gray-500">{idx + 1}</td>
                                 <td className="px-6 py-4 font-bold text-gray-900">{k.keyword}</td>

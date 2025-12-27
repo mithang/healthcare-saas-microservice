@@ -1,17 +1,16 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_CLINIC_BY_ID, UPDATE_CLINIC } from '@/graphql/clinics';
+import React, { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
+import partnerService from '@/services/partner.service';
 import Link from 'next/link';
 
-export default function EditClinicPage() {
+export default function EditClinicPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
-    const params = useParams();
-    const { data, loading: queryLoading } = useQuery<any>(GET_CLINIC_BY_ID, {
-        variables: { id: params.id }
-    });
-    const [updateClinic, { loading: mutationLoading }] = useMutation(UPDATE_CLINIC);
+    const resolvedParams = use(params);
+    const id = parseInt(resolvedParams.id);
+
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -26,19 +25,27 @@ export default function EditClinicPage() {
     const [specialtyInput, setSpecialtyInput] = useState('');
 
     useEffect(() => {
-        if (data?.getClinicById) {
-            const clinic = data.getClinicById;
-            setFormData({
-                name: clinic.name || '',
-                address: clinic.address || '',
-                phone: clinic.phone || '',
-                email: clinic.email || '',
-                description: clinic.description || '',
-                specialties: clinic.specialties || [],
-                isVerified: clinic.isVerified || false,
-            });
-        }
-    }, [data]);
+        const fetchClinic = async () => {
+            try {
+                const clinic = await partnerService.getClinic(id);
+                setFormData({
+                    name: clinic.name || '',
+                    address: clinic.address || '',
+                    phone: clinic.phone || '',
+                    email: clinic.email || '',
+                    description: clinic.description || '',
+                    specialties: clinic.specialties || [],
+                    isVerified: clinic.isVerified || false,
+                });
+            } catch (error) {
+                console.error('Failed to fetch clinic', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (id) fetchClinic();
+    }, [id]);
 
     const handleAddSpecialty = () => {
         if (specialtyInput.trim()) {
@@ -59,24 +66,20 @@ export default function EditClinicPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setSubmitting(true);
 
         try {
-            await updateClinic({
-                variables: {
-                    input: {
-                        id: params.id,
-                        ...formData,
-                    }
-                }
-            });
+            await partnerService.updateClinic(id, formData);
             alert('Cập nhật phòng khám thành công!');
             router.push('/admin/partners/clinics');
-        } catch (error) {
-            alert('Lỗi: ' + error);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    if (queryLoading) return <div className="p-8 text-center">Đang tải...</div>;
+    if (loading) return <div className="p-8 text-center">Đang tải...</div>;
 
     return (
         <div className="space-y-6">
@@ -196,10 +199,10 @@ export default function EditClinicPage() {
                 <div className="flex gap-4 pt-4 border-t">
                     <button
                         type="submit"
-                        disabled={mutationLoading}
+                        disabled={submitting}
                         className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
                     >
-                        {mutationLoading ? 'Đang lưu...' : 'Cập nhật'}
+                        {submitting ? 'Đang lưu...' : 'Cập nhật'}
                     </button>
                     <Link
                         href="/admin/partners/clinics"

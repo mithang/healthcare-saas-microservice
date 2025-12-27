@@ -1,13 +1,12 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation } from '@apollo/client/react';
-import { CREATE_CLINIC } from '@/graphql/clinics';
+import partnerService from '@/services/partner.service';
 import Link from 'next/link';
 
 export default function CreateClinicPage() {
     const router = useRouter();
-    const [createClinic, { loading }] = useMutation(CREATE_CLINIC);
+    const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -47,20 +46,19 @@ export default function CreateClinicPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
 
         try {
-            await createClinic({
-                variables: {
-                    input: {
-                        ...formData,
-                        openingHours: formData.openingHours,
-                    }
-                }
+            await partnerService.createClinic({
+                ...formData,
+                openingHours: formData.openingHours, // Ensure this matches backend expectation or service type
             });
             alert('Tạo phòng khám thành công!');
             router.push('/admin/partners/clinics');
-        } catch (error) {
-            alert('Lỗi: ' + error);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
         }
     };
 

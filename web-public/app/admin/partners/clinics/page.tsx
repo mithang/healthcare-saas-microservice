@@ -1,8 +1,7 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_ALL_CLINICS, DELETE_CLINIC } from '@/graphql/clinics';
+import partnerService, { Clinic } from '@/services/partner.service';
 
 // Custom Modal Component for Delete Confirmation
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; itemName: string }) => {
@@ -40,19 +39,33 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isO
 };
 
 export default function ClinicsManagement() {
-    const { data, loading, refetch } = useQuery<any>(GET_ALL_CLINICS);
-    const [deleteClinic] = useMutation(DELETE_CLINIC);
+    const [clinics, setClinics] = useState<Clinic[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<{ id: any; name: string } | null>(null);
 
-    const clinics = data?.getAllClinics || [];
+    const fetchClinics = async () => {
+        try {
+            setLoading(true);
+            const data = await partnerService.getClinics();
+            setClinics(data);
+        } catch (error) {
+            console.error('Failed to fetch clinics', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const filteredData = clinics.filter((item: any) =>
+    useEffect(() => {
+        fetchClinics();
+    }, []);
+
+    const filteredData = clinics.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.address.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -64,7 +77,7 @@ export default function ClinicsManagement() {
         currentPage * itemsPerPage
     );
 
-    const openDeleteModal = (id: string, name: string) => {
+    const openDeleteModal = (id: any, name: string) => {
         setItemToDelete({ id, name });
         setIsDeleteModalOpen(true);
     };
@@ -72,12 +85,12 @@ export default function ClinicsManagement() {
     const confirmDelete = async () => {
         if (!itemToDelete) return;
         try {
-            await deleteClinic({ variables: { id: itemToDelete.id } });
-            refetch();
+            await partnerService.deleteClinic(itemToDelete.id);
+            fetchClinics();
             setIsDeleteModalOpen(false);
             setItemToDelete(null);
-        } catch (error) {
-            alert('Lỗi: ' + error);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
         }
     };
 
@@ -233,8 +246,8 @@ export default function ClinicsManagement() {
                             key={page}
                             onClick={() => setCurrentPage(page)}
                             className={`w-10 h-10 rounded-lg font-medium transition-all ${currentPage === page
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-105'
-                                    : 'bg-white border text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-105'
+                                : 'bg-white border text-gray-600 hover:bg-gray-50 hover:border-gray-300'
                                 }`}
                         >
                             {page}

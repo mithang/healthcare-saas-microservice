@@ -1,10 +1,31 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import FormBuilder from '@/components/admin/FormBuilder';
 import { useRouter } from 'next/navigation';
+import userService from '@/services/user.service';
+import roleService from '@/services/role.service';
 
 export default function CreateAdmin() {
     const router = useRouter();
+    const [submitting, setSubmitting] = useState(false);
+    const [roles, setRoles] = useState<any[]>([]);
+
+    React.useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const data = await roleService.getRoles();
+                setRoles(data);
+            } catch (error) {
+                console.error('Failed to fetch roles', error);
+            }
+        };
+        fetchRoles();
+    }, []);
+
+    const roleOptions = roles.length > 0 ? roles.map(r => ({
+        value: r.id.toString(),
+        label: r.name
+    })) : [];
 
     const fields = [
         { name: 'name', label: 'Họ và tên', type: 'text' as const, required: true, placeholder: 'Nguyen Van A' },
@@ -12,14 +33,7 @@ export default function CreateAdmin() {
         { name: 'password', label: 'Mật khẩu', type: 'password' as const, required: true },
         { name: 'phone', label: 'Số điện thoại', type: 'text' as const },
         {
-            name: 'role', label: 'Phân quyền', type: 'select' as const, required: true, options: [
-                { value: 'super_admin', label: 'Super Admin - Toàn quyền' },
-                { value: 'admin', label: 'Admin - Quản lý chung' },
-                { value: 'editor', label: 'Editor - Biên tập viên' },
-                { value: 'moderator', label: 'Moderator - Kiểm duyệt viên' },
-                { value: 'support', label: 'Support - Hỗ trợ khách hàng' },
-                { value: 'accountant', label: 'Accountant - Kế toán' },
-            ]
+            name: 'roleId', label: 'Phân quyền', type: 'select' as const, required: true, options: roleOptions
         },
         {
             name: 'status', label: 'Trạng thái', type: 'select' as const, required: true, options: [
@@ -27,16 +41,27 @@ export default function CreateAdmin() {
                 { value: 'inactive', label: 'Tạm khóa' },
             ]
         },
-        { name: 'avatar', label: 'Avatar URL', type: 'text' as const, placeholder: 'https://...' },
     ];
 
-    const handleSubmit = (data: any) => {
-        console.log('Creating admin:', data);
-        // Mock API call
-        setTimeout(() => {
+    const handleSubmit = async (data: any) => {
+        try {
+            setSubmitting(true);
+            await userService.createUser({
+                userId: crypto.randomUUID(), // or let backend handle it
+                email: data.email,
+                password: data.password,
+                name: data.name,
+                phone: data.phone,
+                roleId: parseInt(data.roleId || '2'),
+                isActive: data.status === 'active'
+            });
             alert('Tạo tài khoản quản trị viên thành công!');
             router.push('/admin/users/admins');
-        }, 500);
+        } catch (error: any) {
+            alert('Lỗi khi tạo tài khoản: ' + (error.message || 'Unknown error'));
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -46,7 +71,8 @@ export default function CreateAdmin() {
                 <FormBuilder
                     fields={fields}
                     onSubmit={handleSubmit}
-                    submitLabel="Tạo tài khoản"
+                    submitLabel={submitting ? "Đang tạo..." : "Tạo tài khoản"}
+                    loading={submitting}
                     columns={2}
                 />
             </div>

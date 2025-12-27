@@ -43,10 +43,10 @@ export default function PatientsManagement() {
 
     const actions = (row: any) => (
         <>
-            <Link href={`/admin/users/patients/${row.id}`} className="text-blue-600 hover:text-blue-800">
+            <Link href={`/admin/partners/patients/${row.id}`} className="text-blue-600 hover:text-blue-800">
                 <i className="fi flaticon-eye"></i>
             </Link>
-            <Link href={`/admin/users/patients/${row.id}/edit`} className="text-green-600 hover:text-green-800">
+            <Link href={`/admin/partners/patients/${row.id}/edit`} className="text-green-600 hover:text-green-800">
                 <i className="fi flaticon-edit"></i>
             </Link>
             <button className="text-red-600 hover:text-red-800">
@@ -63,7 +63,7 @@ export default function PatientsManagement() {
                     <p className="text-gray-500 mt-1">Tổng: {filteredData.length} bệnh nhân</p>
                 </div>
                 <Link
-                    href="/admin/users/patients/create"
+                    href="/admin/partners/patients/create"
                     className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-dark"
                 >
                     + Thêm bệnh nhân

@@ -83,12 +83,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     label: <Link href="/partners/doctors">Bác sĩ</Link>,
                 },
                 {
+                    key: '/partners/hospitals',
+                    label: <Link href="/partners/hospitals">Bệnh viện</Link>,
+                },
+                {
+                    key: '/partners/clinics',
+                    label: <Link href="/partners/clinics">Phòng khám</Link>,
+                },
+                {
                     key: '/partners/pharmacies',
                     label: <Link href="/partners/pharmacies">Nhà thuốc</Link>,
                 },
                 {
                     key: '/partners/pharmacists',
                     label: <Link href="/partners/pharmacists">Dược sĩ</Link>,
+                },
+                {
+                    key: '/partners/patients',
+                    label: <Link href="/partners/patients">Bệnh nhân</Link>,
                 },
                 {
                     key: '/partners/verification',
@@ -264,8 +276,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             label: 'Nội dung',
             children: [
                 {
-                    key: '/content/news',
-                    label: <Link href="/content/news">Tin tức</Link>,
+                    key: '/content/posts',
+                    label: <Link href="/content/posts">Tin tức & Bài viết</Link>,
+                },
+                {
+                    key: '/content/categories',
+                    label: <Link href="/content/categories">Danh mục</Link>,
+                },
+                {
+                    key: '/content/banners',
+                    label: <Link href="/content/banners">Banner quảng cáo</Link>,
+                },
+                {
+                    key: '/content/videos',
+                    label: <Link href="/content/videos">Video Management</Link>,
+                },
+                {
+                    key: '/content/pages',
+                    label: <Link href="/content/pages">Trang tĩnh</Link>,
+                },
+                {
+                    key: '/content/file-manager',
+                    label: <Link href="/content/file-manager">Quản lý tập tin</Link>,
+                },
+                {
+                    key: '/content/comments',
+                    label: <Link href="/content/comments">Bình luận</Link>,
                 },
             ],
         },

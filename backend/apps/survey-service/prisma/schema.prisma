@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SurveyStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum QuestionType {
+  CHOICE
+  RATING
+  TEXT
+}
+
+model Survey {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  status      SurveyStatus @default(DRAFT)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  questions   Question[]
+  responses   Response[]
+}
+
+model Question {
+  id        Int          @id @default(autoincrement())
+  surveyId  Int
+  survey    Survey       @relation(fields: [surveyId], references: [id])
+  text      String
+  type      QuestionType
+  options   Json?        // Array of strings for CHOICE type
+  required  Boolean      @default(true)
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Response {
+  id        Int      @id @default(autoincrement())
+  surveyId  Int
+  survey    Survey   @relation(fields: [surveyId], references: [id])
+  userId    Int?
+  answers   Json     // Map of questionId to answer value
+  createdAt DateTime @default(now())
+}

@@ -198,6 +198,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/report-service/tsconfig.app.json"
       }
+    },
+    "survey-service": {
+      "type": "application",
+      "root": "apps/survey-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/survey-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/survey-service/tsconfig.app.json"
+      }
     }
   }
 }

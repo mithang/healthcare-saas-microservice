@@ -1,55 +1,103 @@
 "use client";
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
-type QuestionType = 'choice' | 'rating' | 'text';
-
-interface Question {
-    id: string;
-    text: string;
-    type: QuestionType;
-    options?: string[];
-    required: boolean;
-}
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import surveyService, { Question, SurveyStatus, QuestionType } from '@/services/survey.service';
 
 export default function SurveyBuilderPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const surveyId = searchParams.get('id');
+
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [questions, setQuestions] = useState<Question[]>([
-        { id: '1', text: 'Bạn đánh giá thế nào về nội dung khóa học?', type: 'rating', required: true },
-        { id: '2', text: 'Giảng viên có truyền đạt dễ hiểu không?', type: 'choice', options: ['Rất dễ hiểu', 'Bình thường', 'Khó hiểu'], required: true }
-    ]);
+    const [questions, setQuestions] = useState<Omit<Question, 'id'>[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (surveyId) {
+            const fetchSurvey = async () => {
+                try {
+                    setLoading(true);
+                    const data = await surveyService.getSurveyById(parseInt(surveyId));
+                    setTitle(data.title);
+                    setDescription(data.description || '');
+                    setQuestions(data.questions?.map(q => ({
+                        text: q.text,
+                        type: q.type,
+                        options: q.options,
+                        required: q.required
+                    })) || []);
+                } catch (error) {
+                    console.error('Failed to fetch survey', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchSurvey();
+        }
+    }, [surveyId]);
 
     const addQuestion = (type: QuestionType) => {
-        const newQ: Question = {
-            id: Date.now().toString(),
+        const newQ: Omit<Question, 'id'> = {
             text: '',
             type,
             required: true,
-            options: type === 'choice' ? ['Tùy chọn 1', 'Tùy chọn 2'] : undefined
+            options: type === 'CHOICE' ? ['Tùy chọn 1', 'Tùy chọn 2'] : undefined
         };
         setQuestions([...questions, newQ]);
     };
 
-    const updateQuestion = (id: string, field: keyof Question, value: any) => {
-        setQuestions(questions.map(q => q.id === id ? { ...q, [field]: value } : q));
+    const updateQuestion = (index: number, field: keyof Question, value: any) => {
+        const newQs = [...questions];
+        newQs[index] = { ...newQs[index], [field]: value };
+        setQuestions(newQs);
     };
 
-    const updateOption = (qId: string, optIndex: number, value: string) => {
-        setQuestions(questions.map(q => {
-            if (q.id === qId && q.options) {
-                const newOptions = [...q.options];
-                newOptions[optIndex] = value;
-                return { ...q, options: newOptions };
+    const updateOption = (qIndex: number, optIndex: number, value: string) => {
+        const newQs = [...questions];
+        if (newQs[qIndex].options) {
+            const newOptions = [...newQs[qIndex].options!];
+            newOptions[optIndex] = value;
+            newQs[qIndex] = { ...newQs[qIndex], options: newOptions };
+            setQuestions(newQs);
+        }
+    };
+
+    const removeQuestion = (index: number) => {
+        setQuestions(questions.filter((_, i) => i !== index));
+    };
+
+    const handleSave = async (status: SurveyStatus) => {
+        if (!title.trim()) {
+            alert('Vui lòng nhập tiêu đề khảo sát');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const data = {
+                title,
+                description,
+                status,
+                questions
+            };
+
+            if (surveyId) {
+                await surveyService.updateSurvey(parseInt(surveyId), data);
+            } else {
+                await surveyService.createSurvey(data);
             }
-            return q;
-        }));
+            router.push('/admin/surveys');
+        } catch (error) {
+            console.error('Failed to save survey', error);
+            alert('Lỗi khi lưu khảo sát');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const removeQuestion = (id: string) => {
-        setQuestions(questions.filter(q => q.id !== id));
-    };
+    if (loading && surveyId) return <div className="p-12 text-center text-gray-500">Đang tải dữ liệu khảo sát...</div>;
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -58,16 +106,27 @@ export default function SurveyBuilderPage() {
                     <button onClick={() => router.back()} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-2">
                         <i className="fi flaticon-left-arrow-1 text-xs"></i> Quay lại
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Tạo khảo sát mới</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">{surveyId ? 'Chỉnh sửa khảo sát' : 'Tạo khảo sát mới'}</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 font-bold">Lưu nháp</button>
-                    <button className="px-6 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark shadow-lg">Xuất bản</button>
+                    <button
+                        onClick={() => handleSave('DRAFT')}
+                        disabled={loading}
+                        className="px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 font-bold disabled:opacity-50"
+                    >
+                        Lưu nháp
+                    </button>
+                    <button
+                        onClick={() => handleSave('ACTIVE')}
+                        disabled={loading}
+                        className="px-6 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark shadow-lg disabled:opacity-50"
+                    >
+                        {surveyId ? 'Cập nhật & Xuất bản' : 'Xuất bản'}
+                    </button>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left: Survey Metadata */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                         <h3 className="font-bold text-gray-800 mb-4">Thông tin chung</h3>
@@ -98,41 +157,38 @@ export default function SurveyBuilderPage() {
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-4">
                         <h3 className="font-bold text-gray-800 mb-4">Thêm câu hỏi</h3>
                         <div className="grid grid-cols-1 gap-3">
-                            <button onClick={() => addQuestion('choice')} className="p-3 border border-gray-200 rounded-xl text-left hover:border-primary hover:text-primary hover:bg-primary/5 transition flex items-center gap-3">
+                            <button onClick={() => addQuestion('CHOICE')} className="p-3 border border-gray-200 rounded-xl text-left hover:border-primary hover:text-primary hover:bg-primary/5 transition flex items-center gap-3">
                                 <i className="fi flaticon-list text-lg"></i> Trắc nghiệm (Lựa chọn)
                             </button>
-                            <button onClick={() => addQuestion('rating')} className="p-3 border border-gray-200 rounded-xl text-left hover:border-primary hover:text-primary hover:bg-primary/5 transition flex items-center gap-3">
+                            <button onClick={() => addQuestion('RATING')} className="p-3 border border-gray-200 rounded-xl text-left hover:border-primary hover:text-primary hover:bg-primary/5 transition flex items-center gap-3">
                                 <i className="fi flaticon-star text-lg"></i> Thang điểm (Rating)
                             </button>
-                            <button onClick={() => addQuestion('text')} className="p-3 border border-gray-200 rounded-xl text-left hover:border-primary hover:text-primary hover:bg-primary/5 transition flex items-center gap-3">
+                            <button onClick={() => addQuestion('TEXT')} className="p-3 border border-gray-200 rounded-xl text-left hover:border-primary hover:text-primary hover:bg-primary/5 transition flex items-center gap-3">
                                 <i className="fi flaticon-edit text-lg"></i> Văn bản (Tự luận)
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Right: Question Builder */}
                 <div className="lg:col-span-2 space-y-6">
                     {questions.map((q, index) => (
-                        <div key={q.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 group">
+                        <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 group">
                             <div className="flex justify-between items-start mb-4">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Câu hỏi {index + 1} • {q.type === 'choice' ? 'Trắc nghiệm' : q.type === 'rating' ? 'Đánh giá' : 'Tự luận'}</span>
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Câu hỏi {index + 1} • {q.type === 'CHOICE' ? 'Trắc nghiệm' : q.type === 'RATING' ? 'Đánh giá' : 'Tự luận'}</span>
                                 <div className="flex gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition">
-                                    <button className="text-gray-400 hover:text-primary"><i className="fi flaticon-copy"></i></button>
-                                    <button onClick={() => removeQuestion(q.id)} className="text-gray-400 hover:text-red-500"><i className="fi flaticon-trash"></i></button>
+                                    <button onClick={() => removeQuestion(index)} className="text-gray-400 hover:text-red-500"><i className="fi flaticon-trash"></i></button>
                                 </div>
                             </div>
 
                             <input
                                 type="text"
                                 value={q.text}
-                                onChange={(e) => updateQuestion(q.id, 'text', e.target.value)}
+                                onChange={(e) => updateQuestion(index, 'text', e.target.value)}
                                 placeholder="Nhập nội dung câu hỏi..."
                                 className="w-full text-lg font-bold placeholder-gray-300 border-none focus:ring-0 p-0 mb-4"
                             />
 
-                            {/* Question Type Specific Inputs */}
-                            {q.type === 'rating' && (
+                            {q.type === 'RATING' && (
                                 <div className="flex gap-2">
                                     {[1, 2, 3, 4, 5].map(star => (
                                         <i key={star} className="fi flaticon-star text-2xl text-gray-200"></i>
@@ -140,13 +196,13 @@ export default function SurveyBuilderPage() {
                                 </div>
                             )}
 
-                            {q.type === 'text' && (
+                            {q.type === 'TEXT' && (
                                 <div className="w-full h-24 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-sm">
                                     Khu vực cho người dùng nhập câu trả lời...
                                 </div>
                             )}
 
-                            {q.type === 'choice' && q.options && (
+                            {q.type === 'CHOICE' && q.options && (
                                 <div className="space-y-3">
                                     {q.options.map((opt, optIndex) => (
                                         <div key={optIndex} className="flex items-center gap-3">
@@ -154,13 +210,13 @@ export default function SurveyBuilderPage() {
                                             <input
                                                 type="text"
                                                 value={opt}
-                                                onChange={(e) => updateOption(q.id, optIndex, e.target.value)}
+                                                onChange={(e) => updateOption(index, optIndex, e.target.value)}
                                                 className="flex-1 px-3 py-2 bg-gray-50 border border-transparent hover:border-gray-200 focus:bg-white focus:border-primary rounded-lg transition outline-none text-sm"
                                             />
                                             <button
                                                 onClick={() => {
                                                     const newOpts = q.options!.filter((_, i) => i !== optIndex);
-                                                    updateQuestion(q.id, 'options', newOpts);
+                                                    updateQuestion(index, 'options', newOpts);
                                                 }}
                                                 className="text-gray-300 hover:text-red-500"
                                             >
@@ -169,7 +225,7 @@ export default function SurveyBuilderPage() {
                                         </div>
                                     ))}
                                     <button
-                                        onClick={() => updateQuestion(q.id, 'options', [...q.options!, `Tùy chọn ${q.options!.length + 1}`])}
+                                        onClick={() => updateQuestion(index, 'options', [...q.options!, `Tùy chọn ${q.options!.length + 1}`])}
                                         className="text-primary text-sm font-bold flex items-center gap-1 hover:underline"
                                     >
                                         <i className="fi flaticon-add"></i> Thêm tùy chọn
@@ -182,7 +238,7 @@ export default function SurveyBuilderPage() {
                                     <input
                                         type="checkbox"
                                         checked={q.required}
-                                        onChange={(e) => updateQuestion(q.id, 'required', e.target.checked)}
+                                        onChange={(e) => updateQuestion(index, 'required', e.target.checked)}
                                         className="w-4 h-4 rounded text-primary focus:ring-primary"
                                     />
                                     <span className="text-sm text-gray-600">Bắt buộc trả lời</span>

@@ -8,13 +8,18 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @MessagePattern({ cmd: 'createUser' })
-  createUser(@Payload() data: { email: string; password: string; name?: string }): Promise<User> {
-    return this.userService.createUser(data.email, data.password, data.name);
+  createUser(@Payload() data: any): Promise<User> {
+    return this.userService.createUser(data);
   }
 
   @MessagePattern({ cmd: 'getUsers' })
   getUsers(): Promise<User[]> {
     return this.userService.getUsers();
+  }
+
+  @MessagePattern({ cmd: 'getUser' })
+  getUser(@Payload() id: number): Promise<User | null> {
+    return this.userService.getUser(id);
   }
 
   @MessagePattern({ cmd: 'getUserById' })
@@ -30,24 +35,39 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'updateUser' })
-  updateUser(
-    @Payload() data: { id: string; userData: Partial<User> },
-  ): Promise<User> {
-    return this.userService.updateUser(data.id, data.userData);
+  updateUser(@Payload() data: any): Promise<User> {
+    const { id, ...userData } = data;
+    return this.userService.updateUser(id, userData);
   }
 
   @MessagePattern({ cmd: 'deleteUser' })
-  deleteUser(@Payload() id: string): Promise<User> {
+  deleteUser(@Payload() id: number): Promise<User> {
     return this.userService.deleteUser(id);
   }
 
   @MessagePattern({ cmd: 'createRole' })
-  createRole(@Payload() data: { name: string; description?: string }) {
-    return this.userService.createRole(data.name, data.description);
+  createRole(@Payload() data: any) {
+    return this.userService.createRole(data);
   }
 
   @MessagePattern({ cmd: 'getRoles' })
   getRoles() {
     return this.userService.getRoles();
+  }
+
+  @MessagePattern({ cmd: 'getRole' })
+  getRole(@Payload() id: number) {
+    return this.userService.getRole(id);
+  }
+
+  @MessagePattern({ cmd: 'updateRole' })
+  updateRole(@Payload() data: any) {
+    const { id, ...roleData } = data;
+    return this.userService.updateRole(id, roleData);
+  }
+
+  @MessagePattern({ cmd: 'deleteRole' })
+  deleteRole(@Payload() id: number) {
+    return this.userService.deleteRole(id);
   }
 }

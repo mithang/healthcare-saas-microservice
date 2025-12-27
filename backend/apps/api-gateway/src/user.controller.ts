@@ -1,6 +1,6 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 @Controller('users')
 export class UserController {
@@ -9,7 +9,27 @@ export class UserController {
     ) { }
 
     @Get()
-    getUsers(): Observable<any> {
-        return this.userClient.send({ cmd: 'getUsers' }, {});
+    async getUsers() {
+        return firstValueFrom(this.userClient.send({ cmd: 'getUsers' }, {}));
+    }
+
+    @Get(':id')
+    async getUser(@Param('id') id: string) {
+        return firstValueFrom(this.userClient.send({ cmd: 'getUser' }, parseInt(id)));
+    }
+
+    @Post()
+    async createUser(@Body() body: any) {
+        return firstValueFrom(this.userClient.send({ cmd: 'createUser' }, body));
+    }
+
+    @Put(':id')
+    async updateUser(@Param('id') id: string, @Body() body: any) {
+        return firstValueFrom(this.userClient.send({ cmd: 'updateUser' }, { id: parseInt(id), ...body }));
+    }
+
+    @Delete(':id')
+    async deleteUser(@Param('id') id: string) {
+        return firstValueFrom(this.userClient.send({ cmd: 'deleteUser' }, parseInt(id)));
     }
 }

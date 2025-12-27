@@ -7,15 +7,24 @@ import { v4 as uuidv4 } from 'uuid';
 export class UserService {
   constructor(private prisma: PrismaService) { }
 
-  async createUser(email: string, password: string, name?: string): Promise<User> {
-    const userId = uuidv4(); // Generate a unique userId
+  async createUser(data: any): Promise<User> {
+    const userId = data.userId || uuidv4();
     return this.prisma.user.create({
-      data: { userId, email, password, name },
+      data: {
+        userId,
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      },
     });
   }
 
   async getUsers(): Promise<User[]> {
     return this.prisma.user.findMany();
+  }
+
+  async getUser(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
   async getUserById(userId: string): Promise<User | null> {
@@ -26,20 +35,23 @@ export class UserService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async updateUser(userId: string, data: Partial<User>): Promise<User> {
+  async updateUser(id: number, data: any): Promise<User> {
     return this.prisma.user.update({
-      where: { userId },
+      where: { id },
       data,
     });
   }
 
-  async deleteUser(userId: string): Promise<User> {
-    return this.prisma.user.delete({ where: { userId } });
+  async deleteUser(id: number): Promise<User> {
+    return this.prisma.user.delete({ where: { id } });
   }
 
-  async createRole(name: string, description?: string) {
+  async createRole(data: any) {
     return this.prisma.role.create({
-      data: { name, description },
+      data: {
+        name: data.name,
+        description: data.description,
+      },
     });
   }
 
@@ -47,5 +59,26 @@ export class UserService {
     return this.prisma.role.findMany({
       include: { permissions: true },
     });
+  }
+
+  async getRole(id: number) {
+    return this.prisma.role.findUnique({
+      where: { id },
+      include: { permissions: true },
+    });
+  }
+
+  async updateRole(id: number, data: any) {
+    return this.prisma.role.update({
+      where: { id },
+      data: {
+        name: data.name,
+        description: data.description,
+      },
+    });
+  }
+
+  async deleteRole(id: number) {
+    return this.prisma.role.delete({ where: { id } });
   }
 }

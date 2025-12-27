@@ -149,7 +149,7 @@ export default function PharmacistsManagementPage() {
                                 </tr>
                             ) : (
                                 pharmacists.map((pharmacist) => {
-                                    const rankInfo = MEMBER_RANKS[(pharmacist.memberRank as any) || 'bronze'];
+                                    const rankInfo = MEMBER_RANKS[(pharmacist.memberRank as keyof typeof MEMBER_RANKS) || 'bronze'];
                                     return (
                                         <tr key={pharmacist.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">

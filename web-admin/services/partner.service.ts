@@ -39,10 +39,11 @@ export interface Clinic {
     website?: string;
     description?: string;
     rating?: number;
-    specialty?: string;
+    specialties?: string[];
     isVerified?: boolean;
     thumbnail?: string;
     status?: string;
+    openingHours?: any;
     createdAt?: string;
 }
 
@@ -59,6 +60,7 @@ export interface Hospital {
     beds?: number;
     isVerified?: boolean;
     thumbnail?: string;
+    departments?: string[];
     status?: string;
     createdAt?: string;
 }

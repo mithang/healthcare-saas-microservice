@@ -1,8 +1,30 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function SeminarSpeakersPage() {
     const [showAddForm, setShowAddForm] = useState(false);
+    const loading = false;
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [name, setName] = useState('');
+    const [title, setTitle] = useState('');
+    const [bio, setBio] = useState('');
+
+    const handleDelete = (id: number) => {
+        alert('Chức năng xóa đang phát triển');
+    };
+
+    const handleAddSpeaker = () => {
+        alert('Chức năng thêm đang phát triển');
+        setShowAddModal(false);
+    };
+
+    // Sync showAddForm with showAddModal if needed, or just use showAddModal
+    useEffect(() => {
+        if (showAddForm) {
+            setShowAddModal(true);
+            setShowAddForm(false);
+        }
+    }, [showAddForm]);
 
     const speakers = [
         { id: 1, name: 'GS.TS Nguyễn Văn A', title: 'Trưởng khoa Dược, BV Chợ Rẫy', photo: '/img/speaker-1.jpg', seminars: 2 },

@@ -1,10 +1,14 @@
 'use client';
+import './globals.css';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/providers/AuthProvider';
+import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 const menuItems = [
     {
@@ -164,11 +168,9 @@ const menuItems = [
 ];
 
 function MenuGroup({ group, icon, items, pathname }: any) {
-    // Auto-expand if any child is active
     const isActive = items.some((item: any) => pathname === item.href || pathname.startsWith(item.href + '/'));
     const [isOpen, setIsOpen] = useState(isActive);
 
-    // Keep open if active child
     React.useEffect(() => {
         if (isActive) setIsOpen(true);
     }, [isActive]);
@@ -177,8 +179,7 @@ function MenuGroup({ group, icon, items, pathname }: any) {
         <div className="mb-2">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center justify-between px-4 py-2 transition-colors ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'
-                    }`}
+                className={`w-full flex items-center justify-between px-4 py-2 transition-colors ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`}
             >
                 <div className="flex items-center gap-3">
                     <span className="text-sm">{icon === 'flaticon-dashboard' ? '📊' :
@@ -218,10 +219,10 @@ function MenuGroup({ group, icon, items, pathname }: any) {
     );
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { user } = useAuth();
-    console.log("data", user)
+
     // Default values if user data is not available
     const userName = user?.name || 'Admin User';
     const userRole = (user as any)?.role === 'super_admin' || user?.roleId === 1 ? 'Super Admin' : (typeof (user as any)?.role === 'object' ? ((user as any)?.role as any)?.name : (user as any)?.role) || 'Admin';
@@ -272,5 +273,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
             </div>
         </ProtectedRoute>
+    );
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <html lang="vi">
+            <body className={inter.className}>
+                <AuthProvider>
+                    <AdminLayoutContent>{children}</AdminLayoutContent>
+                </AuthProvider>
+            </body>
+        </html>
     );
 }

@@ -1,70 +1,51 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Modal, Form, Input, message, Popconfirm, Checkbox, Collapse } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { Table, Typography, Card, Space, Button, Modal, Form, Input, message, Popconfirm, Checkbox, Collapse, Tag, Breadcrumb, Row, Col, Statistic, Tooltip, Divider } from 'antd';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SafetyCertificateOutlined, ShieldOutlined, LockOutlined, KeyOutlined, SearchOutlined, CheckSquareOutlined, BorderOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import roleService, { Role } from '@/services/role.service';
 
-const { Title } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
 
-interface Role {
-    id: number;
-    name: string;
-    permissions?: string[];
-    createdAt: string;
-}
-
 // Grouped permissions for better organization
-const permissionGroups = {
-    'User Management': [
+const permissionGroups: Record<string, string[]> = {
+    'Quản lý Người dùng': [
         'users.view',
         'users.create',
         'users.edit',
         'users.delete',
     ],
-    'Role Management': [
+    'Quản lý Vai trò & Quyền': [
         'roles.view',
         'roles.create',
         'roles.edit',
         'roles.delete',
     ],
-    'API Keys': [
-        'apikeys.view',
-        'apikeys.create',
-        'apikeys.delete',
+    'Quản lý Đối tác': [
+        'partners.view',
+        'partners.approve',
+        'partners.edit',
+        'partners.delete',
     ],
-    'Files': [
-        'files.view',
-        'files.upload',
-        'files.download',
-        'files.delete',
+    'Quản lý Nội dung': [
+        'content.view',
+        'content.create',
+        'content.edit',
+        'content.delete',
     ],
-    'Settings': [
+    'Quản lý Tài chính': [
+        'finance.view',
+        'finance.withdrawals',
+        'finance.commissions',
+        'payments.gateways',
+    ],
+    'Hệ thống & Bảo mật': [
         'settings.view',
         'settings.edit',
-    ],
-    'Search Data': [
-        'search.view',
-        'search.index',
-        'search.delete',
-    ],
-    'Background Jobs': [
-        'jobs.view',
-        'jobs.create',
-        'jobs.delete',
-    ],
-    'Audit Logs': [
         'logs.view',
-        'logs.export',
-    ],
-    'Payments': [
-        'payments.view',
-        'payments.manage',
-    ],
-    'System': [
-        'system.admin',
-        'system.config',
+        'backup.manage',
     ],
 };
 
@@ -74,20 +55,20 @@ export default function RolesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRole, setEditingRole] = useState<Role | null>(null);
     const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+    const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
 
-    const fetchRoles = () => {
+    const fetchRoles = async () => {
         setLoading(true);
-        fetch('http://localhost:3000/roles')
-            .then((res) => res.json())
-            .then((data) => {
-                setRoles(data);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error('Failed to fetch roles:', err);
-                setLoading(false);
-            });
+        try {
+            const data = await roleService.getRoles();
+            setRoles(data);
+        } catch (error) {
+            console.error('Failed to fetch roles:', error);
+            message.error('Lỗi khi tải danh sách vai trò');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -96,73 +77,48 @@ export default function RolesPage() {
 
     const handleCreate = async (values: any) => {
         try {
-            const response = await fetch('http://localhost:3000/roles', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...values,
-                    permissions: selectedPermissions,
-                }),
+            await roleService.createRole({
+                ...values,
+                permissions: selectedPermissions,
             });
-
-            if (response.ok) {
-                message.success('Role created successfully');
-                setIsModalOpen(false);
-                form.resetFields();
-                setSelectedPermissions([]);
-                fetchRoles();
-            } else {
-                message.error('Failed to create role');
-            }
+            message.success('Đã tạo vai trò mới thành công');
+            setIsModalOpen(false);
+            form.resetFields();
+            setSelectedPermissions([]);
+            fetchRoles();
         } catch (error) {
             console.error('Error creating role:', error);
-            message.error('An error occurred');
+            message.error('Lỗi khi tạo vai trò');
         }
     };
 
     const handleEdit = async (values: any) => {
         if (!editingRole) return;
         try {
-            const response = await fetch(`http://localhost:3000/roles/${editingRole.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...values,
-                    permissions: selectedPermissions,
-                }),
+            await roleService.updateRole(editingRole.id, {
+                ...values,
+                permissions: selectedPermissions,
             });
-
-            if (response.ok) {
-                message.success('Role updated successfully');
-                setIsModalOpen(false);
-                setEditingRole(null);
-                form.resetFields();
-                setSelectedPermissions([]);
-                fetchRoles();
-            } else {
-                message.error('Failed to update role');
-            }
+            message.success('Đã cập nhật vai trò thành công');
+            setIsModalOpen(false);
+            setEditingRole(null);
+            form.resetFields();
+            setSelectedPermissions([]);
+            fetchRoles();
         } catch (error) {
             console.error('Error updating role:', error);
-            message.error('An error occurred');
+            message.error('Lỗi khi cập nhật vai trò');
         }
     };
 
     const handleDelete = async (id: number) => {
         try {
-            const response = await fetch(`http://localhost:3000/roles/${id}`, {
-                method: 'DELETE',
-            });
-
-            if (response.ok) {
-                message.success('Role deleted successfully');
-                fetchRoles();
-            } else {
-                message.error('Failed to delete role');
-            }
+            await roleService.deleteRole(id);
+            message.success('Đã xóa vai trò thành công');
+            fetchRoles();
         } catch (error) {
             console.error('Error deleting role:', error);
-            message.error('An error occurred');
+            message.error('Lỗi khi xóa vai trò');
         }
     };
 
@@ -177,6 +133,7 @@ export default function RolesPage() {
         setEditingRole(role);
         form.setFieldsValue({
             name: role.name,
+            description: role.description,
         });
         setSelectedPermissions(role.permissions || []);
         setIsModalOpen(true);
@@ -192,55 +149,83 @@ export default function RolesPage() {
 
     const handleGroupChange = (groupPermissions: string[], checked: boolean) => {
         if (checked) {
-            const newPermissions = [...new Set([...selectedPermissions, ...groupPermissions])];
+            const newPermissions = Array.from(new Set([...selectedPermissions, ...groupPermissions]));
             setSelectedPermissions(newPermissions);
         } else {
             setSelectedPermissions(selectedPermissions.filter(p => !groupPermissions.includes(p)));
         }
     };
 
+    const handleSelectAll = () => {
+        const all = Object.values(permissionGroups).flat();
+        setSelectedPermissions(all);
+    };
+
+    const handleDeselectAll = () => {
+        setSelectedPermissions([]);
+    };
+
+    const filteredRoles = roles.filter(role =>
+        role.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        (role.description && role.description.toLowerCase().includes(searchText.toLowerCase()))
+    );
+
     const columns: ColumnsType<Role> = [
         {
-            title: 'Role Name',
+            title: 'Vai trò',
             dataIndex: 'name',
             key: 'name',
+            render: (text) => (
+                <Space>
+                    <ShieldOutlined style={{ color: '#1890ff' }} />
+                    <Text strong>{text}</Text>
+                </Space>
+            )
         },
         {
-            title: 'Permissions',
+            title: 'Mô tả',
+            dataIndex: 'description',
+            key: 'description',
+            render: (text) => <Text type="secondary">{text || 'Không có mô tả'}</Text>
+        },
+        {
+            title: 'Quyền hạn',
             dataIndex: 'permissions',
             key: 'permissions',
             render: (permissions: string[]) => (
-                <span>{permissions ? permissions.length : 0} permissions</span>
+                <Tag color="blue">{permissions ? permissions.length : 0} quyền</Tag>
             ),
         },
         {
-            title: 'Created At',
+            title: 'Ngày tạo',
             dataIndex: 'createdAt',
             key: 'createdAt',
-            render: (text) => new Date(text).toLocaleDateString(),
+            render: (text) => new Date(text).toLocaleDateString('vi-VN'),
         },
         {
-            title: 'Actions',
+            title: 'Thao tác',
             key: 'actions',
+            align: 'right',
             render: (_, record) => (
                 <Space>
-                    <Button
-                        type="link"
-                        icon={<EditOutlined />}
-                        onClick={() => openEditModal(record)}
-                    >
-                        Edit
-                    </Button>
+                    <Tooltip title="Chỉnh sửa quyền">
+                        <Button
+                            type="text"
+                            icon={<EditOutlined style={{ color: '#1890ff' }} />}
+                            onClick={() => openEditModal(record)}
+                        />
+                    </Tooltip>
                     <Popconfirm
-                        title="Delete role"
-                        description="Are you sure you want to delete this role?"
+                        title="Xóa vai trò"
+                        description={`Bạn có chắc muốn xóa vai trò "${record.name}"?`}
                         onConfirm={() => handleDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
+                        okText="Xóa"
+                        cancelText="Hủy"
+                        okType="danger"
                     >
-                        <Button type="link" danger icon={<DeleteOutlined />}>
-                            Delete
-                        </Button>
+                        <Tooltip title="Xóa">
+                            <Button type="text" danger icon={<DeleteOutlined />} />
+                        </Tooltip>
                     </Popconfirm>
                 </Space>
             ),
@@ -248,27 +233,62 @@ export default function RolesPage() {
     ];
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '0px' }}>
+            <Breadcrumb style={{ marginBottom: '16px' }}>
+                <Breadcrumb.Item>Hệ thống</Breadcrumb.Item>
+                <Breadcrumb.Item>Phân quyền & Vai trò</Breadcrumb.Item>
+            </Breadcrumb>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                    <Title level={2} style={{ margin: 0 }}>Quản lý Vai trò</Title>
+                    <Text type="secondary">Định nghĩa các nhóm quyền hạn và vai trò phục vụ việc phân quyền người dùng</Text>
+                </div>
+                <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreateModal}>
+                    Tạo vai trò mới
+                </Button>
+            </div>
+
+            <Row gutter={16} style={{ marginBottom: '24px' }}>
+                <Col span={8}>
+                    <Card bordered={false}>
+                        <Statistic title="Tổng số vai trò" value={roles.length} prefix={<SafetyCertificateOutlined style={{ color: '#1890ff' }} />} />
+                    </Card>
+                </Col>
+                <Col span={8}>
+                    <Card bordered={false}>
+                        <Statistic title="Phạm vi quyền" value={Object.keys(permissionGroups).length} suffix="Nhóm" prefix={<LockOutlined style={{ color: '#52c41a' }} />} />
+                    </Card>
+                </Col>
+                <Col span={8}>
+                    <Card bordered={false}>
+                        <Statistic title="Tổng đầu quyền" value={Object.values(permissionGroups).flat().length} prefix={<KeyOutlined style={{ color: '#fa8c16' }} />} />
+                    </Card>
+                </Col>
+            </Row>
+
             <Card>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Title level={2}><SafetyCertificateOutlined /> Role Management</Title>
-                        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
-                            Create Role
-                        </Button>
-                    </div>
-                    <Table
-                        columns={columns}
-                        dataSource={roles}
-                        rowKey="id"
-                        loading={loading}
-                        pagination={{ pageSize: 10 }}
+                <div style={{ marginBottom: '16px' }}>
+                    <Input
+                        placeholder="Tìm kiếm vai trò..."
+                        prefix={<SearchOutlined />}
+                        style={{ width: 400 }}
+                        value={searchText}
+                        onChange={e => setSearchText(e.target.value)}
+                        allowClear
                     />
-                </Space>
+                </div>
+                <Table
+                    columns={columns}
+                    dataSource={filteredRoles}
+                    rowKey="id"
+                    loading={loading}
+                    pagination={{ pageSize: 10 }}
+                />
             </Card>
 
             <Modal
-                title={editingRole ? 'Edit Role' : 'Create New Role'}
+                title={editingRole ? 'Cấu hình vai trò & quyền hạn' : 'Tạo vai trò mới'}
                 open={isModalOpen}
                 onCancel={() => {
                     setIsModalOpen(false);
@@ -277,71 +297,94 @@ export default function RolesPage() {
                     setSelectedPermissions([]);
                 }}
                 footer={null}
-                width={800}
+                width={900}
+                centered
             >
                 <Form
                     form={form}
                     layout="vertical"
                     onFinish={editingRole ? handleEdit : handleCreate}
                 >
-                    <Form.Item
-                        name="name"
-                        label="Role Name"
-                        rules={[{ required: true, message: 'Please input role name' }]}
-                    >
-                        <Input placeholder="e.g. Administrator, Doctor, Nurse" />
-                    </Form.Item>
+                    <Row gutter={16}>
+                        <Col span={24}>
+                            <Form.Item
+                                name="name"
+                                label="Tên vai trò"
+                                rules={[{ required: true, message: 'Vui lòng nhập tên vai trò' }]}
+                            >
+                                <Input placeholder="ví dụ: Quản trị viên, Bác sĩ, Nhân viên hỗ trợ..." size="large" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={24}>
+                            <Form.Item
+                                name="description"
+                                label="Mô tả chức năng"
+                            >
+                                <Input.TextArea rows={2} placeholder="Nhập mô tả về trách nhiệm của vai trò này" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
 
-                    <Form.Item label="Permissions">
-                        <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #d9d9d9', padding: '16px', borderRadius: '4px' }}>
-                            <Collapse defaultActiveKey={['0']} ghost>
-                                {Object.entries(permissionGroups).map(([groupName, permissions], index) => {
-                                    const allSelected = permissions.every(p => selectedPermissions.includes(p));
-                                    const someSelected = permissions.some(p => selectedPermissions.includes(p));
+                    <Divider orientation="left">Thiết lập quyền hạn ({selectedPermissions.length})</Divider>
 
-                                    return (
-                                        <Panel
-                                            key={index.toString()}
-                                            header={
-                                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    <Checkbox
-                                                        checked={allSelected}
-                                                        indeterminate={someSelected && !allSelected}
-                                                        onChange={(e) => handleGroupChange(permissions, e.target.checked)}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <strong>{groupName}</strong>
-                                                    </Checkbox>
-                                                </div>
-                                            }
-                                        >
-                                            <div style={{ paddingLeft: '24px' }}>
-                                                {permissions.map((permission) => (
-                                                    <div key={permission} style={{ marginBottom: '8px' }}>
-                                                        <Checkbox
-                                                            checked={selectedPermissions.includes(permission)}
-                                                            onChange={(e) => handlePermissionChange(permission, e.target.checked)}
-                                                        >
-                                                            {permission}
-                                                        </Checkbox>
-                                                    </div>
-                                                ))}
+                    <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                        <Button size="small" icon={<CheckSquareOutlined />} onClick={handleSelectAll}>Chọn tất cả</Button>
+                        <Button size="small" icon={<BorderOutlined />} onClick={handleDeselectAll}>Bỏ chọn tất cả</Button>
+                    </div>
+
+                    <div style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #f0f0f0', padding: '16px', borderRadius: '8px', background: '#fafafa' }}>
+                        <Collapse defaultActiveKey={['0']} ghost expandIconPosition="right">
+                            {Object.entries(permissionGroups).map(([groupName, permissions], index) => {
+                                const groupSelectedCount = permissions.filter(p => selectedPermissions.includes(p)).length;
+                                const isAllGroupSelected = groupSelectedCount === permissions.length;
+                                const isSomeGroupSelected = groupSelectedCount > 0 && !isAllGroupSelected;
+
+                                return (
+                                    <Panel
+                                        key={index.toString()}
+                                        header={
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <Checkbox
+                                                    checked={isAllGroupSelected}
+                                                    indeterminate={isSomeGroupSelected}
+                                                    onChange={(e) => handleGroupChange(permissions, e.target.checked)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <Text strong>{groupName}</Text>
+                                                </Checkbox>
+                                                <Tag style={{ marginLeft: '12px' }} color={groupSelectedCount > 0 ? 'blue' : 'default'}>
+                                                    {groupSelectedCount}/{permissions.length}
+                                                </Tag>
                                             </div>
-                                        </Panel>
-                                    );
-                                })}
-                            </Collapse>
-                        </div>
-                        <div style={{ marginTop: '8px', color: '#666' }}>
-                            Selected: {selectedPermissions.length} permissions
-                        </div>
-                    </Form.Item>
+                                        }
+                                        style={{ marginBottom: '8px', background: '#fff', border: '1px solid #f0f0f0', borderRadius: '8px' }}
+                                    >
+                                        <Row gutter={[16, 8]}>
+                                            {permissions.map((permission) => (
+                                                <Col span={8} key={permission}>
+                                                    <Checkbox
+                                                        checked={selectedPermissions.includes(permission)}
+                                                        onChange={(e) => handlePermissionChange(permission, e.target.checked)}
+                                                    >
+                                                        <Text style={{ fontSize: '13px' }}>{permission}</Text>
+                                                    </Checkbox>
+                                                </Col>
+                                            ))}
+                                        </Row>
+                                    </Panel>
+                                );
+                            })}
+                        </Collapse>
+                    </div>
 
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit" block>
-                            {editingRole ? 'Update' : 'Create'}
-                        </Button>
-                    </Form.Item>
+                    <div style={{ textAlign: 'right', marginTop: '24px' }}>
+                        <Space>
+                            <Button onClick={() => setIsModalOpen(false)} size="large">Hủy</Button>
+                            <Button type="primary" htmlType="submit" size="large" style={{ padding: '0 48px' }}>
+                                {editingRole ? 'Lưu thay đổi' : 'Xác nhận tạo'}
+                            </Button>
+                        </Space>
+                    </div>
                 </Form>
             </Modal>
         </div>

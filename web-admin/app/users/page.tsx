@@ -1,31 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Modal, Form, Input, message, Popconfirm, Select, Switch } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, UserOutlined } from '@ant-design/icons';
+import { Table, Typography, Card, Space, Button, Modal, Form, Input, message, Popconfirm, Select, Switch, Tag, Row, Col, Statistic, Avatar, Breadcrumb, Tooltip } from 'antd';
+import { EditOutlined, DeleteOutlined, PlusOutlined, UserOutlined, TeamOutlined, UserCheckOutlined, UserDeleteOutlined, SearchOutlined, FilterOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import userService, { User } from '@/services/user.service';
+import roleService, { Role } from '@/services/role.service';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
-
-interface User {
-    id: number;
-    userId: string;
-    email: string;
-    name: string | null;
-    phone?: string;
-    address?: string;
-    department?: string;
-    position?: string;
-    roleId?: number;
-    isActive?: boolean;
-    createdAt: string;
-}
-
-interface Role {
-    id: number;
-    name: string;
-}
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -33,98 +16,69 @@ export default function UsersPage() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
 
-    const fetchUsers = () => {
+    const fetchData = async () => {
         setLoading(true);
-        fetch('http://localhost:3000/users')
-            .then((res) => res.json())
-            .then((data) => {
-                setUsers(data);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error('Failed to fetch users:', err);
-                setLoading(false);
-            });
-    };
-
-    const fetchRoles = () => {
-        fetch('http://localhost:3000/roles')
-            .then((res) => res.json())
-            .then((data) => setRoles(data))
-            .catch((err) => console.error('Failed to fetch roles:', err));
+        try {
+            const [usersData, rolesData] = await Promise.all([
+                userService.getUsers(),
+                roleService.getRoles()
+            ]);
+            setUsers(usersData);
+            setRoles(rolesData);
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
+            message.error('Lỗi khi tải dữ liệu người dùng');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
-        fetchUsers();
-        fetchRoles();
+        fetchData();
     }, []);
 
     const handleCreate = async (values: any) => {
         try {
-            const response = await fetch('http://localhost:3000/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...values,
-                    isActive: values.isActive !== undefined ? values.isActive : true,
-                }),
+            await userService.createUser({
+                ...values,
+                isActive: values.isActive !== undefined ? values.isActive : true,
             });
-
-            if (response.ok) {
-                message.success('User created successfully');
-                setIsModalOpen(false);
-                form.resetFields();
-                fetchUsers();
-            } else {
-                message.error('Failed to create user');
-            }
+            message.success('Đã tạo người dùng mới thành công');
+            setIsModalOpen(false);
+            form.resetFields();
+            fetchData();
         } catch (error) {
             console.error('Error creating user:', error);
-            message.error('An error occurred');
+            message.error('Lỗi khi tạo người dùng');
         }
     };
 
     const handleEdit = async (values: any) => {
         if (!editingUser) return;
         try {
-            const response = await fetch(`http://localhost:3000/users/${editingUser.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(values),
-            });
-
-            if (response.ok) {
-                message.success('User updated successfully');
-                setIsModalOpen(false);
-                setEditingUser(null);
-                form.resetFields();
-                fetchUsers();
-            } else {
-                message.error('Failed to update user');
-            }
+            await userService.updateUser(editingUser.id, values);
+            message.success('Đã cập nhật thông tin người dùng');
+            setIsModalOpen(false);
+            setEditingUser(null);
+            form.resetFields();
+            fetchData();
         } catch (error) {
             console.error('Error updating user:', error);
-            message.error('An error occurred');
+            message.error('Lỗi khi cập nhật người dùng');
         }
     };
 
     const handleDelete = async (id: number) => {
         try {
-            const response = await fetch(`http://localhost:3000/users/${id}`, {
-                method: 'DELETE',
-            });
-
-            if (response.ok) {
-                message.success('User deleted successfully');
-                fetchUsers();
-            } else {
-                message.error('Failed to delete user');
-            }
+            await userService.deleteUser(id);
+            message.success('Đã xóa người dùng thành công');
+            fetchData();
         } catch (error) {
             console.error('Error deleting user:', error);
-            message.error('An error occurred');
+            message.error('Lỗi khi xóa người dùng');
         }
     };
 
@@ -151,77 +105,104 @@ export default function UsersPage() {
         setIsModalOpen(true);
     };
 
+    const filteredUsers = users.filter(user =>
+        user.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchText.toLowerCase()) ||
+        user.userId.toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    const stats = {
+        total: users.length,
+        active: users.filter(u => u.isActive).length,
+        inactive: users.filter(u => !u.isActive).length,
+        admins: users.filter(u => u.roleId === 1).length,
+    };
+
     const columns: ColumnsType<User> = [
         {
-            title: 'User ID',
-            dataIndex: 'userId',
-            key: 'userId',
+            title: 'Người dùng',
+            key: 'user',
+            render: (_, record) => (
+                <Space>
+                    <Avatar icon={<UserOutlined />} src={null} style={{ backgroundColor: record.isActive ? '#1890ff' : '#bfbfbf' }} />
+                    <Space direction="vertical" size={0}>
+                        <Text strong>{record.name || 'N/A'}</Text>
+                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.userId}</Text>
+                    </Space>
+                </Space>
+            ),
         },
         {
-            title: 'Name',
-            dataIndex: 'name',
-            key: 'name',
+            title: 'Liên hệ',
+            key: 'contact',
+            render: (_, record) => (
+                <Space direction="vertical" size={0}>
+                    <Space size="small">
+                        <MailOutlined style={{ fontSize: '12px', color: '#8c8c8c' }} />
+                        <Text style={{ fontSize: '13px' }}>{record.email}</Text>
+                    </Space>
+                    {record.phone && (
+                        <Space size="small">
+                            <PhoneOutlined style={{ fontSize: '12px', color: '#8c8c8c' }} />
+                            <Text style={{ fontSize: '13px' }}>{record.phone}</Text>
+                        </Space>
+                    )}
+                </Space>
+            ),
         },
         {
-            title: 'Email',
-            dataIndex: 'email',
-            key: 'email',
-        },
-        {
-            title: 'Phone',
-            dataIndex: 'phone',
-            key: 'phone',
-            render: (text) => text || '-',
-        },
-        {
-            title: 'Department',
-            dataIndex: 'department',
-            key: 'department',
-            render: (text) => text || '-',
-        },
-        {
-            title: 'Position',
-            dataIndex: 'position',
+            title: 'Phòng ban / Chức vụ',
             key: 'position',
-            render: (text) => text || '-',
+            render: (_, record) => (
+                <Space direction="vertical" size={0}>
+                    <Text style={{ fontSize: '13px' }}>{record.department || '-'}</Text>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>{record.position || '-'}</Text>
+                </Space>
+            ),
         },
         {
-            title: 'Role',
+            title: 'Vai trò',
             dataIndex: 'roleId',
             key: 'roleId',
             render: (roleId) => {
                 const role = roles.find(r => r.id === roleId);
-                return role ? role.name : '-';
+                return role ? <Tag color="blue">{role.name}</Tag> : <Text type="secondary">-</Text>;
             },
         },
         {
-            title: 'Created At',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
-            render: (text) => new Date(text).toLocaleDateString(),
+            title: 'Trạng thái',
+            dataIndex: 'isActive',
+            key: 'isActive',
+            render: (isActive) => (
+                <Tag color={isActive ? 'success' : 'error'} style={{ borderRadius: '10px' }}>
+                    {isActive ? 'HOẠT ĐỘNG' : 'ĐÃ KHÓA'}
+                </Tag>
+            ),
         },
         {
-            title: 'Actions',
+            title: 'Thao tác',
             key: 'actions',
+            align: 'right',
             render: (_, record) => (
                 <Space>
-                    <Button
-                        type="link"
-                        icon={<EditOutlined />}
-                        onClick={() => openEditModal(record)}
-                    >
-                        Edit
-                    </Button>
+                    <Tooltip title="Chỉnh sửa">
+                        <Button
+                            type="text"
+                            icon={<EditOutlined style={{ color: '#1890ff' }} />}
+                            onClick={() => openEditModal(record)}
+                        />
+                    </Tooltip>
                     <Popconfirm
-                        title="Delete user"
-                        description="Are you sure you want to delete this user?"
+                        title="Xóa người dùng"
+                        description={`Bạn có chắc muốn xóa nhân sự "${record.name}"?`}
                         onConfirm={() => handleDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
+                        okText="Xóa"
+                        cancelText="Hủy"
+                        okType="danger"
                     >
-                        <Button type="link" danger icon={<DeleteOutlined />}>
-                            Delete
-                        </Button>
+                        <Tooltip title="Xóa">
+                            <Button type="text" danger icon={<DeleteOutlined />} />
+                        </Tooltip>
                     </Popconfirm>
                 </Space>
             ),
@@ -229,27 +210,71 @@ export default function UsersPage() {
     ];
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '0px' }}>
+            <Breadcrumb style={{ marginBottom: '16px' }}>
+                <Breadcrumb.Item>Hệ thống</Breadcrumb.Item>
+                <Breadcrumb.Item>Quản lý nhân sự</Breadcrumb.Item>
+            </Breadcrumb>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                    <Title level={2} style={{ margin: 0 }}>Quản trị viên & Nhân sự</Title>
+                    <Text type="secondary">Quản lý tài khoản truy cập hệ thống quản trị và phân quyền phòng ban</Text>
+                </div>
+                <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreateModal}>
+                    Thêm nhân sự mới
+                </Button>
+            </div>
+
+            <Row gutter={16} style={{ marginBottom: '24px' }}>
+                <Col span={6}>
+                    <Card bordered={false}>
+                        <Statistic title="Tổng số nhân sự" value={stats.total} prefix={<TeamOutlined style={{ color: '#1890ff' }} />} />
+                    </Card>
+                </Col>
+                <Col span={6}>
+                    <Card bordered={false}>
+                        <Statistic title="Đang hoạt động" value={stats.active} prefix={<UserCheckOutlined style={{ color: '#52c41a' }} />} />
+                    </Card>
+                </Col>
+                <Col span={6}>
+                    <Card bordered={false}>
+                        <Statistic title="Đã khóa" value={stats.inactive} prefix={<UserDeleteOutlined style={{ color: '#ff4d4f' }} />} />
+                    </Card>
+                </Col>
+                <Col span={6}>
+                    <Card bordered={false}>
+                        <Statistic title="Quản trị viên" value={stats.admins} prefix={<UserOutlined style={{ color: '#722ed1' }} />} />
+                    </Card>
+                </Col>
+            </Row>
+
             <Card>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Title level={2}><UserOutlined /> User Management</Title>
-                        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
-                            Create User
-                        </Button>
-                    </div>
-                    <Table
-                        columns={columns}
-                        dataSource={users}
-                        rowKey="id"
-                        loading={loading}
-                        pagination={{ pageSize: 10 }}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <Input
+                        placeholder="Tìm kiếm theo tên, email, mã nhân sự..."
+                        prefix={<SearchOutlined />}
+                        style={{ width: 400 }}
+                        value={searchText}
+                        onChange={e => setSearchText(e.target.value)}
+                        allowClear
                     />
-                </Space>
+                    <Space>
+                        <Button icon={<FilterOutlined />}>Bộ lọc</Button>
+                        <Button type="dashed" icon={<PlusOutlined />} onClick={() => fetchData()}>Làm mới</Button>
+                    </Space>
+                </div>
+                <Table
+                    columns={columns}
+                    dataSource={filteredUsers}
+                    rowKey="id"
+                    loading={loading}
+                    pagination={{ pageSize: 10, showSizeChanger: true }}
+                />
             </Card>
 
             <Modal
-                title={editingUser ? 'Edit User' : 'Create New User'}
+                title={editingUser ? 'Chỉnh sửa nhân sự' : 'Thêm nhân sự mới'}
                 open={isModalOpen}
                 onCancel={() => {
                     setIsModalOpen(false);
@@ -263,97 +288,131 @@ export default function UsersPage() {
                     form={form}
                     layout="vertical"
                     onFinish={editingUser ? handleEdit : handleCreate}
+                    initialValues={{ isActive: true }}
                 >
-                    <Form.Item
-                        name="userId"
-                        label="User ID"
-                        rules={[{ required: true, message: 'Please input user ID' }]}
-                    >
-                        <Input placeholder="e.g. USR001" disabled={!!editingUser} />
-                    </Form.Item>
-                    <Form.Item
-                        name="email"
-                        label="Email"
-                        rules={[
-                            { required: true, message: 'Please input email' },
-                            { type: 'email', message: 'Please enter a valid email' }
-                        ]}
-                    >
-                        <Input placeholder="user@example.com" />
-                    </Form.Item>
-                    <Form.Item
-                        name="name"
-                        label="Full Name"
-                        rules={[{ required: true, message: 'Please input name' }]}
-                    >
-                        <Input placeholder="John Doe" />
-                    </Form.Item>
-                    <Form.Item
-                        name="phone"
-                        label="Phone Number"
-                    >
-                        <Input placeholder="+84 123 456 789" />
-                    </Form.Item>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="userId"
+                                label="Mã nhân sự"
+                                rules={[{ required: true, message: 'Vui lòng nhập mã nhân sự' }]}
+                            >
+                                <Input placeholder="ví dụ: NV001" disabled={!!editingUser} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="email"
+                                label="Địa chỉ Email"
+                                rules={[
+                                    { required: true, message: 'Vui lòng nhập email' },
+                                    { type: 'email', message: 'Email không hợp lệ' }
+                                ]}
+                            >
+                                <Input placeholder="nhanvien@healthcare.com" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="name"
+                                label="Họ và tên"
+                                rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+                            >
+                                <Input placeholder="Nguyễn Văn A" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="phone"
+                                label="Số điện thoại"
+                            >
+                                <Input placeholder="0901234567" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
                     <Form.Item
                         name="address"
-                        label="Address"
+                        label="Địa chỉ"
                     >
-                        <Input.TextArea rows={2} placeholder="Full address" />
+                        <Input.TextArea rows={2} placeholder="Nhập địa chỉ tạm trú/thường trú" />
                     </Form.Item>
-                    <Form.Item
-                        name="department"
-                        label="Department"
-                    >
-                        <Select placeholder="Select department" allowClear>
-                            <Option value="IT">IT</Option>
-                            <Option value="HR">HR</Option>
-                            <Option value="Finance">Finance</Option>
-                            <Option value="Operations">Operations</Option>
-                            <Option value="Medical">Medical</Option>
-                            <Option value="Nursing">Nursing</Option>
-                            <Option value="Pharmacy">Pharmacy</Option>
-                        </Select>
-                    </Form.Item>
-                    <Form.Item
-                        name="position"
-                        label="Position"
-                    >
-                        <Input placeholder="e.g. Senior Developer, Nurse, Doctor" />
-                    </Form.Item>
-                    <Form.Item
-                        name="roleId"
-                        label="Role"
-                        rules={[{ required: true, message: 'Please select a role' }]}
-                    >
-                        <Select placeholder="Select role" loading={roles.length === 0}>
-                            {roles.map((role) => (
-                                <Option key={role.id} value={role.id}>
-                                    {role.name}
-                                </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                    <Form.Item
-                        name="isActive"
-                        label="Active Status"
-                        valuePropName="checked"
-                    >
-                        <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
-                    </Form.Item>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="department"
+                                label="Phòng ban"
+                            >
+                                <Select placeholder="Chọn phòng ban" allowClear>
+                                    <Option value="IT">Công nghệ thông tin (IT)</Option>
+                                    <Option value="HR">Nhân sự (HR)</Option>
+                                    <Option value="Finance">Tài chính (Finance)</Option>
+                                    <Option value="Operations">Vận hành (Operations)</Option>
+                                    <Option value="Medical">Y tế (Medical)</Option>
+                                    <Option value="Nursing">Điều dưỡng (Nursing)</Option>
+                                    <Option value="Pharmacy">Dược phẩm (Pharmacy)</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="position"
+                                label="Chức vụ"
+                            >
+                                <Input placeholder="ví dụ: Trưởng phòng, Chuyên viên..." />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="roleId"
+                                label="Vai trò / Quyền hạn"
+                                rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
+                            >
+                                <Select placeholder="Chọn vai trò" loading={roles.length === 0}>
+                                    {roles.map((role) => (
+                                        <Option key={role.id} value={role.id}>
+                                            {role.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="isActive"
+                                label="Trạng thái kích hoạt"
+                                valuePropName="checked"
+                            >
+                                <Switch checkedChildren="HOẠT ĐỘNG" unCheckedChildren="ĐÃ KHÓA" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
                     {!editingUser && (
                         <Form.Item
                             name="password"
-                            label="Password"
-                            rules={[{ required: true, message: 'Please input password' }]}
+                            label="Mật khẩu khởi tạo"
+                            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
                         >
-                            <Input.Password placeholder="Enter password" />
+                            <Input.Password placeholder="Tối thiểu 6 ký tự" />
                         </Form.Item>
                     )}
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit" block>
-                            {editingUser ? 'Update' : 'Create'}
-                        </Button>
-                    </Form.Item>
+
+                    <div style={{ textAlign: 'right', marginTop: '16px' }}>
+                        <Space>
+                            <Button onClick={() => setIsModalOpen(false)}>Hủy</Button>
+                            <Button type="primary" htmlType="submit" style={{ padding: '0 32px' }}>
+                                {editingUser ? 'Cập nhật' : 'Tạo mới'}
+                            </Button>
+                        </Space>
+                    </div>
                 </Form>
             </Modal>
         </div>

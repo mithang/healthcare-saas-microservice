@@ -137,11 +137,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             children: [
                 {
                     key: '/finance/revenue',
-                    label: <Link href="/finance/revenue">Doanh thu</Link>,
+                    label: <Link href="/finance/revenue">Doanh thu & Giao dịch</Link>,
                 },
                 {
                     key: '/finance/withdrawals',
-                    label: <Link href="/finance/withdrawals">Rút tiền</Link>,
+                    label: <Link href="/finance/withdrawals">Yêu cầu Rút tiền</Link>,
+                },
+                {
+                    key: '/finance/commissions',
+                    label: <Link href="/finance/commissions">Hoa hồng đối tác</Link>,
+                },
+                {
+                    key: '/payments/gateways',
+                    label: <Link href="/payments/gateways">Cổng thanh toán</Link>,
                 },
             ],
         },
@@ -168,6 +176,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {
                     key: '/security/audit-logs',
                     label: <Link href="/security/audit-logs">Audit Logs</Link>,
+                },
+                {
+                    key: '/security/backup',
+                    label: <Link href="/security/backup">Sao lưu & Khôi phục</Link>,
                 },
             ],
         },

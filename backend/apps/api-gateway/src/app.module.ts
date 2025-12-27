@@ -9,6 +9,7 @@ import { LoggerController } from './logger.controller';
 import { PaymentController } from './payment.controller';
 import { FileController } from './file.controller';
 import { SettingController } from './setting.controller';
+import { SearchController } from './search.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -102,9 +103,20 @@ import { AppService } from './app.service';
           },
         },
       },
+      {
+        name: 'SEARCH_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'search_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController],
   providers: [AppService],
 })
 export class AppModule { }

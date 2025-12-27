@@ -14,6 +14,7 @@ import {
     FileOutlined,
     CreditCardOutlined,
     SettingOutlined,
+    SearchOutlined,
     LogoutOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
@@ -74,6 +75,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             key: '/settings',
             icon: <SettingOutlined />,
             label: <Link href="/settings">Settings</Link>,
+        },
+        {
+            key: '/search',
+            icon: <SearchOutlined />,
+            label: <Link href="/search">Search Data</Link>,
         },
     ];
 

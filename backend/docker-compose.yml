@@ -27,6 +27,20 @@ services:
     networks:
       - saas-network
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - saas-network
+
   api-gateway: # API Gateway
     build:
       context: .
@@ -47,6 +61,7 @@ services:
       - file-service
       - notification-service
       - setting-service
+      - search-service
     networks:
       - saas-network
 
@@ -166,9 +181,26 @@ services:
     networks:
       - saas-network
 
+  search-service:
+    build:
+      context: .
+      args:
+        APP_NAME: search-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/search_db?schema=public
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - rabbitmq
+      - db
+      - elasticsearch
+    networks:
+      - saas-network
+
 networks:
   saas-network:
     driver: bridge
 
 volumes:
   postgres_data:
+  elasticsearch_data:

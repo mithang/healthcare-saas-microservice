@@ -45,7 +45,7 @@ export default function VerifyPage() {
                         type="primary"
                         htmlType="submit"
                         loading={loading}
-                        className="w-full h-12 bg-white text-purple-600 font-bold border-none hover:bg-gray-100 hover:text-purple-700 shadow-lg"
+                        className="w-full h-12 bg-gradient-to-r from-blue-500 to-teal-500 text-white font-bold border-none hover:from-blue-400 hover:to-teal-400 shadow-lg"
                     >
                         XÁC NHẬN
                     </Button>
@@ -53,10 +53,10 @@ export default function VerifyPage() {
             </Form>
 
             <div className="text-center mt-4 text-white/70 text-sm">
-                Chưa nhận được mã? <button className="text-white font-bold hover:underline bg-transparent border-none cursor-pointer">Gửi lại</button>
+                Chưa nhận được mã? <button className="text-teal-400 font-bold hover:underline hover:text-teal-300 bg-transparent border-none cursor-pointer">Gửi lại</button>
             </div>
             <div className="text-center mt-6">
-                <Link href="/auth/login" className="text-white/80 hover:text-white transition-colors">
+                <Link href="/auth/login" className="text-teal-400 hover:text-teal-300 transition-colors">
                     &larr; Quay lại đăng nhập
                 </Link>
             </div>

@@ -28,7 +28,11 @@ export default function LoginPage() {
         <div className="w-full">
             <Form
                 name="login_form"
-                initialValues={{ remember: true }}
+                initialValues={{
+                    remember: true,
+                    email: '',
+                    password: ''
+                }}
                 onFinish={onFinish}
                 layout="vertical"
                 size="large"
@@ -59,7 +63,7 @@ export default function LoginPage() {
                     <Form.Item name="remember" valuePropName="checked" noStyle>
                         <Checkbox className="text-white/80 hover:text-white">Ghi nhớ đăng nhập</Checkbox>
                     </Form.Item>
-                    <Link href="/auth/forgot-password" className="text-white/80 hover:text-white text-sm font-medium">
+                    <Link href="/auth/forgot-password" className="text-teal-400 hover:text-teal-300 text-sm font-medium">
                         Quên mật khẩu?
                     </Link>
                 </div>
@@ -69,7 +73,7 @@ export default function LoginPage() {
                         type="primary"
                         htmlType="submit"
                         loading={loading}
-                        className="w-full h-12 bg-white text-purple-600 font-bold border-none hover:bg-gray-100 hover:text-purple-700 shadow-lg"
+                        className="w-full h-12 bg-gradient-to-r from-blue-500 to-teal-500 text-white font-bold border-none hover:from-blue-400 hover:to-teal-400 shadow-lg"
                     >
                         ĐĂNG NHẬP
                     </Button>
@@ -78,7 +82,7 @@ export default function LoginPage() {
 
             <div className="text-center mt-4">
                 <span className="text-white/70">Chưa có tài khoản? </span>
-                <Link href="/auth/register" className="text-white font-bold hover:underline">
+                <Link href="/auth/register" className="text-teal-400 font-bold hover:text-teal-300 hover:underline">
                     Đăng ký ngay
                 </Link>
             </div>

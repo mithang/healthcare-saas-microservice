@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
                     <Button
                         type="primary"
                         htmlType="submit"
-                        className="w-full h-12 bg-white text-purple-600 font-bold border-none hover:bg-gray-100 hover:text-purple-700 shadow-lg"
+                        className="w-full h-12 bg-gradient-to-r from-blue-500 to-teal-500 text-white font-bold border-none hover:from-blue-400 hover:to-teal-400 shadow-lg"
                     >
                         GỬI YÊU CẦU
                     </Button>
@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
             </Form>
 
             <div className="text-center mt-4">
-                <Link href="/auth/login" className="text-white/80 hover:text-white transition-colors">
+                <Link href="/auth/login" className="text-teal-400 hover:text-teal-300 transition-colors">
                     &larr; Quay lại đăng nhập
                 </Link>
             </div>

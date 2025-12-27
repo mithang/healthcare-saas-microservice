@@ -75,7 +75,7 @@ export default function RegisterPage() {
                     <Button
                         type="primary"
                         htmlType="submit"
-                        className="w-full h-12 bg-white text-purple-600 font-bold border-none hover:bg-gray-100 hover:text-purple-700 shadow-lg"
+                        className="w-full h-12 bg-gradient-to-r from-blue-500 to-teal-500 text-white font-bold border-none hover:from-blue-400 hover:to-teal-400 shadow-lg"
                     >
                         ĐĂNG KÝ
                     </Button>
@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
             <div className="text-center mt-4">
                 <span className="text-white/70">Đã có tài khoản? </span>
-                <Link href="/auth/login" className="text-white font-bold hover:underline">
+                <Link href="/auth/login" className="text-teal-400 font-bold hover:text-teal-300 hover:underline">
                     Đăng nhập
                 </Link>
             </div>

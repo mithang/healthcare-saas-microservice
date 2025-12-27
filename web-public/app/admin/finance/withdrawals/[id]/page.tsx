@@ -1,49 +1,79 @@
 "use client";
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import StatusBadge from '@/components/admin/StatusBadge';
 import { useRouter, useParams } from 'next/navigation';
+import financeService, { Withdrawal } from '@/services/finance.service';
 
 export default function WithdrawalDetail() {
     const params = useParams<{ id: string }>();
     const router = useRouter();
-    const withdrawal = {
-        id: params.id,
-        transactionId: 'TRX-987654',
-        partnerName: 'Nhà thuốc An Khang',
-        partnerType: 'Pharmacy',
-        amount: '15.000.000đ',
-        accountName: 'NGUYEN VAN A',
-        accountNumber: '1903456789012',
-        bankName: 'Techcombank',
-        requestDate: '19/12/2024 08:30',
-        status: 'pending',
-        note: 'Rút tiền doanh thu tháng 11',
-        history: [
-            { date: '19/12/2024 08:30', action: 'Tạo yêu cầu', user: 'Nhà thuốc An Khang' },
-        ]
+    const [withdrawal, setWithdrawal] = useState<Withdrawal | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    const fetchWithdrawal = async () => {
+        try {
+            setLoading(true);
+            const data = await financeService.getWithdrawalById(parseInt(params.id));
+            setWithdrawal(data);
+        } catch (error) {
+            console.error('Failed to fetch withdrawal', error);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        if (params.id) {
+            fetchWithdrawal();
+        }
+    }, [params.id]);
+
+    const handleAction = async (status: string) => {
+        if (!withdrawal) return;
+        try {
+            await financeService.updateWithdrawal(withdrawal.id, {
+                status,
+                processedDate: new Date().toISOString()
+            });
+            fetchWithdrawal();
+        } catch (error) {
+            console.error(`Failed to ${status} withdrawal`, error);
+        }
+    };
+
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải...</div>;
+    if (!withdrawal) return <div className="p-8 text-center text-red-500">Không tìm thấy yêu cầu</div>;
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Yêu cầu rút tiền #{withdrawal.transactionId}</h1>
-                    <p className="text-gray-500 mt-1">Ngày yêu cầu: {withdrawal.requestDate}</p>
+                    <p className="text-gray-500 mt-1">Ngày yêu cầu: {new Date(withdrawal.requestDate).toLocaleString('vi-VN')}</p>
                 </div>
-                <div className="flex gap-3">
-                    <button className="bg-green-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-green-600 transition-colors">
-                        <i className="fi flaticon-check mr-2"></i>Duyệt chuyển khoản
-                    </button>
-                    <button className="bg-red-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-600 transition-colors">
-                        <i className="fi flaticon-cross mr-2"></i>Từ chối
-                    </button>
-                </div>
+                {withdrawal.status === 'pending' && (
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => handleAction('approved')}
+                            className="bg-green-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-green-600 transition-colors"
+                        >
+                            <i className="fi flaticon-check mr-2"></i>Duyệt chuyển khoản
+                        </button>
+                        <button
+                            onClick={() => handleAction('rejected')}
+                            className="bg-red-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-600 transition-colors"
+                        >
+                            <i className="fi flaticon-cross mr-2"></i>Từ chối
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <p className="text-gray-500 text-sm mb-2">Số tiền rút</p>
-                    <h3 className="text-4xl font-bold text-green-600">{withdrawal.amount}</h3>
+                    <h3 className="text-4xl font-bold text-green-600">{withdrawal.amount.toLocaleString()} đ</h3>
                 </div>
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <p className="text-gray-500 text-sm mb-2">Đối tác</p>
@@ -85,10 +115,12 @@ export default function WithdrawalDetail() {
                         </div>
                     </div>
                 </div>
-                <div className="mt-6">
-                    <p className="text-sm text-gray-500 mb-1">Ghi chú từ đối tác</p>
-                    <p className="text-gray-700 italic">"{withdrawal.note}"</p>
-                </div>
+                {withdrawal.note && (
+                    <div className="mt-6">
+                        <p className="text-sm text-gray-500 mb-1">Ghi chú từ đối tác</p>
+                        <p className="text-gray-700 italic">"{withdrawal.note}"</p>
+                    </div>
+                )}
             </div>
         </div>
     );

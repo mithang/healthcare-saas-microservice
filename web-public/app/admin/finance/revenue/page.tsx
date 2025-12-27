@@ -1,27 +1,43 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import StatusBadge from '@/components/admin/StatusBadge';
 import StatsCard from '@/components/admin/StatsCard';
-
-const MOCK_DATA = Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    date: `${15 + (i % 15)}/12/2024`,
-    source: ['Đặt khám', 'Mua thuốc', 'Xét nghiệm'][i % 3],
-    amount: `${(500 + i * 50)}k`,
-    fee: `${(50 + i * 5)}k`,
-    net: `${(450 + i * 45)}k`,
-}));
+import financeService, { Revenue } from '@/services/finance.service';
 
 export default function RevenueManagement() {
+    const [revenueData, setRevenueData] = useState<Revenue[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    const totalPages = Math.ceil(MOCK_DATA.length / itemsPerPage);
-    const paginatedData = MOCK_DATA.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const fetchRevenue = async () => {
+        try {
+            setLoading(true);
+            const data = await financeService.getRevenue();
+            setRevenueData(data);
+        } catch (error) {
+            console.error('Failed to fetch revenue', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRevenue();
+    }, []);
+
+    const totalPages = Math.ceil(revenueData.length / itemsPerPage);
+    const paginatedData = revenueData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // Dynamic stats (simplified for demo)
+    const totalAmount = revenueData.reduce((acc, curr) => acc + curr.amount, 0);
+    const totalFee = revenueData.reduce((acc, curr) => acc + curr.fee, 0);
+    const totalNet = revenueData.reduce((acc, curr) => acc + curr.net, 0);
 
     const columns = [
-        { label: 'Thời gian', key: 'timestamp' },
+        { label: 'Thời gian', key: 'timestamp', render: (val: string) => <span>{new Date(val).toLocaleString('vi-VN')}</span> },
         { label: 'Loại', key: 'type' },
         { label: 'Chi tiết', key: 'details' },
         { label: 'Số tiền', key: 'amount', render: (val: number) => <span className="font-bold text-green-600">{val.toLocaleString()} đ</span> },
@@ -30,16 +46,39 @@ export default function RevenueManagement() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900">Quản lý Doanh thu</h1>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <StatsCard title="Doanh thu hôm nay" value="12.5M" icon="flaticon-money" color="green" trend={{ value: "+8.2%", isPositive: true }} />
-                <StatsCard title="Doanh thu tháng" value="125.5M" icon="flaticon-chart-line" color="blue" trend={{ value: "+12.5%", isPositive: true }} />
-                <StatsCard title="Phí hệ thống" value="12.5M" icon="flaticon-percentage" color="orange" />
-                <StatsCard title="Thực nhận" value="113M" icon="flaticon-wallet" color="purple" />
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-900">Quản lý Doanh thu</h1>
+                <button
+                    onClick={async () => {
+                        await financeService.createRevenue({
+                            type: 'Đặt khám',
+                            details: 'Khám bệnh nhi khoa',
+                            amount: 500000,
+                            fee: 50000,
+                            net: 450000,
+                            status: 'Done'
+                        });
+                        fetchRevenue();
+                    }}
+                    className="bg-primary text-white font-bold px-6 py-3 rounded-xl"
+                >
+                    + Ghi nhận doanh thu
+                </button>
             </div>
 
-            <DataTable columns={columns} data={paginatedData} pagination={{ currentPage, totalPages, onPageChange: setCurrentPage }} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <StatsCard title="Tổng doanh thu" value={(totalAmount / 1000000).toFixed(1) + "M"} icon="flaticon-money" color="green" />
+                <StatsCard title="Thực nhận" value={(totalNet / 1000000).toFixed(1) + "M"} icon="flaticon-chart-line" color="blue" />
+                <StatsCard title="Phí hệ thống" value={(totalFee / 1000000).toFixed(1) + "M"} icon="flaticon-percentage" color="orange" />
+                <StatsCard title="Số giao dịch" value={revenueData.length.toString()} icon="flaticon-wallet" color="purple" />
+            </div>
+
+            <DataTable
+                columns={columns}
+                data={paginatedData}
+                loading={loading}
+                pagination={{ currentPage, totalPages, onPageChange: setCurrentPage }}
+            />
         </div>
     );
 }

@@ -110,6 +110,32 @@ export class PartnerController {
         return this.partnerService.deletePharmacy(id);
     }
 
+    // --- Pharmacists ---
+    @MessagePattern({ cmd: 'get_pharmacists' })
+    getPharmacists() {
+        return this.partnerService.getPharmacists();
+    }
+
+    @MessagePattern({ cmd: 'get_pharmacist' })
+    getPharmacist(@Payload() id: number) {
+        return this.partnerService.getPharmacist(id);
+    }
+
+    @MessagePattern({ cmd: 'create_pharmacist' })
+    createPharmacist(@Payload() data: any) {
+        return this.partnerService.createPharmacist(data);
+    }
+
+    @MessagePattern({ cmd: 'update_pharmacist' })
+    updatePharmacist(@Payload() { id, data }: { id: number; data: any }) {
+        return this.partnerService.updatePharmacist(id, data);
+    }
+
+    @MessagePattern({ cmd: 'delete_pharmacist' })
+    deletePharmacist(@Payload() id: number) {
+        return this.partnerService.deletePharmacist(id);
+    }
+
     // --- Patients ---
     @MessagePattern({ cmd: 'get_patients' })
     getPatients() {

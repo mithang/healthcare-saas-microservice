@@ -109,6 +109,32 @@ export class PartnerController {
         return this.client.send({ cmd: 'delete_pharmacy' }, parseInt(id));
     }
 
+    // --- Pharmacists ---
+    @Get('pharmacists')
+    getPharmacists() {
+        return this.client.send({ cmd: 'get_pharmacists' }, {});
+    }
+
+    @Get('pharmacists/:id')
+    getPharmacist(@Param('id') id: string) {
+        return this.client.send({ cmd: 'get_pharmacist' }, parseInt(id));
+    }
+
+    @Post('pharmacists')
+    createPharmacist(@Body() data: any) {
+        return this.client.send({ cmd: 'create_pharmacist' }, data);
+    }
+
+    @Put('pharmacists/:id')
+    updatePharmacist(@Param('id') id: string, @Body() data: any) {
+        return this.client.send({ cmd: 'update_pharmacist' }, { id: parseInt(id), data });
+    }
+
+    @Delete('pharmacists/:id')
+    deletePharmacist(@Param('id') id: string) {
+        return this.client.send({ cmd: 'delete_pharmacist' }, parseInt(id));
+    }
+
     // --- Patients ---
     @Get('patients')
     getPatients() {

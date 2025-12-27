@@ -9,8 +9,49 @@ export interface Pharmacy {
     website?: string;
     description?: string;
     rating?: number;
+    reviewCount?: number;
     isVerified?: boolean;
-    image?: string;
+    thumbnail?: string;
+    outletOwner?: string;
+    gppNumber?: string;
+    gppImage?: string;
+    pointsCMEOnline?: number;
+    memberRank?: string;
+    status?: string;
+    provinceCode?: string;
+    districtCode?: string;
+    wardCode?: string;
+    streetName?: string;
+    os?: string;
+    token?: string;
+    scName?: string;
+    dynamicLink?: string;
+    bannerLandingPage?: string;
+    createdAt?: string;
+}
+
+export interface Pharmacist {
+    id: number;
+    fullName: string;
+    phoneNumber: string;
+    address: string;
+    specialistly?: string;
+    career?: string;
+    provinceCode?: string;
+    districtCode?: string;
+    wardCode?: string;
+    streetName?: string;
+    os?: string;
+    token?: string;
+    scName?: string;
+    pointsCMEOnline?: number;
+    memberRank?: string;
+    dynamicLink?: string;
+    bannerLandingPage?: string;
+    isVerified?: boolean;
+    rating?: number;
+    reviewCount?: number;
+    status?: string;
     createdAt?: string;
 }
 
@@ -115,6 +156,31 @@ class PartnerService {
 
     async deletePharmacy(id: number): Promise<void> {
         await apiService.delete(`${this.baseUrl}/pharmacies/${id}`);
+    }
+
+    // --- Pharmacists ---
+    async getPharmacists(): Promise<Pharmacist[]> {
+        const response = await apiService.get(`${this.baseUrl}/pharmacists`);
+        return (response as any).data || response;
+    }
+
+    async getPharmacist(id: number): Promise<Pharmacist> {
+        const response = await apiService.get(`${this.baseUrl}/pharmacists/${id}`);
+        return (response as any).data || response;
+    }
+
+    async createPharmacist(data: Partial<Pharmacist>): Promise<Pharmacist> {
+        const response = await apiService.post(`${this.baseUrl}/pharmacists`, data);
+        return (response as any).data || response;
+    }
+
+    async updatePharmacist(id: number, data: Partial<Pharmacist>): Promise<Pharmacist> {
+        const response = await apiService.put(`${this.baseUrl}/pharmacists/${id}`, data);
+        return (response as any).data || response;
+    }
+
+    async deletePharmacist(id: number): Promise<void> {
+        await apiService.delete(`${this.baseUrl}/pharmacists/${id}`);
     }
 
     // Doctors

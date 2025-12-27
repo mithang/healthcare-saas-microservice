@@ -37,13 +37,13 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
-    "logger-service": {
+    "audit-log": {
       "type": "application",
-      "root": "apps/logger-service",
+      "root": "apps/audit-log",
       "entryFile": "main",
-      "sourceRoot": "apps/logger-service/src",
+      "sourceRoot": "apps/audit-log/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/logger-service/tsconfig.app.json"
+        "tsConfigPath": "apps/audit-log/tsconfig.app.json"
       }
     },
     "file-service": {

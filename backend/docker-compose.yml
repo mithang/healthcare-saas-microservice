@@ -42,7 +42,7 @@ services:
       - auth-service
       - user-service
       - apikey-service
-      - logger-service
+      - audit-log
       - payment-service
       - file-service
       - notification-service
@@ -95,14 +95,14 @@ services:
     networks:
       - saas-network
 
-  logger-service:
+  audit-log:
     build:
       context: .
       args:
-        APP_NAME: logger-service
+        APP_NAME: audit-log
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/logger_db?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/audit_log_db?schema=public
     depends_on:
       - rabbitmq
       - db

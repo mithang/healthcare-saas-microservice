@@ -11,6 +11,7 @@ import {
     SafetyCertificateOutlined,
     KeyOutlined,
     FileTextOutlined,
+    FileOutlined,
     CreditCardOutlined,
     LogoutOutlined,
 } from '@ant-design/icons';
@@ -52,6 +53,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             key: '/apikeys',
             icon: <KeyOutlined />,
             label: <Link href="/apikeys">API Keys</Link>,
+        },
+        {
+            key: '/files',
+            icon: <FileOutlined />,
+            label: <Link href="/files">Files</Link>,
         },
         {
             key: '/logs',

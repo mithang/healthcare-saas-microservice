@@ -7,6 +7,7 @@ import { RoleController } from './role.controller';
 import { ApikeyController } from './apikey.controller';
 import { LoggerController } from './logger.controller';
 import { PaymentController } from './payment.controller';
+import { FileController } from './file.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -91,7 +92,7 @@ import { AppService } from './app.service';
       },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController],
   providers: [AppService],
 })
 export class AppModule { }

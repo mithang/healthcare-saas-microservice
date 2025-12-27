@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Modal, Form, Input, message, Tag } from 'antd';
+import { Table, Typography, Card, Space, Button, Modal, Form, Input, message, Tag, Popconfirm } from 'antd';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
@@ -44,6 +45,23 @@ const columns: ColumnsType<ApiKey> = [
         dataIndex: 'createdAt',
         key: 'createdAt',
         render: (text) => new Date(text).toLocaleString(),
+    },
+    {
+        title: 'Actions',
+        key: 'actions',
+        render: (_, record) => (
+            <Popconfirm
+                title="Delete API Key"
+                description="Are you sure you want to delete this API key? This action cannot be undone."
+                onConfirm={() => handleDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+            >
+                <Button type="link" danger icon={<DeleteOutlined />}>
+                    Delete
+                </Button>
+            </Popconfirm>
+        ),
     },
 ];
 
@@ -98,13 +116,33 @@ export default function ApiKeysPage() {
         }
     };
 
+    const handleDelete = async (id: number) => {
+        try {
+            const response = await fetch(`http://localhost:3000/apikeys/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                message.success('API Key deleted successfully');
+                fetchApiKeys();
+            } else {
+                message.error('Failed to delete API Key');
+            }
+        } catch (error) {
+            console.error('Error deleting API Key:', error);
+            message.error('An error occurred');
+        }
+    };
+
     return (
         <div style={{ padding: '24px' }}>
             <Card>
                 <Space direction="vertical" style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Title level={2}>API Keys</Title>
-                        <Button type="primary" onClick={() => setIsModalOpen(true)}>Generate New Key</Button>
+                        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
+                            Generate New Key
+                        </Button>
                     </div>
                     <Table
                         columns={columns}

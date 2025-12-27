@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 class ApiService {
     private api: AxiosInstance;
@@ -36,7 +36,7 @@ class ApiService {
                     if (typeof window !== 'undefined') {
                         localStorage.removeItem('auth_token');
                         localStorage.removeItem('user');
-                        window.location.href = '/login';
+                        window.location.href = '/auth/login';
                     }
                 }
                 return Promise.reject(error);

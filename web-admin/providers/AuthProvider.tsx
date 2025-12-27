@@ -45,10 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                 // Redirect based on role
                 const role = response.user.roleId === 1 ? 'admin' : 'user'; // Simplified role logic
+                router.push('/');
                 if (role === 'admin') {
-                    router.push('/admin');
-                } else {
-                    router.push('/');
+                    // router.push('/admin'); // Assuming root is admin for now based on file structure
                 }
             }
         } catch (error: any) {

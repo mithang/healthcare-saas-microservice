@@ -26,9 +26,9 @@ export default function ForgotPasswordPage() {
                     rules={[{ required: true, message: 'Vui lòng nhập Email!' }, { type: 'email', message: 'Email không hợp lệ!' }]}
                 >
                     <Input
-                        prefix={<MailOutlined className="text-white/50" />}
+                        prefix={<MailOutlined className="text-gray-400" />}
                         placeholder="Email đăng ký"
-                        className="bg-white/10 border-white/20 text-white placeholder-white/50 hover:bg-white/20 focus:bg-white/20"
+                        className="h-10 bg-white border-gray-300 text-gray-900 placeholder-gray-400 hover:border-blue-400 focus:border-blue-500 hover:bg-white focus:bg-white"
                     />
                 </Form.Item>
 

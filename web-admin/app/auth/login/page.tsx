@@ -42,10 +42,10 @@ export default function LoginPage() {
                     rules={[{ required: true, message: 'Vui lòng nhập Email!' }, { type: 'email', message: 'Email không hợp lệ!' }]}
                 >
                     <Input
-                        prefix={<UserOutlined className="text-white/50" />}
+                        prefix={<UserOutlined className="text-gray-400" />}
                         placeholder="Email"
-                        className="bg-white/10 border-white/20 text-white placeholder-white/50 hover:bg-white/20 focus:bg-white/20 hover:border-white/40 focus:border-white/60"
-                        style={{ color: 'white' }}
+                        className="h-10 bg-white border-gray-300 text-gray-900 placeholder-gray-400 hover:border-blue-400 focus:border-blue-500 hover:bg-white focus:bg-white"
+                        style={{ color: '#000' }}
                     />
                 </Form.Item>
                 <Form.Item
@@ -53,10 +53,10 @@ export default function LoginPage() {
                     rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
                 >
                     <Input.Password
-                        prefix={<LockOutlined className="text-white/50" />}
+                        prefix={<LockOutlined className="text-gray-400" />}
                         placeholder="Mật khẩu"
-                        className="bg-white/10 border-white/20 text-white placeholder-white/50 hover:bg-white/20 focus:bg-white/20 hover:border-white/40 focus:border-white/60"
-                        style={{ color: 'white' }}
+                        className="h-10 bg-white border-gray-300 text-gray-900 placeholder-gray-400 hover:border-blue-400 focus:border-blue-500 hover:bg-white focus:bg-white"
+                        style={{ color: '#000' }}
                     />
                 </Form.Item>
                 <div className="flex justify-between items-center mb-6">

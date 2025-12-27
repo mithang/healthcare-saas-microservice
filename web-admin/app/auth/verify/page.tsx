@@ -34,7 +34,7 @@ export default function VerifyPage() {
                     >
                         <Input
                             placeholder="Mã OTP"
-                            className="bg-white/10 border-white/20 text-white placeholder-white/50 hover:bg-white/20 focus:bg-white/20 text-center tracking-[1em] font-mono text-lg"
+                            className="h-12 bg-white border-gray-300 text-gray-900 placeholder-gray-400 hover:border-blue-400 focus:border-blue-500 hover:bg-white focus:bg-white text-center tracking-[1em] font-mono text-lg"
                             maxLength={6}
                         />
                     </Form.Item>

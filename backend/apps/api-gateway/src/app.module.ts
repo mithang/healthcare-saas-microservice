@@ -143,6 +143,17 @@ import { AppService } from './app.service';
         },
       },
       {
+        name: 'CONTENT_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'content_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
         name: 'COMMUNITY_SERVICE',
         transport: Transport.RMQ,
         options: {

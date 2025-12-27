@@ -24,9 +24,9 @@ export default function RegisterPage() {
                     rules={[{ required: true, message: 'Vui lòng nhập họ tên!' }]}
                 >
                     <Input
-                        prefix={<UserOutlined className="text-white/50" />}
+                        prefix={<UserOutlined className="text-gray-400" />}
                         placeholder="Họ và tên"
-                        className="bg-white/10 border-white/20 text-white placeholder-white/50 hover:bg-white/20 focus:bg-white/20"
+                        className="h-10 bg-white border-gray-300 text-gray-900 placeholder-gray-400 hover:border-blue-400 focus:border-blue-500 hover:bg-white focus:bg-white"
                     />
                 </Form.Item>
                 <Form.Item
@@ -34,9 +34,9 @@ export default function RegisterPage() {
                     rules={[{ required: true, message: 'Vui lòng nhập Email!' }, { type: 'email', message: 'Email không hợp lệ!' }]}
                 >
                     <Input
-                        prefix={<MailOutlined className="text-white/50" />}
+                        prefix={<MailOutlined className="text-gray-400" />}
                         placeholder="Email"
-                        className="bg-white/10 border-white/20 text-white placeholder-white/50 hover:bg-white/20 focus:bg-white/20"
+                        className="h-10 bg-white border-gray-300 text-gray-900 placeholder-gray-400 hover:border-blue-400 focus:border-blue-500 hover:bg-white focus:bg-white"
                     />
                 </Form.Item>
                 <Form.Item
@@ -44,9 +44,9 @@ export default function RegisterPage() {
                     rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
                 >
                     <Input.Password
-                        prefix={<LockOutlined className="text-white/50" />}
+                        prefix={<LockOutlined className="text-gray-400" />}
                         placeholder="Mật khẩu"
-                        className="bg-white/10 border-white/20 text-white placeholder-white/50 hover:bg-white/20 focus:bg-white/20"
+                        className="h-10 bg-white border-gray-300 text-gray-900 placeholder-gray-400 hover:border-blue-400 focus:border-blue-500 hover:bg-white focus:bg-white"
                     />
                 </Form.Item>
                 <Form.Item
@@ -65,9 +65,9 @@ export default function RegisterPage() {
                     ]}
                 >
                     <Input.Password
-                        prefix={<LockOutlined className="text-white/50" />}
+                        prefix={<LockOutlined className="text-gray-400" />}
                         placeholder="Xác nhận mật khẩu"
-                        className="bg-white/10 border-white/20 text-white placeholder-white/50 hover:bg-white/20 focus:bg-white/20"
+                        className="h-10 bg-white border-gray-300 text-gray-900 placeholder-gray-400 hover:border-blue-400 focus:border-blue-500 hover:bg-white focus:bg-white"
                     />
                 </Form.Item>
 

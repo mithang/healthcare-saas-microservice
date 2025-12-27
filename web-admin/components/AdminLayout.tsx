@@ -17,6 +17,13 @@ import {
     SearchOutlined,
     ClockCircleOutlined,
     LogoutOutlined,
+    BarChartOutlined,
+    DollarOutlined,
+    ShoppingCartOutlined,
+    TrophyOutlined,
+    CommentOutlined,
+    VideoCameraOutlined,
+    CustomerServiceOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -43,14 +50,137 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             label: <Link href="/">Dashboard</Link>,
         },
         {
-            key: '/users',
-            icon: <TeamOutlined />,
-            label: <Link href="/users">Users</Link>,
+            key: '/identity',
+            icon: <UserOutlined />,
+            label: 'Danh tính',
+            children: [
+                {
+                    key: '/users',
+                    label: <Link href="/users">Người dùng</Link>,
+                },
+                {
+                    key: '/roles',
+                    label: <Link href="/roles">Vai trò & Quyền</Link>,
+                },
+            ],
         },
         {
-            key: '/roles',
-            icon: <SafetyCertificateOutlined />,
-            label: <Link href="/roles">Roles & Permissions</Link>,
+            key: '/partners',
+            icon: <TeamOutlined />,
+            label: 'Đối tác',
+            children: [
+                {
+                    key: '/partners/doctors',
+                    label: <Link href="/partners/doctors">Bác sĩ</Link>,
+                },
+                {
+                    key: '/partners/pharmacies',
+                    label: <Link href="/partners/pharmacies">Nhà thuốc</Link>,
+                },
+                {
+                    key: '/partners/pharmacists',
+                    label: <Link href="/partners/pharmacists">Dược sĩ</Link>,
+                },
+                {
+                    key: '/partners/verification',
+                    label: <Link href="/partners/verification">Xác minh</Link>,
+                },
+            ],
+        },
+        {
+            key: '/analytics',
+            icon: <BarChartOutlined />,
+            label: 'Phân tích',
+            children: [
+                {
+                    key: '/analytics/search',
+                    label: <Link href="/analytics/search">Tìm kiếm</Link>,
+                },
+            ],
+        },
+        {
+            key: '/reports',
+            icon: <FileTextOutlined />,
+            label: 'Báo cáo',
+            children: [
+                {
+                    key: '/reports/overview',
+                    label: <Link href="/reports/overview">Tổng quan</Link>,
+                },
+            ],
+        },
+        {
+            key: '/finance',
+            icon: <DollarOutlined />,
+            label: 'Tài chính',
+            children: [
+                {
+                    key: '/finance/revenue',
+                    label: <Link href="/finance/revenue">Doanh thu</Link>,
+                },
+                {
+                    key: '/finance/withdrawals',
+                    label: <Link href="/finance/withdrawals">Rút tiền</Link>,
+                },
+            ],
+        },
+        {
+            key: '/orders',
+            icon: <ShoppingCartOutlined />,
+            label: 'Đơn hàng',
+            children: [
+                {
+                    key: '/orders/pharmacy',
+                    label: <Link href="/orders/pharmacy">Đơn thuốc</Link>,
+                },
+                {
+                    key: '/orders/appointments',
+                    label: <Link href="/orders/appointments">Lịch khám</Link>,
+                },
+            ],
+        },
+        {
+            key: '/live',
+            icon: <VideoCameraOutlined />,
+            label: <Link href="/live">Livestream</Link>,
+        },
+        {
+            key: '/support',
+            icon: <CustomerServiceOutlined />,
+            label: 'Hỗ trợ',
+            children: [
+                {
+                    key: '/support/chat',
+                    label: <Link href="/support/chat">Chat trực tiếp</Link>,
+                },
+            ],
+        },
+        {
+            key: '/content',
+            icon: <FileTextOutlined />,
+            label: 'Nội dung',
+            children: [
+                {
+                    key: '/content/news',
+                    label: <Link href="/content/news">Tin tức</Link>,
+                },
+            ],
+        },
+        {
+            key: '/engagement',
+            icon: <CommentOutlined />,
+            label: 'Tương tác',
+            children: [
+                {
+                    key: '/engagement/comments',
+                    label: <Link href="/engagement/comments">Bình luận</Link>,
+                },
+            ],
+        },
+        {
+            key: '/gamification',
+            icon: <TrophyOutlined />,
+            label: <Link href="/gamification">Gamification</Link>,
         },
         {
             key: '/apikeys',

@@ -22,6 +22,11 @@ import { SeminarController } from './seminar.controller';
 import { ReportController } from './report.controller';
 import { SurveyController } from './survey.controller';
 import { AIController } from './ai.controller';
+import { AnalyticController } from './analytic.controller';
+import { EngagementController } from './engagement.controller';
+import { GamificationController } from './gamification.controller';
+import { LiveController } from './live.controller';
+import { SupportController } from './support.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -247,9 +252,64 @@ import { AppService } from './app.service';
           },
         },
       },
+      {
+        name: 'ANALYTIC_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'analytic_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
+        name: 'ENGAGEMENT_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'engagement_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
+        name: 'GAMIFICATION_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'gamification_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
+        name: 'LIVE_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'live_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
+        name: 'SUPPORT_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'support_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController, MarketingController, FinanceController, SeminarController, ReportController, SurveyController, AIController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController, MarketingController, FinanceController, SeminarController, ReportController, SurveyController, AIController, AnalyticController, EngagementController, GamificationController, LiveController, SupportController],
   providers: [AppService],
 })
 export class AppModule { }

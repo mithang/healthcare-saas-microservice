@@ -216,6 +216,51 @@
       "compilerOptions": {
         "tsConfigPath": "apps/ai-service/tsconfig.app.json"
       }
+    },
+    "analytic-service": {
+      "type": "application",
+      "root": "apps/analytic-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/analytic-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analytic-service/tsconfig.app.json"
+      }
+    },
+    "engagement-service": {
+      "type": "application",
+      "root": "apps/engagement-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/engagement-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/engagement-service/tsconfig.app.json"
+      }
+    },
+    "gamification-service": {
+      "type": "application",
+      "root": "apps/gamification-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/gamification-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/gamification-service/tsconfig.app.json"
+      }
+    },
+    "live-service": {
+      "type": "application",
+      "root": "apps/live-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/live-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/live-service/tsconfig.app.json"
+      }
+    },
+    "support-service": {
+      "type": "application",
+      "root": "apps/support-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/support-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/support-service/tsconfig.app.json"
+      }
     }
   }
 }

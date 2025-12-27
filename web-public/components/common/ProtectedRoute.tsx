@@ -10,9 +10,9 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export default function ProtectedRoute({ 
-  children, 
-  redirectTo 
+export default function ProtectedRoute({
+  children,
+  redirectTo
 }: ProtectedRouteProps) {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
@@ -23,8 +23,8 @@ export default function ProtectedRoute({
 
   // Determine redirect URL based on current path
   const getDefaultRedirectUrl = () => {
-   
-    return 'http://localhost:4000/login';
+
+    return 'http://localhost:3001/login';
   };
 
   const redirectUrl = getDefaultRedirectUrl();

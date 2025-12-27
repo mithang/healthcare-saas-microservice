@@ -24,6 +24,15 @@ import {
     CommentOutlined,
     VideoCameraOutlined,
     CustomerServiceOutlined,
+    QuestionCircleOutlined,
+    TagOutlined,
+    RocketOutlined,
+    GiftOutlined,
+    ReadOutlined,
+    CalendarOutlined,
+    FormOutlined,
+    RobotOutlined,
+    BellOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -136,6 +145,100 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {
                     key: '/orders/appointments',
                     label: <Link href="/orders/appointments">Lịch khám</Link>,
+                },
+            ],
+        },
+        {
+            key: '/security',
+            icon: <SafetyCertificateOutlined />,
+            label: 'An ninh & Bảo mật',
+            children: [
+                {
+                    key: '/security/audit-logs',
+                    label: <Link href="/security/audit-logs">Audit Logs</Link>,
+                },
+            ],
+        },
+        {
+            key: '/settings',
+            icon: <SettingOutlined />,
+            label: 'Cài đặt hệ thống',
+            children: [
+                {
+                    key: '/settings/general',
+                    label: <Link href="/settings/general">Cài đặt chung</Link>,
+                },
+            ],
+        },
+        {
+            key: '/notifications',
+            icon: <BellOutlined />,
+            label: <Link href="/notifications">Thông báo (Push)</Link>,
+        },
+        {
+            key: '/ai',
+            icon: <RobotOutlined />,
+            label: 'Hệ thống AI',
+            children: [
+                {
+                    key: '/ai/recommendations',
+                    label: <Link href="/ai/recommendations">Gợi ý thông minh</Link>,
+                },
+            ],
+        },
+        {
+            key: '/events',
+            icon: <CalendarOutlined />,
+            label: 'Sự kiện & Khảo sát',
+            children: [
+                {
+                    key: '/seminars',
+                    label: <Link href="/seminars">Hội thảo</Link>,
+                },
+                {
+                    key: '/surveys',
+                    label: <Link href="/surveys">Khảo sát</Link>,
+                },
+            ],
+        },
+        {
+            key: '/education',
+            icon: <ReadOutlined />,
+            label: 'Giáo dục',
+            children: [
+                {
+                    key: '/education/courses',
+                    label: <Link href="/education/courses">Khóa học CME/CPE</Link>,
+                },
+            ],
+        },
+        {
+            key: '/community',
+            icon: <TeamOutlined />,
+            label: 'Cộng đồng',
+            children: [
+                {
+                    key: '/community/forum',
+                    label: <Link href="/community/forum">Diễn đàn</Link>,
+                },
+                {
+                    key: '/community/qa',
+                    label: <Link href="/community/qa">Hỏi đáp (Q&A)</Link>,
+                },
+            ],
+        },
+        {
+            key: '/marketing',
+            icon: <RocketOutlined />,
+            label: 'Marketing',
+            children: [
+                {
+                    key: '/marketing/vouchers',
+                    label: <Link href="/marketing/vouchers">Voucher</Link>,
+                },
+                {
+                    key: '/marketing/campaigns',
+                    label: <Link href="/marketing/campaigns">Chiến dịch</Link>,
                 },
             ],
         },

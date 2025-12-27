@@ -26,10 +26,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     ClientsModule.register([
       {
         name: 'USER_SERVICE',
-        transport: Transport.TCP,
+        transport: Transport.RMQ,
         options: {
-          host: process.env.USER_SERVICE_HOST,
-          port: parseInt(process.env.USER_SERVICE_PORT || '3006'),
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'user_queue',
+          queueOptions: {
+            durable: false,
+          },
         },
       },
     ]),

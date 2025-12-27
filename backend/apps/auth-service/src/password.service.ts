@@ -2,7 +2,12 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+
+interface User {
+  userId: string;
+  email: string;
+  password: string;
+}
 
 @Injectable()
 export class PasswordAuthService {

@@ -23,6 +23,7 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - saas-network
 
@@ -35,7 +36,6 @@ services:
       - '3000:3000'
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
     depends_on:
       - rabbitmq
       - db
@@ -44,6 +44,8 @@ services:
       - apikey-service
       - logger-service
       - payment-service
+      - file-service
+      - notification-service
     networks:
       - saas-network
 
@@ -54,7 +56,7 @@ services:
         APP_NAME: auth-service
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/auth_db?schema=public
       - RP_ID=localhost
       - EXPECTED_ORIGIN=http://localhost:3000
       - JWT_SECRET=supersecret
@@ -72,7 +74,7 @@ services:
         APP_NAME: user-service
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/user_db?schema=public
     depends_on:
       - rabbitmq
       - db
@@ -86,7 +88,7 @@ services:
         APP_NAME: apikey-service
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/apikey_db?schema=public
     depends_on:
       - rabbitmq
       - db
@@ -100,7 +102,7 @@ services:
         APP_NAME: logger-service
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/logger_db?schema=public
     depends_on:
       - rabbitmq
       - db
@@ -114,7 +116,35 @@ services:
         APP_NAME: payment-service
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saas_microservices?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/payment_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  file-service:
+    build:
+      context: .
+      args:
+        APP_NAME: file-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/file_db?schema=public
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - saas-network
+
+  notification-service:
+    build:
+      context: .
+      args:
+        APP_NAME: notification-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/notification_db?schema=public
     depends_on:
       - rabbitmq
       - db

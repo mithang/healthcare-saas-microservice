@@ -1,26 +1,27 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Modal, Row, Col, Statistic, Avatar } from 'antd';
-import { CalendarOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, SearchOutlined, UserOutlined, MedicineBoxOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import React, { useState, useEffect } from 'react';
+import DataTable from '@/components/admin/DataTable';
+import StatusBadge from '@/components/admin/StatusBadge';
+import { Button } from '@/components/admin/ui/Button';
+import { useRouter } from 'next/navigation';
 import bookingService, { Appointment } from '@/services/booking.service';
 
-const { Title, Text } = Typography;
-
-export default function AppointmentsPage() {
+export default function AppointmentsManagement() {
+    const router = useRouter();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchText, setSearchText] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
+    const itemsPerPage = 10;
 
     const fetchAppointments = async () => {
-        setLoading(true);
         try {
+            setLoading(true);
             const data = await bookingService.getAppointments();
             setAppointments(data);
         } catch (error) {
-            console.error('Failed to fetch appointments:', error);
-            message.error('Không thể tải danh sách lịch hẹn');
+            console.error('Failed to fetch appointments', error);
         } finally {
             setLoading(false);
         }
@@ -30,166 +31,101 @@ export default function AppointmentsPage() {
         fetchAppointments();
     }, []);
 
-    const handleDelete = (id: number) => {
-        Modal.confirm({
-            title: 'Xóa lịch hẹn',
-            content: 'Bạn có chắc chắn muốn xóa lịch hẹn này không?',
-            okText: 'Xóa',
-            okType: 'danger',
-            cancelText: 'Hủy',
-            onOk: async () => {
-                try {
-                    await bookingService.deleteAppointment(id);
-                    message.success('Đã xóa lịch hẹn');
-                    fetchAppointments();
-                } catch (error) {
-                    message.error('Lỗi khi xóa lịch hẹn');
-                }
-            }
-        });
-    };
-
     const filteredData = appointments.filter(item =>
-        item.patientName.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.doctorName.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.patientPhone.includes(searchText)
+        item.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.patientPhone.includes(searchQuery)
     );
 
-    const columns: ColumnsType<Appointment> = [
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const columns = [
         {
-            title: 'Bệnh nhân',
-            dataIndex: 'patientName',
-            key: 'patientName',
-            render: (text, record) => (
-                <Space>
-                    <Avatar icon={<UserOutlined />} />
-                    <div>
-                        <Text strong>{text}</Text>
-                        <br />
-                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.patientPhone}</Text>
-                    </div>
-                </Space>
-            ),
-        },
-        {
-            title: 'Bác sĩ',
-            dataIndex: 'doctorName',
-            key: 'doctorName',
-            render: (text) => (
-                <Space>
-                    <Avatar icon={<MedicineBoxOutlined />} style={{ backgroundColor: '#1890ff' }} />
-                    <Text strong style={{ color: '#1890ff' }}>{text}</Text>
-                </Space>
-            ),
-        },
-        {
-            title: 'Thời gian',
-            dataIndex: 'date',
-            key: 'date',
-            render: (text, record) => (
+            key: 'patientName', label: 'Bệnh nhân', render: (val: string, row: Appointment) => (
                 <div>
-                    <Space>
-                        <CalendarOutlined style={{ color: '#1890ff' }} />
-                        <Text strong>{text}</Text>
-                    </Space>
-                    <br />
-                    <Space>
-                        <ClockCircleOutlined style={{ color: '#faad14' }} />
-                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.time}</Text>
-                    </Space>
+                    <p className="font-bold text-gray-900">{val}</p>
+                    <p className="text-xs text-gray-500">{row.patientPhone}</p>
                 </div>
-            ),
+            )
         },
+        { key: 'doctorName', label: 'Bác sĩ', render: (val: string) => <span className="font-medium text-blue-700">{val}</span> },
         {
-            title: 'Dịch vụ',
-            dataIndex: 'service',
-            key: 'service',
+            key: 'date', label: 'Thời gian', render: (val: string, row: Appointment) => (
+                <div>
+                    <p className="font-medium text-gray-900">{val}</p>
+                    <p className="text-xs text-gray-500">{row.time}</p>
+                </div>
+            )
         },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'completed' ? 'success' : status === 'pending' ? 'orange' : status === 'cancelled' ? 'error' : 'processing'}>
-                    {(status || 'processing').toUpperCase()}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            render: (_, record) => (
-                <Space>
-                    <Button icon={<EyeOutlined />} type="link">Xem</Button>
-                    <Button icon={<EditOutlined />} type="link">Sửa</Button>
-                    <Button icon={<DeleteOutlined />} type="link" danger onClick={() => handleDelete(record.id)}>Xóa</Button>
-                </Space>
-            ),
-        },
+        { key: 'service', label: 'Dịch vụ' },
+        { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
-    return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Đơn hàng</Breadcrumb.Item>
-                <Breadcrumb.Item>Đặt lịch khám</Breadcrumb.Item>
-            </Breadcrumb>
+    const actions = (row: Appointment) => (
+        <div className="flex gap-2">
+            <button
+                onClick={() => router.push(`/admin/orders/appointments/${row.id}`)}
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Xem chi tiết"
+            >
+                <i className="fi flaticon-eye"></i>
+            </button>
+            <button
+                onClick={() => router.push(`/admin/orders/appointments/${row.id}/edit`)}
+                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                title="Chỉnh sửa"
+            >
+                <i className="fi flaticon-edit"></i>
+            </button>
+            <button
+                onClick={async () => {
+                    if (confirm('Bạn có chắc chắn muốn xóa lịch hẹn này?')) {
+                        await bookingService.deleteAppointment(row.id);
+                        fetchAppointments();
+                    }
+                }}
+                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Xóa"
+            >
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
+    );
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
                 <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Đặt lịch khám</Title>
-                    <Text type="secondary">Theo dõi và quản lý các cuộc hẹn giữa bệnh nhân và bác sĩ</Text>
+                    <h1 className="text-3xl font-bold text-gray-900">Quản lý Đặt lịch khám</h1>
+                    <p className="text-gray-500 mt-1">Tổng: {filteredData.length} lịch hẹn</p>
                 </div>
-                <Space>
-                    <Button icon={<CalendarOutlined />} size="large" onClick={() => message.info('Tính năng đang phát triển')}>
+                <div className="flex gap-3">
+                    <Button
+                        variant="secondary"
+                        onClick={() => router.push('/admin/orders/appointments/calendar')}
+                        icon="calendar"
+                    >
                         Xem Lịch
                     </Button>
-                    <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => message.info('Tính năng đang phát triển')}>
+                    <Button
+                        onClick={() => router.push('/admin/orders/appointments/create')}
+                        icon="plus"
+                    >
                         Đặt lịch mới
                     </Button>
-                </Space>
+                </div>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng lịch hẹn" value={appointments.length} prefix={<CalendarOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Chờ khám" value={appointments.filter(a => a.status === 'pending').length} valueStyle={{ color: '#faad14' }} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Hoàn tất" value={appointments.filter(a => a.status === 'completed').length} valueStyle={{ color: '#3f8600' }} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Dịch vụ phổ biến" value="Khám nhi" valueStyle={{ fontSize: '16px' }} />
-                    </Card>
-                </Col>
-            </Row>
-
-            <Card style={{ marginBottom: '16px' }}>
-                <Input
-                    placeholder="Tìm kiếm bệnh nhân, bác sĩ..."
-                    prefix={<SearchOutlined />}
-                    value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
-                    style={{ width: 400 }}
-                    allowClear
-                />
-            </Card>
-
-            <Table
+            <DataTable
                 columns={columns}
-                dataSource={filteredData}
-                rowKey="id"
+                data={paginatedData}
                 loading={loading}
-                pagination={{ pageSize: 10 }}
+                actions={actions}
+                searchable
+                searchPlaceholder="Tìm kiếm bệnh nhân, bác sĩ..."
+                onSearch={setSearchQuery}
+                pagination={{ currentPage, totalPages, onPageChange: setCurrentPage }}
             />
         </div>
     );

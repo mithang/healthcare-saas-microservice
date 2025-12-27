@@ -1,329 +1,165 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Input, Select, Tag, Avatar, message, Modal, Form, Row, Col, Statistic, Breadcrumb } from 'antd';
-import { ShopOutlined, PlusOutlined, SearchOutlined, EditOutlined, CheckCircleOutlined, InfoCircleOutlined, StarFilled, TrophyOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+"use client";
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import partnerService, { Pharmacy } from '@/services/partner.service';
-import { MEMBER_RANKS } from '@/types/pharmacy';
+import DataTable from '@/components/admin/DataTable';
 
-const { Title, Text } = Typography;
-const { Option } = Select;
+// Custom Modal Component for Delete Confirmation
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; itemName: string }) => {
+    if (!isOpen) return null;
 
-export default function PharmaciesPage() {
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Xác nhận xóa</h3>
+                <p className="text-gray-500 text-center mb-6">
+                    Bạn có chắc chắn muốn xóa nhà thuốc <span className="font-bold text-gray-800">"{itemName}"</span> không? Hành động này không thể hoàn tác.
+                </p>
+                <div className="flex gap-3 justify-center">
+                    <button
+                        onClick={onClose}
+                        className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                    >
+                        Hủy bỏ
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
+                    >
+                        Xóa ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default function PharmaciesManagement() {
     const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchText, setSearchText] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [rankFilter, setRankFilter] = useState('all');
-    const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacy | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [form] = Form.useForm();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-    const stats = {
-        total: pharmacies.length,
-        active: pharmacies.filter(p => p.status === 'active').length,
-        pending: pharmacies.filter(p => p.status === 'pending').length,
-        gpp: pharmacies.filter(p => !!p.gppNumber).length,
-        platinumPlus: pharmacies.filter(p => ['platinum', 'diamond'].includes(p.memberRank || '')).length
-    };
+    // Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{ id: number; name: string } | null>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        setLoading(true);
+    const fetchPharmacies = async () => {
         try {
+            setLoading(true);
             const data = await partnerService.getPharmacies();
             setPharmacies(data);
         } catch (error) {
-            console.error('Failed to fetch pharmacies:', error);
-            message.error('Không thể tải danh sách nhà thuốc');
+            console.error('Failed to fetch pharmacies', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleVerify = async (id: number) => {
+    useEffect(() => {
+        fetchPharmacies();
+    }, []);
+
+    const filteredData = pharmacies.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.address.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const openDeleteModal = (id: number, name: string) => {
+        setItemToDelete({ id, name });
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
         try {
-            await partnerService.updatePharmacy(id, { isVerified: true, status: 'active' });
-            message.success('Đã duyệt nhà thuốc');
-            fetchData();
-        } catch (error) {
-            message.error('Lỗi khi duyệt nhà thuốc');
+            await partnerService.deletePharmacy(itemToDelete.id);
+            fetchPharmacies();
+            setIsDeleteModalOpen(false);
+            setItemToDelete(null);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
         }
     };
 
-    const handleEdit = (pharmacy: Pharmacy) => {
-        setSelectedPharmacy(pharmacy);
-        form.setFieldsValue({
-            ...pharmacy,
-            createdAt: pharmacy.createdAt ? new Date(pharmacy.createdAt).toLocaleDateString() : '---'
-        });
-        setIsModalOpen(true);
-    };
-
-    const onFinish = async (values: any) => {
-        if (!selectedPharmacy) return;
-        try {
-            await partnerService.updatePharmacy(selectedPharmacy.id, values);
-            message.success('Cập nhật thành công');
-            setIsModalOpen(false);
-            fetchData();
-        } catch (error) {
-            message.error('Lỗi khi cập nhật nhà thuốc');
-        }
-    };
-
-    const filteredData = pharmacies.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(searchText.toLowerCase()) ||
-            p.phone.includes(searchText);
-        const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-        const matchesRank = rankFilter === 'all' || p.memberRank === rankFilter;
-        return matchesSearch && matchesStatus && matchesRank;
-    });
-
-    const columns: ColumnsType<Pharmacy> = [
+    const columns = [
+        { key: 'name', label: 'Tên', render: (val: string) => <span className="font-medium text-gray-900">{val}</span> },
+        { key: 'address', label: 'Địa chỉ', render: (val: string) => <span className="text-gray-600 max-w-xs truncate block" title={val}>{val}</span> },
+        { key: 'phone', label: 'Điện thoại' },
         {
-            title: 'Nhà thuốc',
-            dataIndex: 'name',
-            key: 'name',
-            render: (text, record) => (
-                <Space>
-                    <Avatar icon={<ShopOutlined />} />
-                    <div>
-                        <Text strong>{text}</Text>
-                        <br />
-                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.phone}</Text>
-                    </div>
-                </Space>
-            ),
-        },
-        {
-            title: 'Chủ sở hữu',
-            dataIndex: 'outletOwner',
-            key: 'outletOwner',
-        },
-        {
-            title: 'Địa chỉ',
-            dataIndex: 'address',
-            key: 'address',
-            ellipsis: true,
-        },
-        {
-            title: 'GPP',
-            dataIndex: 'gppNumber',
-            key: 'gppNumber',
-            render: (gpp) => gpp ? (
-                <div>
-                    <Tag color="success">CÓ GPP</Tag>
-                    <div style={{ fontSize: '11px', color: '#666' }}>{gpp}</div>
+            key: 'rating', label: 'Đánh giá', render: (val: number) => (
+                <div className="flex items-center gap-1 font-medium text-gray-900">
+                    <span className="text-yellow-400">★</span> {val || 0}
                 </div>
-            ) : <Tag color="default">CHƯA CẬP NHẬT</Tag>,
+            )
         },
         {
-            title: 'Điểm CME',
-            dataIndex: 'pointsCMEOnline',
-            key: 'pointsCMEOnline',
-            render: (points) => <Text strong style={{ color: '#1890ff' }}>{(points || 0).toLocaleString()}</Text>,
-        },
-        {
-            title: 'Hạng',
-            dataIndex: 'memberRank',
-            key: 'memberRank',
-            render: (rank) => {
-                const rankInfo = (MEMBER_RANKS as any)[(rank as any) || 'bronze'];
-                return (
-                    <Space>
-                        <span style={{ fontSize: '18px' }}>{rankInfo.icon}</span>
-                        <Text strong style={{ color: rankInfo.color, fontSize: '11px' }}>{rank?.toUpperCase()}</Text>
-                    </Space>
-                );
-            },
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'active' ? 'success' : status === 'pending' ? 'orange' : 'default'} style={{ borderRadius: '10px' }}>
-                    {status === 'active' ? 'HOẠT ĐỘNG' : status === 'pending' ? 'CHỜ DUYỆT' : 'TẠM DỪNG'}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            render: (_, record) => (
-                <Space size="middle">
-                    <Button type="link" onClick={() => handleEdit(record)}>Xem</Button>
-                    {record.status === 'pending' && (
-                        <Button type="primary" size="small" ghost onClick={() => handleVerify(record.id)}>Duyệt</Button>
-                    )}
-                </Space>
-            ),
+            key: 'isVerified', label: 'Trạng thái', render: (val: boolean) => (
+                val ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        Đã xác thực
+                    </span>
+                ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                        Chưa xác thực
+                    </span>
+                )
+            )
         },
     ];
 
-    return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Đối tác</Breadcrumb.Item>
-                <Breadcrumb.Item>Nhà thuốc</Breadcrumb.Item>
-            </Breadcrumb>
+    const actions = (row: Pharmacy) => (
+        <div className="flex gap-2">
+            <Link href={`/admin/partners/pharmacies/${row.id}/edit`} className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors">
+                <i className="fi flaticon-edit"></i>
+            </Link>
+            <button onClick={() => openDeleteModal(row.id, row.name)} className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors">
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
+    );
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Nhà thuốc</Title>
-                    <Text type="secondary">Quản lý thông tin và xác minh nhà thuốc</Text>
+                    <h1 className="text-3xl font-bold text-gray-900">Quản lý Nhà thuốc</h1>
+                    <p className="text-gray-500 mt-1">Tổng: {filteredData.length} nhà thuốc</p>
                 </div>
-                <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => message.info('Tính năng đang phát triển')}>
+                <Link href="/admin/partners/pharmacies/create" className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-dark transition shadow-lg shadow-primary/25 flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
                     Thêm nhà thuốc
-                </Button>
+                </Link>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={4.8} style={{ width: '20%' }}>
-                    <Card size="small">
-                        <Statistic title="Tổng nhà thuốc" value={stats.total} prefix={<ShopOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={4.8} style={{ width: '20%' }}>
-                    <Card size="small">
-                        <Statistic title="Đang hoạt động" value={stats.active} valueStyle={{ color: '#3f8600' }} prefix={<CheckCircleOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={4.8} style={{ width: '20%' }}>
-                    <Card size="small">
-                        <Statistic title="Chờ xác minh" value={stats.pending} valueStyle={{ color: '#faad14' }} prefix={<InfoCircleOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={4.8} style={{ width: '20%' }}>
-                    <Card size="small">
-                        <Statistic title="Có GPP" value={stats.gpp} valueStyle={{ color: '#722ed1' }} prefix={<TrophyOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={4.8} style={{ width: '20%' }}>
-                    <Card size="small">
-                        <Statistic title="Platinum+" value={stats.platinumPlus} valueStyle={{ color: '#cf1322' }} prefix={<StarFilled />} />
-                    </Card>
-                </Col>
-            </Row>
-
-            <Card style={{ marginBottom: '16px' }}>
-                <Space wrap>
-                    <Input
-                        placeholder="Tìm kiếm theo tên hoặc SDT..."
-                        prefix={<SearchOutlined />}
-                        value={searchText}
-                        onChange={e => setSearchText(e.target.value)}
-                        style={{ width: 250 }}
-                        allowClear
-                    />
-                    <Select defaultValue="all" style={{ width: 150 }} onChange={setStatusFilter}>
-                        <Option value="all">Tất cả trạng thái</Option>
-                        <Option value="active">Hoạt động</Option>
-                        <Option value="pending">Chờ duyệt</Option>
-                        <Option value="inactive">Tạm dừng</Option>
-                    </Select>
-                    <Select defaultValue="all" style={{ width: 150 }} onChange={setRankFilter}>
-                        <Option value="all">Tất cả hạng</Option>
-                        <Option value="diamond">Diamond</Option>
-                        <Option value="platinum">Platinum</Option>
-                        <Option value="gold">Gold</Option>
-                        <Option value="silver">Silver</Option>
-                        <Option value="bronze">Bronze</Option>
-                    </Select>
-                </Space>
-            </Card>
-
-            <Table
+            <DataTable
                 columns={columns}
-                dataSource={filteredData}
-                rowKey="id"
+                data={paginatedData}
                 loading={loading}
-                pagination={{ pageSize: 10 }}
+                actions={actions}
+                searchable
+                onSearch={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+                pagination={{
+                    currentPage,
+                    totalPages,
+                    onPageChange: setCurrentPage,
+                }}
             />
 
-            <Modal
-                title="Chi tiết Nhà thuốc"
-                open={isModalOpen}
-                onCancel={() => setIsModalOpen(false)}
-                width={800}
-                footer={[
-                    <Button key="back" onClick={() => setIsModalOpen(false)}>Đóng</Button>,
-                    <Button key="submit" type="primary" onClick={() => form.submit()}>Lưu thay đổi</Button>
-                ]}
-            >
-                <Form form={form} layout="vertical" onFinish={onFinish}>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item name="name" label="Tên nhà thuốc">
-                                <Input disabled />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="outletOwner" label="Chủ sở hữu">
-                                <Input disabled />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="phone" label="Số điện thoại">
-                                <Input disabled />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="createdAt" label="Ngày tạo">
-                                <Input disabled />
-                            </Form.Item>
-                        </Col>
-                        <Col span={24}>
-                            <Form.Item name="address" label="Địa chỉ đầy đủ">
-                                <Input disabled />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="gppNumber" label="Số GPP">
-                                <Input disabled />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="Hình ảnh GPP">
-                                <div style={{ height: '100px', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #d9d9d9', borderRadius: '8px' }}>
-                                    <Text type="secondary">Xem ảnh GPP</Text>
-                                </div>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="pointsCMEOnline" label="Điểm CME Online">
-                                <Input type="number" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="memberRank" label="Hạng thành viên">
-                                <Select>
-                                    <Option value="bronze">Bronze</Option>
-                                    <Option value="silver">Silver</Option>
-                                    <Option value="gold">Gold</Option>
-                                    <Option value="platinum">Platinum</Option>
-                                    <Option value="diamond">Diamond</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={24}>
-                            <Form.Item name="status" label="Trạng thái">
-                                <Select>
-                                    <Option value="active">Hoạt động</Option>
-                                    <Option value="inactive">Tạm dừng</Option>
-                                    <Option value="pending">Chờ duyệt</Option>
-                                    <Option value="suspended">Đình chỉ</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                </Form>
-            </Modal>
+            <DeleteConfirmationModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={confirmDelete} itemName={itemToDelete?.name || ''} />
         </div>
     );
 }

@@ -1,27 +1,62 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Modal, Row, Col, Statistic, Tooltip } from 'antd';
-import { MedicineBoxOutlined, PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, EnvironmentOutlined, PhoneOutlined, StarOutlined, CheckCircleOutlined, StopOutlined, BankOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import partnerService, { Hospital } from '@/services/partner.service';
+"use client";
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import partnerService, { Hospital } from '@/services/partner.service';
+import DataTable from '@/components/admin/DataTable';
 
-const { Title, Text } = Typography;
+// Custom Modal Component for Delete Confirmation
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; itemName: string }) => {
+    if (!isOpen) return null;
 
-export default function HospitalsManagementPage() {
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Xác nhận xóa</h3>
+                <p className="text-gray-500 text-center mb-6">
+                    Bạn có chắc chắn muốn xóa bệnh viện <span className="font-bold text-gray-800">"{itemName}"</span> không? Hành động này không thể hoàn tác.
+                </p>
+                <div className="flex gap-3 justify-center">
+                    <button
+                        onClick={onClose}
+                        className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                    >
+                        Hủy bỏ
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
+                    >
+                        Xóa ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default function HospitalsManagement() {
     const [hospitals, setHospitals] = useState<Hospital[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchText, setSearchText] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{ id: any; name: string } | null>(null);
 
     const fetchHospitals = async () => {
-        setLoading(true);
         try {
+            setLoading(true);
             const data = await partnerService.getHospitals();
             setHospitals(data);
         } catch (error) {
-            console.error('Failed to fetch hospitals:', error);
-            message.error('Lỗi khi tải danh sách bệnh viện');
+            console.error('Failed to fetch hospitals', error);
         } finally {
             setLoading(false);
         }
@@ -31,180 +66,113 @@ export default function HospitalsManagementPage() {
         fetchHospitals();
     }, []);
 
-    const handleDelete = (id: any, name: string) => {
-        Modal.confirm({
-            title: 'Xác nhận xóa',
-            content: `Bạn có chắc chắn muốn xóa bệnh viện "${name}" không? Hành động này không thể hoàn tác.`,
-            okText: 'Xóa',
-            okType: 'danger',
-            cancelText: 'Hủy',
-            onOk: async () => {
-                try {
-                    await partnerService.deleteHospital(id);
-                    message.success('Đã xóa bệnh viện thành công');
-                    fetchHospitals();
-                } catch (error) {
-                    message.error('Lỗi khi xóa bệnh viện');
-                }
-            }
-        });
-    };
-
-    const filteredData = hospitals.filter(item =>
-        item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.address.toLowerCase().includes(searchText.toLowerCase())
+    const filteredData = hospitals.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.address.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const columns: ColumnsType<Hospital> = [
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const openDeleteModal = (id: any, name: string) => {
+        setItemToDelete({ id, name });
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        try {
+            await partnerService.deleteHospital(itemToDelete.id);
+            fetchHospitals();
+            setIsDeleteModalOpen(false);
+            setItemToDelete(null);
+        } catch (error: any) {
+            alert('Lỗi: ' + (error.message || 'Unknown error'));
+        }
+    };
+
+    const columns = [
+        { key: 'name', label: 'Tên', render: (val: string) => <span className="font-medium text-gray-900">{val}</span> },
+        { key: 'address', label: 'Địa chỉ', render: (val: string) => <span className="text-gray-600 max-w-xs truncate block" title={val}>{val}</span> },
+        { key: 'phone', label: 'Điện thoại' },
         {
-            title: 'Bệnh viện',
-            dataIndex: 'name',
-            key: 'name',
-            render: (text, record) => (
-                <Space direction="vertical" size={0}>
-                    <Text strong style={{ fontSize: '15px' }}>{text}</Text>
-                    <Space size="small">
-                        <EnvironmentOutlined style={{ color: '#8c8c8c', fontSize: '12px' }} />
-                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.address}</Text>
-                    </Space>
-                </Space>
-            ),
-        },
-        {
-            title: 'Liên hệ',
-            dataIndex: 'phone',
-            key: 'phone',
-            render: (text) => (
-                <Space>
-                    <PhoneOutlined style={{ color: '#1890ff' }} />
-                    <Text>{text || 'N/A'}</Text>
-                </Space>
-            ),
-        },
-        {
-            title: 'Khoa chuyên môn',
-            dataIndex: 'departments',
-            key: 'departments',
-            render: (departments: string[]) => (
-                <Space wrap size={[0, 4]}>
-                    {departments?.slice(0, 2).map((d, i) => (
-                        <Tag key={i} color="purple">{d}</Tag>
+            key: 'departments', label: 'Khoa', render: (val: string[]) => (
+                <div className="flex gap-1 flex-wrap">
+                    {val?.slice(0, 2).map((d: string, i: number) => (
+                        <span key={i} className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full border border-purple-100">{d}</span>
                     ))}
-                    {departments?.length > 2 && (
-                        <Tooltip title={departments.slice(2).join(', ')}>
-                            <Tag>+{departments.length - 2}</Tag>
-                        </Tooltip>
+                    {val?.length > 2 && (
+                        <span className="px-2.5 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-100">+{val.length - 2}</span>
                     )}
-                </Space>
-            ),
+                </div>
+            )
+        },
+        { key: 'beds', label: 'Giường', render: (val: number) => val || 0 },
+        {
+            key: 'rating', label: 'Đánh giá', render: (val: number) => (
+                <div className="flex items-center gap-1 font-medium text-gray-900">
+                    <span className="text-yellow-400">★</span> {val || 0}
+                </div>
+            )
         },
         {
-            title: 'Quy mô',
-            dataIndex: 'beds',
-            key: 'beds',
-            render: (beds) => (
-                <Space>
-                    <BankOutlined style={{ color: '#fa541c' }} />
-                    <Text>{beds || 0} giường</Text>
-                </Space>
-            ),
-        },
-        {
-            title: 'Đánh giá',
-            dataIndex: 'rating',
-            key: 'rating',
-            render: (val) => (
-                <Space>
-                    <StarOutlined style={{ color: '#faad14' }} />
-                    <Text strong>{val || 0}</Text>
-                </Space>
-            ),
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'isVerified',
-            key: 'isVerified',
-            render: (verified) => (
-                <Tag icon={verified ? <CheckCircleOutlined /> : <StopOutlined />} color={verified ? 'success' : 'default'}>
-                    {verified ? 'ĐÃ XÁC MINH' : 'CHƯA XÁC MINH'}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            align: 'right',
-            render: (_, record) => (
-                <Space>
-                    <Link href={`/partners/hospitals/${record.id}/edit`}>
-                        <Button icon={<EditOutlined />} type="link" />
-                    </Link>
-                    <Button icon={<DeleteOutlined />} type="link" danger onClick={() => handleDelete(record.id, record.name)} />
-                </Space>
-            ),
+            key: 'isVerified', label: 'Trạng thái', render: (val: boolean) => (
+                val ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        Đã xác thực
+                    </span>
+                ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                        Chưa xác thực
+                    </span>
+                )
+            )
         },
     ];
 
-    return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Đối tác</Breadcrumb.Item>
-                <Breadcrumb.Item>Bệnh viện</Breadcrumb.Item>
-            </Breadcrumb>
+    const actions = (row: Hospital) => (
+        <div className="flex gap-2">
+            <Link href={`/admin/partners/hospitals/${row.id}/edit`} className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors">
+                <i className="fi flaticon-edit"></i>
+            </Link>
+            <button onClick={() => openDeleteModal(row.id, row.name)} className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors">
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
+    );
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Bệnh viện</Title>
-                    <Text type="secondary">Quản lý các bệnh viện đa khoa và chuyên khoa trong mạng lưới</Text>
+                    <h1 className="text-3xl font-bold text-gray-900">Quản lý Bệnh viện</h1>
+                    <p className="text-gray-500 mt-1">Tổng: {filteredData.length} bệnh viện</p>
                 </div>
-                <Link href="/partners/hospitals/create">
-                    <Button type="primary" icon={<PlusOutlined />} size="large">
-                        Thêm bệnh viện mới
-                    </Button>
+                <Link href="/admin/partners/hospitals/create" className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-dark transition shadow-lg shadow-primary/25 flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Thêm bệnh viện
                 </Link>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng bệnh viện" value={hospitals.length} prefix={<MedicineBoxOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Đã xác minh" value={hospitals.filter(h => h.isVerified).length} valueStyle={{ color: '#52c41a' }} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng số giường" value={hospitals.reduce((sum, h) => sum + (h.beds || 0), 0)} prefix={<BankOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Rating trung bình" value={4.7} suffix="/ 5" prefix={<StarOutlined style={{ color: '#faad14' }} />} />
-                    </Card>
-                </Col>
-            </Row>
-
-            <Card style={{ marginBottom: '16px' }}>
-                <Input
-                    placeholder="Tìm theo tên bệnh viện hoặc địa chỉ..."
-                    prefix={<SearchOutlined />}
-                    value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
-                    style={{ width: 400 }}
-                    allowClear
-                />
-            </Card>
-
-            <Table
+            <DataTable
                 columns={columns}
-                dataSource={filteredData}
-                rowKey="id"
+                data={paginatedData}
                 loading={loading}
-                pagination={{ pageSize: 10 }}
+                actions={actions}
+                searchable
+                onSearch={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+                pagination={{
+                    currentPage,
+                    totalPages,
+                    onPageChange: setCurrentPage,
+                }}
             />
+
+            <DeleteConfirmationModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={confirmDelete} itemName={itemToDelete?.name || ''} />
         </div>
     );
 }

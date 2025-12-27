@@ -1,26 +1,24 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Modal, Row, Col, Statistic, Avatar } from 'antd';
-import { QuestionCircleOutlined, PlusOutlined, EyeOutlined, CheckOutlined, DeleteOutlined, SearchOutlined, UserOutlined, MessageOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import React, { useState, useEffect } from 'react';
+import DataTable from '@/components/admin/DataTable';
+import StatusBadge from '@/components/admin/StatusBadge';
 import communityService, { QAQuestion } from '@/services/community.service';
 
-const { Title, Text } = Typography;
-
-export default function QAPage() {
+export default function QAManagement() {
     const [questions, setQuestions] = useState<QAQuestion[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchText, setSearchText] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
+    const itemsPerPage = 10;
 
     const fetchQuestions = async () => {
-        setLoading(true);
         try {
+            setLoading(true);
             const data = await communityService.getQAQuestions();
             setQuestions(data);
         } catch (error) {
-            console.error('Failed to fetch QA questions:', error);
-            message.error('Không thể tải danh sách câu hỏi');
+            console.error('Failed to fetch QA questions', error);
         } finally {
             setLoading(false);
         }
@@ -30,166 +28,68 @@ export default function QAPage() {
         fetchQuestions();
     }, []);
 
-    const handleApprove = async (id: number) => {
-        try {
-            await communityService.updateQAQuestion(id, { status: 'approved' });
-            message.success('Đã duyệt câu hỏi');
-            fetchQuestions();
-        } catch (error) {
-            message.error('Lỗi khi duyệt câu hỏi');
-        }
-    };
-
-    const handleDelete = (id: number) => {
-        Modal.confirm({
-            title: 'Xóa câu hỏi',
-            content: 'Bạn có chắc chắn muốn xóa câu hỏi này không?',
-            okText: 'Xóa',
-            okType: 'danger',
-            cancelText: 'Hủy',
-            onOk: async () => {
-                try {
-                    await communityService.deleteQAQuestion(id);
-                    message.success('Đã xóa câu hỏi');
-                    fetchQuestions();
-                } catch (error) {
-                    message.error('Lỗi khi xóa câu hỏi');
-                }
-            }
-        });
-    };
-
     const filteredData = questions.filter(item =>
-        item.question.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.askedByName.toLowerCase().includes(searchText.toLowerCase())
+        item.question.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const columns: ColumnsType<QAQuestion> = [
-        {
-            title: 'Câu hỏi',
-            dataIndex: 'question',
-            key: 'question',
-            render: (text) => (
-                <div style={{ maxWidth: '400px' }}>
-                    <Text strong style={{ fontSize: '15px' }}>{text}</Text>
-                </div>
-            ),
-        },
-        {
-            title: 'Người hỏi',
-            dataIndex: 'askedByName',
-            key: 'askedByName',
-            render: (text) => (
-                <Space>
-                    <Avatar size="small" icon={<UserOutlined />} />
-                    <Text>{text}</Text>
-                </Space>
-            ),
-        },
-        {
-            title: 'Danh mục',
-            dataIndex: 'category',
-            key: 'category',
-            render: (text) => <Tag color="cyan">{text}</Tag>,
-        },
-        {
-            title: 'Tương tác',
-            key: 'engagement',
-            render: (_, record) => (
-                <div>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                        {record._count?.answers || 0} câu trả lời
-                    </Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                        {record.views.toLocaleString()} lượt xem
-                    </Text>
-                </div>
-            ),
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'approved' ? 'success' : 'orange'}>
-                    {(status || 'PENDING').toUpperCase()}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            align: 'right',
-            render: (_, record) => (
-                <Space>
-                    <Button icon={<EyeOutlined />} type="link" />
-                    {record.status !== 'approved' && (
-                        <Button icon={<CheckOutlined />} type="link" style={{ color: '#52c41a' }} onClick={() => handleApprove(record.id)} />
-                    )}
-                    <Button icon={<DeleteOutlined />} type="link" danger onClick={() => handleDelete(record.id)} />
-                </Space>
-            ),
-        },
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const columns = [
+        { key: 'question', label: 'Câu hỏi', render: (val: string) => <span className="font-medium text-gray-900">{val}</span> },
+        { key: 'askedByName', label: 'Người hỏi' },
+        { key: 'category', label: 'Danh mục' },
+        { key: '_count', label: 'Trả lời', render: (val: any) => val?.answers || 0 },
+        { key: 'views', label: 'Lượt xem' },
+        { key: 'createdAt', label: 'Ngày hỏi', render: (val: string) => new Date(val).toLocaleDateString() },
+        { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
+    const actions = (row: QAQuestion) => (
+        <div className="flex gap-2">
+            <button className="text-blue-600 hover:text-blue-800" title="Xem chi tiết">
+                <i className="fi flaticon-eye"></i>
+            </button>
+            <button
+                className="text-green-600 hover:text-green-800"
+                title="Duyệt"
+                onClick={async () => {
+                    await communityService.updateQAQuestion(row.id, { status: 'approved' });
+                    fetchQuestions();
+                }}
+            >
+                <i className="fi flaticon-check"></i>
+            </button>
+            <button
+                className="text-red-600 hover:text-red-800"
+                title="Xóa"
+                onClick={async () => {
+                    if (confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) {
+                        await communityService.deleteQAQuestion(row.id);
+                        fetchQuestions();
+                    }
+                }}
+            >
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
+    );
+
     return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Cộng đồng</Breadcrumb.Item>
-                <Breadcrumb.Item>Hỏi đáp (Q&A)</Breadcrumb.Item>
-            </Breadcrumb>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Hỏi đáp</Title>
-                    <Text type="secondary">Quản lý và giải đáp thắc mắc từ người dùng</Text>
-                </div>
-                <Button type="primary" icon={<PlusOutlined />} size="large">
-                    Tạo câu hỏi mới
-                </Button>
-            </div>
-
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng câu hỏi" value={questions.length} prefix={<QuestionCircleOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Chờ duyệt" value={questions.filter(q => q.status !== 'approved').length} valueStyle={{ color: '#faad14' }} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Lượt xem" value={questions.reduce((sum, q) => sum + q.views, 0)} prefix={<EyeOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Trợ giúp" value={questions.reduce((sum, q) => sum + (q._count?.answers || 0), 0)} prefix={<MessageOutlined style={{ color: '#1890ff' }} />} />
-                    </Card>
-                </Col>
-            </Row>
-
-            <Card style={{ marginBottom: '16px' }}>
-                <Input
-                    placeholder="Tìm kiếm câu hỏi hoặc người hỏi..."
-                    prefix={<SearchOutlined />}
-                    value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
-                    style={{ width: 400 }}
-                    allowClear
-                />
-            </Card>
-
-            <Table
+        <div className="space-y-6">
+            <h1 className="text-3xl font-bold text-gray-900">Quản lý Hỏi đáp</h1>
+            <DataTable
                 columns={columns}
-                dataSource={filteredData}
-                rowKey="id"
+                data={paginatedData}
                 loading={loading}
-                pagination={{ pageSize: 10 }}
+                actions={actions}
+                searchable
+                onSearch={setSearchQuery}
+                pagination={{
+                    currentPage,
+                    totalPages,
+                    onPageChange: setCurrentPage
+                }}
             />
         </div>
     );

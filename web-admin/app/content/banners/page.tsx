@@ -1,26 +1,18 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { Typography, Card, Space, Button, Breadcrumb, message, Modal, Row, Col, Tag, Tooltip, Empty, Spin } from 'antd';
-import { PictureOutlined, PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, StopOutlined, EyeOutlined } from '@ant-design/icons';
-import contentService, { Banner } from '@/services/content.service';
+"use client";
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import contentService, { Banner } from '@/services/content.service';
 
-const { Title, Text } = Typography;
-const { Meta } = Card;
-
-export default function BannersManagementPage() {
+export default function BannersManagement() {
     const [banners, setBanners] = useState<Banner[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchBanners = async () => {
-        setLoading(true);
         try {
             const data = await contentService.getBanners();
             setBanners(data);
         } catch (error) {
-            console.error('Failed to fetch banners:', error);
-            message.error('Lỗi khi tải danh sách banner');
+            console.error('Failed to fetch banners', error);
         } finally {
             setLoading(false);
         }
@@ -30,106 +22,66 @@ export default function BannersManagementPage() {
         fetchBanners();
     }, []);
 
-    const handleDelete = (id: number | string, title: string) => {
-        Modal.confirm({
-            title: 'Xác nhận xóa',
-            content: `Bạn có chắc chắn muốn xóa banner "${title}" không?`,
-            okText: 'Xóa',
-            okType: 'danger',
-            cancelText: 'Hủy',
-            onOk: async () => {
-                try {
-                    await contentService.deleteBanner(id);
-                    message.success('Đã xóa banner thành công');
-                    fetchBanners();
-                } catch (error) {
-                    message.error('Lỗi khi xóa banner');
-                }
+    const handleDelete = async (id: number | string) => {
+        if (confirm('Bạn có chắc chắn muốn xóa banner này?')) {
+            try {
+                await contentService.deleteBanner(id);
+                fetchBanners();
+                alert('Xóa thành công!');
+            } catch (error) {
+                alert('Xóa thất bại');
             }
-        });
+        }
     };
 
-    return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Nội dung</Breadcrumb.Item>
-                <Breadcrumb.Item>Banner quảng cáo</Breadcrumb.Item>
-            </Breadcrumb>
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
                 <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Banner</Title>
-                    <Text type="secondary">Cấu hình các banner quảng cáo và hình ảnh trình chiếu trên toàn hệ thống</Text>
+                    <h1 className="text-3xl font-bold text-gray-900">Quản lý Banner</h1>
+                    <p className="text-gray-500 mt-1">Quản lý banner quảng cáo trên hệ thống</p>
                 </div>
-                <Link href="/admin/content/banners/create">
-                    <Button type="primary" icon={<PlusOutlined />} size="large">
-                        Tạo Banner mới
-                    </Button>
+                <Link href="/admin/content/banners/create" className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all">
+                    + Tạo banner mới
                 </Link>
             </div>
 
-            {loading ? (
-                <div style={{ padding: '100px', textAlign: 'center' }}>
-                    <Spin size="large" tip="Đang tải dữ liệu..." />
-                </div>
-            ) : banners.length === 0 ? (
-                <Card style={{ padding: '60px 0' }}>
-                    <Empty description="Chưa có banner nào được tạo" />
-                    <div style={{ textAlign: 'center', marginTop: '16px' }}>
-                        <Link href="/admin/content/banners/create">
-                            <Button type="primary">Tạo ngay</Button>
-                        </Link>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {banners.map(banner => (
+                    <div key={banner.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group">
+                        <div className="aspect-video bg-gray-50 relative overflow-hidden">
+                            <img src={banner.image || '/img/placeholder.png'} alt={banner.title} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" />
+                            <div className="absolute top-3 left-3">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${banner.isActive ? 'bg-green-500 text-white shadow-sm' : 'bg-gray-400 text-white'}`}>
+                                    {banner.isActive ? 'Hoạt động' : 'Tạm ngưng'}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <h3 className="font-bold text-gray-900 mb-1 truncate text-lg">{banner.title}</h3>
+                            <p className="text-sm text-gray-500 mb-6 flex items-center gap-2">
+                                <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">
+                                    {banner.position}
+                                </span>
+                            </p>
+                            <div className="flex gap-3 pt-4 border-t border-gray-50">
+                                <Link href={`/admin/content/banners/${banner.id}/edit`} className="flex-1 text-center bg-gray-50 text-gray-600 font-bold py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all">
+                                    Sửa
+                                </Link>
+                                <button onClick={() => handleDelete(banner.id)} className="flex-1 bg-gray-50 text-gray-600 font-bold py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all">
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </Card>
-            ) : (
-                <Row gutter={[24, 24]}>
-                    {banners.map((banner) => (
-                        <Col xs={24} sm={12} lg={8} key={banner.id}>
-                            <Card
-                                hoverable
-                                cover={
-                                    <div style={{ height: '180px', overflow: 'hidden', position: 'relative' }}>
-                                        <img
-                                            alt={banner.title}
-                                            src={banner.image || 'https://via.placeholder.com/800x450?text=Banner+Image'}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                        <div style={{ position: 'absolute', top: '12px', left: '12px' }}>
-                                            <Tag color={banner.isActive ? 'success' : 'default'} style={{ fontWeight: 'bold' }}>
-                                                {banner.isActive ? 'ĐANG HOẠT ĐỘNG' : 'TẠM NGƯNG'}
-                                            </Tag>
-                                        </div>
-                                    </div>
-                                }
-                                actions={[
-                                    <Tooltip title="Xem chi tiết">
-                                        <EyeOutlined key="view" />
-                                    </Tooltip>,
-                                    <Tooltip title="Chỉnh sửa">
-                                        <Link href={`/admin/content/banners/${banner.id}/edit`}>
-                                            <EditOutlined key="edit" />
-                                        </Link>
-                                    </Tooltip>,
-                                    <Tooltip title="Xóa">
-                                        <DeleteOutlined key="delete" style={{ color: '#ff4d4f' }} onClick={() => handleDelete(banner.id, banner.title)} />
-                                    </Tooltip>
-                                ]}
-                            >
-                                <Meta
-                                    title={<Text strong style={{ fontSize: '16px' }}>{banner.title}</Text>}
-                                    description={
-                                        <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                                            <Tag color="cyan">{banner.position || 'Trang chủ'}</Tag>
-                                            <Text type="secondary" ellipsis={{ tooltip: banner.link }}>
-                                                Link: {banner.link || 'Không có'}
-                                            </Text>
-                                        </Space>
-                                    }
-                                />
-                            </Card>
-                        </Col>
-                    ))}
-                </Row>
+                ))}
+            </div>
+            {banners.length === 0 && (
+                <div className="p-20 text-center bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400 font-medium">
+                    Chưa có banner nào được tạo.
+                </div>
             )}
         </div>
     );

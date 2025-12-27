@@ -1,30 +1,21 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Row, Col, Statistic, Progress, Modal, List } from 'antd';
-import { CalendarOutlined, PlusOutlined, EnvironmentOutlined, UsergroupAddOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PictureOutlined, TeamOutlined, QrcodeOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import seminarService, { Seminar } from '@/services/seminar.service';
 
-const { Title, Text } = Typography;
-
-export default function SeminarsPage() {
+export default function AdminSeminarsPage() {
+    const [filter, setFilter] = useState('all');
     const [seminars, setSeminars] = useState<Seminar[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchText, setSearchText] = useState('');
 
     const fetchSeminars = async () => {
-        setLoading(true);
         try {
+            setLoading(true);
             const data = await seminarService.getSeminars();
             setSeminars(data);
         } catch (error) {
-            console.error('Failed to fetch seminars:', error);
-            // Fallback mock
-            setSeminars([
-                { id: 1, title: 'Hội nghị Tim mạch khu vực phía Nam', date: '2024-12-20', location: 'TT Hội nghị Gem Center', capacity: 500, registrations: 380, status: 'published' },
-                { id: 2, title: 'Tập huấn Chăm sóc bệnh nhân tiểu đường', date: '2025-01-15', location: 'BV Đại học Y Dược', capacity: 100, registrations: 45, status: 'draft' }
-            ]);
+            console.error('Failed to fetch seminars', error);
         } finally {
             setLoading(false);
         }
@@ -34,187 +25,209 @@ export default function SeminarsPage() {
         fetchSeminars();
     }, []);
 
-    const handleDelete = (id: number) => {
-        Modal.confirm({
-            title: 'Xóa hội thảo',
-            content: 'Bạn có chắc chắn muốn xóa hội thảo này không?',
-            okText: 'Xóa',
-            okType: 'danger',
-            onOk: async () => {
-                try {
-                    await seminarService.deleteSeminar(id);
-                    message.success('Đã xóa hội thảo');
-                    fetchSeminars();
-                } catch (error) {
-                    message.error('Lỗi khi xóa hội thảo');
-                }
-            }
-        });
-    };
-
-    const handleCreate = async () => {
-        try {
-            await seminarService.createSeminar({
-                title: 'Hội thảo mới ' + new Date().toLocaleTimeString(),
-                date: new Date().toISOString().split('T')[0],
-                location: 'Địa điểm mặc định',
-                capacity: 100,
-                status: 'draft'
-            });
-            message.success('Đã tạo hội thảo nháp');
-            fetchSeminars();
-        } catch (error) {
-            message.error('Lỗi khi tạo hội thảo');
+    const filteredSeminars = seminars.filter(s => {
+        if (filter === 'all') return true;
+        if (filter === 'published') return s.status === 'published';
+        if (filter === 'draft') return s.status === 'draft';
+        if (filter === 'upcoming') {
+            const seminarDate = new Date(s.date);
+            return seminarDate > new Date();
         }
-    };
+        return true;
+    });
 
-    const filteredData = seminars.filter(item =>
-        item.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchText.toLowerCase())
-    );
-
-    const columns: ColumnsType<Seminar> = [
-        {
-            title: 'Hội thảo',
-            dataIndex: 'title',
-            key: 'title',
-            render: (text) => <Text strong style={{ fontSize: '15px' }}>{text}</Text>,
-        },
-        {
-            title: 'Thời gian & Địa điểm',
-            key: 'info',
-            render: (_, record) => (
-                <Space direction="vertical" size={0}>
-                    <Space size="small">
-                        <CalendarOutlined style={{ color: '#1890ff' }} />
-                        <Text>{record.date}</Text>
-                    </Space>
-                    <Space size="small">
-                        <EnvironmentOutlined style={{ color: '#faad14' }} />
-                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.location}</Text>
-                    </Space>
-                </Space>
-            ),
-        },
-        {
-            title: 'Đăng ký',
-            key: 'registrations',
-            render: (_, record) => (
-                <div style={{ width: '120px' }}>
-                    <Space style={{ fontSize: '12px', justifyContent: 'space-between', width: '100%', marginBottom: '4px' }}>
-                        <Text strong>{record.registrations}/{record.capacity}</Text>
-                        <Text type="secondary">{Math.round((record.registrations / record.capacity) * 100)}%</Text>
-                    </Space>
-                    <Progress percent={Math.round((record.registrations / record.capacity) * 100)} size="small" showInfo={false} strokeColor="#1890ff" />
-                </div>
-            ),
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'published' ? 'success' : 'orange'}>
-                    {(status || 'DRAFT').toUpperCase()}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            align: 'right',
-            render: (_, record) => (
-                <Space>
-                    <Button icon={<EditOutlined />} type="link" />
-                    <Button icon={<DeleteOutlined />} type="link" danger onClick={() => handleDelete(record.id)} />
-                </Space>
-            ),
-        },
-    ];
+    // Stats
+    const totalSeminars = seminars.length;
+    const publishedCount = seminars.filter(s => s.status === 'published').length;
+    const totalRegistrations = seminars.reduce((acc, curr) => acc + curr.registrations, 0);
+    const upcomingCount = seminars.filter(s => new Date(s.date) > new Date()).length;
 
     return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Sự kiện</Breadcrumb.Item>
-                <Breadcrumb.Item>Hội thảo (Seminars)</Breadcrumb.Item>
-            </Breadcrumb>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="space-y-8">
+            <div className="flex justify-between items-center">
                 <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Hội thảo</Title>
-                    <Text type="secondary">Tổ chức và quản lý các sự kiện, hội thảo chuyên môn</Text>
+                    <h1 className="text-2xl font-bold text-gray-900">Quản lý Hội thảo</h1>
+                    <p className="text-gray-500 text-sm mt-1">Tạo và quản lý các hội thảo offline</p>
                 </div>
-                <Button type="primary" icon={<PlusOutlined />} size="large" onClick={handleCreate}>
-                    Tạo Hội thảo mới
-                </Button>
+                <button
+                    onClick={async () => {
+                        await seminarService.createSeminar({
+                            title: 'Hội thảo mới ' + new Date().toLocaleTimeString(),
+                            date: new Date().toISOString().split('T')[0],
+                            location: 'Địa điểm mặc định',
+                            capacity: 100,
+                            status: 'draft'
+                        });
+                        fetchSeminars();
+                    }}
+                    className="px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition flex items-center gap-2"
+                >
+                    <i className="fi flaticon-add"></i> Tạo Hội thảo
+                </button>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng Hội thảo" value={seminars.length} prefix={<CalendarOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Sắp diễn ra" value={seminars.filter(s => new Date(s.date) > new Date()).length} valueStyle={{ color: '#1890ff' }} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng đăng ký" value={seminars.reduce((sum, s) => sum + s.registrations, 0)} prefix={<UsergroupAddOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Đã kết thúc" value={seminars.filter(s => new Date(s.date) < new Date()).length} />
-                    </Card>
-                </Col>
-            </Row>
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <p className="text-gray-500 text-sm mb-1">Tổng hội thảo</p>
+                    <p className="text-3xl font-bold text-gray-900">{totalSeminars}</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <p className="text-gray-500 text-sm mb-1">Đã xuất bản</p>
+                    <p className="text-3xl font-bold text-green-600">{publishedCount}</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <p className="text-gray-500 text-sm mb-1">Tổng đăng ký</p>
+                    <p className="text-3xl font-bold text-blue-600">{totalRegistrations}</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <p className="text-gray-500 text-sm mb-1">Sắp diễn ra</p>
+                    <p className="text-3xl font-bold text-purple-600">{upcomingCount}</p>
+                </div>
+            </div>
 
-            <Row gutter={24}>
-                <Col span={18}>
-                    <Card style={{ marginBottom: '16px' }}>
-                        <Input
-                            placeholder="Tìm theo tiêu đề hoặc địa điểm..."
-                            prefix={<SearchOutlined />}
-                            value={searchText}
-                            onChange={e => setSearchText(e.target.value)}
-                            style={{ width: 400 }}
-                            allowClear
-                        />
-                    </Card>
-                    <Table
-                        columns={columns}
-                        dataSource={filteredData}
-                        rowKey="id"
-                        loading={loading}
-                        pagination={{ pageSize: 10 }}
-                    />
-                </Col>
-                <Col span={6}>
-                    <Space direction="vertical" style={{ width: '100%' }} size="large">
-                        <Card title="Phím tắt quản lý" size="small">
-                            <List
-                                size="small"
-                                dataSource={[
-                                    { icon: <PictureOutlined />, label: 'Quản lý Banner', count: 12 },
-                                    { icon: <TeamOutlined />, label: 'Quản lý Diễn giả', count: 45 },
-                                    { icon: <QrcodeOutlined />, label: 'Hệ thống Check-in', count: 1205 },
-                                ]}
-                                renderItem={item => (
-                                    <List.Item extra={<Text type="secondary">{item.count}</Text>} style={{ cursor: 'pointer' }}>
-                                        <Space>
-                                            {item.icon}
-                                            <Text>{item.label}</Text>
-                                        </Space>
-                                    </List.Item>
+            {/* Filters */}
+            <div className="flex gap-2">
+                {[
+                    { key: 'all', label: 'Tất cả' },
+                    { key: 'published', label: 'Đã xuất bản' },
+                    { key: 'draft', label: 'Nháp' },
+                    { key: 'upcoming', label: 'Sắp diễn ra' },
+                ].map((tab) => (
+                    <button
+                        key={tab.key}
+                        onClick={() => setFilter(tab.key)}
+                        className={`px-4 py-2 rounded-xl font-bold transition ${filter === tab.key
+                            ? 'bg-primary text-white'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-100'
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Seminars Table */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {loading ? (
+                    <div className="p-8 text-center text-gray-500">Đang tải...</div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Hội thảo</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Ngày</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Địa điểm</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Đăng ký</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Trạng thái</th>
+                                    <th className="px-6 py-4 font-bold text-gray-700">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {filteredSeminars.map((seminar) => (
+                                    <tr key={seminar.id} className="hover:bg-gray-50 transition">
+                                        <td className="px-6 py-4">
+                                            <p className="font-medium text-gray-900">{seminar.title}</p>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">{seminar.date}</td>
+                                        <td className="px-6 py-4 text-gray-600">{seminar.location}</td>
+                                        <td className="px-6 py-4">
+                                            <div>
+                                                <p className="font-bold text-gray-900">{seminar.registrations}/{seminar.capacity}</p>
+                                                <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1">
+                                                    <div
+                                                        className="h-full bg-primary"
+                                                        style={{ width: `${(seminar.registrations / seminar.capacity) * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded text-xs font-bold ${seminar.status === 'published'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-yellow-100 text-yellow-700'
+                                                }`}>
+                                                {seminar.status === 'published' ? 'Đã xuất bản' : 'Nháp'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={async () => {
+                                                        const newTitle = prompt('Nhập tiêu đề mới:', seminar.title);
+                                                        if (newTitle) {
+                                                            await seminarService.updateSeminar(seminar.id, { title: newTitle });
+                                                            fetchSeminars();
+                                                        }
+                                                    }}
+                                                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-bold"
+                                                >
+                                                    Sửa
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (confirm('Xóa hội thảo này?')) {
+                                                            await seminarService.deleteSeminar(seminar.id);
+                                                            fetchSeminars();
+                                                        }
+                                                    }}
+                                                    className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs font-bold"
+                                                >
+                                                    Xóa
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredSeminars.length === 0 && (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                            Chưa có hội thảo nào
+                                        </td>
+                                    </tr>
                                 )}
-                            />
-                        </Card>
-                    </Space>
-                </Col>
-            </Row>
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Quick Links */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link href="/admin/seminars/banners">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition text-center cursor-pointer">
+                        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i className="fi flaticon-image text-purple-600 text-xl"></i>
+                        </div>
+                        <p className="font-bold text-gray-900">Quản lý Banner</p>
+                    </div>
+                </Link>
+                <Link href="/admin/seminars/speakers">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition text-center cursor-pointer">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i className="fi flaticon-user text-blue-600 text-xl"></i>
+                        </div>
+                        <p className="font-bold text-gray-900">Diễn giả</p>
+                    </div>
+                </Link>
+                <Link href="/admin/seminars/sessions">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition text-center cursor-pointer">
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i className="fi flaticon-calendar text-green-600 text-xl"></i>
+                        </div>
+                        <p className="font-bold text-gray-900">Phiên hội thảo</p>
+                    </div>
+                </Link>
+                <Link href="/admin/seminars/checkin">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition text-center cursor-pointer">
+                        <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i className="fi flaticon-checked text-orange-600 text-xl"></i>
+                        </div>
+                        <p className="font-bold text-gray-900">Check-in</p>
+                    </div>
+                </Link>
+            </div>
         </div>
     );
 }

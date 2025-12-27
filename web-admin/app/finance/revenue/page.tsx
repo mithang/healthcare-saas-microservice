@@ -1,25 +1,24 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Tag, Row, Col, Statistic, Breadcrumb, message } from 'antd';
-import { DollarOutlined, LineChartOutlined, PercentageOutlined, WalletOutlined, PlusOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import React, { useState, useEffect } from 'react';
+import DataTable from '@/components/admin/DataTable';
+import StatusBadge from '@/components/admin/StatusBadge';
+import StatsCard from '@/components/admin/StatsCard';
 import financeService, { Revenue } from '@/services/finance.service';
 
-const { Title, Text } = Typography;
-
-export default function RevenuePage() {
+export default function RevenueManagement() {
     const [revenueData, setRevenueData] = useState<Revenue[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const fetchRevenue = async () => {
-        setLoading(true);
         try {
+            setLoading(true);
             const data = await financeService.getRevenue();
             setRevenueData(data);
         } catch (error) {
-            console.error('Failed to fetch revenue:', error);
-            message.error('Không thể tải dữ liệu doanh thu');
+            console.error('Failed to fetch revenue', error);
         } finally {
             setLoading(false);
         }
@@ -29,114 +28,57 @@ export default function RevenuePage() {
         fetchRevenue();
     }, []);
 
+    const totalPages = Math.ceil(revenueData.length / itemsPerPage);
+    const paginatedData = revenueData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // Dynamic stats (simplified for demo)
     const totalAmount = revenueData.reduce((acc, curr) => acc + curr.amount, 0);
     const totalFee = revenueData.reduce((acc, curr) => acc + curr.fee, 0);
     const totalNet = revenueData.reduce((acc, curr) => acc + curr.net, 0);
 
-    const handleCreateRevenue = async () => {
-        try {
-            await financeService.createRevenue({
-                type: 'Đặt khám',
-                details: 'Khám bệnh nhi khoa',
-                amount: 500000,
-                fee: 50000,
-                net: 450000,
-                status: 'Done'
-            });
-            message.success('Đã ghi nhận doanh thu mới');
-            fetchRevenue();
-        } catch (error) {
-            message.error('Lỗi khi tạo doanh thu');
-        }
-    };
-
-    const columns: ColumnsType<Revenue> = [
-        {
-            title: 'Thời gian',
-            dataIndex: 'timestamp',
-            key: 'timestamp',
-            render: (val: string) => <span>{new Date(val).toLocaleString('vi-VN')}</span>,
-            sorter: (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-        },
-        {
-            title: 'Loại',
-            dataIndex: 'type',
-            key: 'type',
-            render: (text) => <Tag color="blue">{text}</Tag>,
-        },
-        {
-            title: 'Chi tiết',
-            dataIndex: 'details',
-            key: 'details',
-        },
-        {
-            title: 'Số tiền',
-            dataIndex: 'amount',
-            key: 'amount',
-            render: (val: number) => <Text strong style={{ color: '#3f8600' }}>{val.toLocaleString()} đ</Text>,
-            sorter: (a, b) => a.amount - b.amount,
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (val: string) => (
-                <Tag color={val === 'Done' ? 'success' : 'orange'} icon={val === 'Done' ? <CheckCircleOutlined /> : <ClockCircleOutlined />}>
-                    {val === 'Done' ? 'Hoàn tất' : 'Đang xử lý'}
-                </Tag>
-            ),
-        },
+    const columns = [
+        { label: 'Thời gian', key: 'timestamp', render: (val: string) => <span>{new Date(val).toLocaleString('vi-VN')}</span> },
+        { label: 'Loại', key: 'type' },
+        { label: 'Chi tiết', key: 'details' },
+        { label: 'Số tiền', key: 'amount', render: (val: number) => <span className="font-bold text-green-600">{val.toLocaleString()} đ</span> },
+        { label: 'Trạng thái', key: 'status', render: (val: string) => <StatusBadge status={val === 'Done' ? 'approved' : 'pending'} /> }
     ];
 
     return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Tài chính</Breadcrumb.Item>
-                <Breadcrumb.Item>Doanh thu</Breadcrumb.Item>
-            </Breadcrumb>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Doanh thu</Title>
-                    <Text type="secondary">Theo dõi các giao dịch và dòng tiền trong hệ thống</Text>
-                </div>
-                <Button type="primary" icon={<PlusOutlined />} size="large" onClick={handleCreateRevenue}>
-                    Ghi nhận doanh thu
-                </Button>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-900">Quản lý Doanh thu</h1>
+                <button
+                    onClick={async () => {
+                        await financeService.createRevenue({
+                            type: 'Đặt khám',
+                            details: 'Khám bệnh nhi khoa',
+                            amount: 500000,
+                            fee: 50000,
+                            net: 450000,
+                            status: 'Done'
+                        });
+                        fetchRevenue();
+                    }}
+                    className="bg-primary text-white font-bold px-6 py-3 rounded-xl"
+                >
+                    + Ghi nhận doanh thu
+                </button>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng doanh thu" value={totalAmount} suffix="đ" prefix={<DollarOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Thực nhận (Net)" value={totalNet} suffix="đ" valueStyle={{ color: '#3f8600' }} prefix={<LineChartOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Phí hệ thống" value={totalFee} suffix="đ" valueStyle={{ color: '#fa8c16' }} prefix={<PercentageOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Số giao dịch" value={revenueData.length} prefix={<WalletOutlined />} />
-                    </Card>
-                </Col>
-            </Row>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <StatsCard title="Tổng doanh thu" value={(totalAmount / 1000000).toFixed(1) + "M"} icon="flaticon-money" color="green" />
+                <StatsCard title="Thực nhận" value={(totalNet / 1000000).toFixed(1) + "M"} icon="flaticon-chart-line" color="blue" />
+                <StatsCard title="Phí hệ thống" value={(totalFee / 1000000).toFixed(1) + "M"} icon="flaticon-percentage" color="orange" />
+                <StatsCard title="Số giao dịch" value={revenueData.length.toString()} icon="flaticon-wallet" color="purple" />
+            </div>
 
-            <Card>
-                <Table
-                    columns={columns}
-                    dataSource={revenueData}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={{ pageSize: 10 }}
-                />
-            </Card>
+            <DataTable
+                columns={columns}
+                data={paginatedData}
+                loading={loading}
+                pagination={{ currentPage, totalPages, onPageChange: setCurrentPage }}
+            />
         </div>
     );
 }

@@ -1,181 +1,83 @@
-'use client';
-
+"use client";
 import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Row, Col, Statistic, Avatar, Tooltip } from 'antd';
-import { ReadOutlined, PlusOutlined, EditOutlined, EyeOutlined, SearchOutlined, BookOutlined, UsergroupAddOutlined, TrophyOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import DataTable from '@/components/admin/DataTable';
+import StatusBadge from '@/components/admin/StatusBadge';
+import { Button } from '@/components/admin/ui/Button';
+import { useRouter } from 'next/navigation';
 import { educationService, Course } from '@/services/education.service';
 
-const { Title, Text } = Typography;
-
 export default function EducationCoursesPage() {
+    const router = useRouter();
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchText, setSearchText] = useState('');
-
-    const fetchCourses = async () => {
-        setLoading(true);
-        try {
-            const data = await educationService.getCourses();
-            setCourses(data);
-        } catch (error) {
-            console.error('Failed to fetch courses:', error);
-            // Fallback mock
-            setCourses([
-                { id: 'CME-001', code: 'CME001', name: 'Kỹ thuật chẩn đoán hình ảnh nâng cao', provider: 'BV Chợ Rẫy', type: 'CME', credits: 24, price: 5000000, students: 45, status: 'published', lecturerId: 'LEC001' },
-                { id: 'CME-002', code: 'CPE002', name: 'Quản lý an toàn người bệnh', provider: 'ĐH Y Dược', type: 'CPE', credits: 12, price: 0, students: 120, status: 'published', lecturerId: 'LEC002' }
-            ]);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const data = await educationService.getCourses();
+                setCourses(data);
+            } catch (error) {
+                console.error('Failed to fetch courses:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchCourses();
     }, []);
 
-    const filteredData = courses.filter(item =>
-        item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.provider.toLowerCase().includes(searchText.toLowerCase())
-    );
-
-    const columns: ColumnsType<Course> = [
+    const columns = [
+        { key: 'id', label: 'Mã khóa học', render: (val: string) => <span className="font-mono font-bold text-gray-600">{val}</span> },
         {
-            title: 'Mã & Tên khóa học',
-            dataIndex: 'name',
-            key: 'name',
-            render: (text, record) => (
-                <Space align="start">
-                    <Avatar shape="square" size={48} icon={<BookOutlined />} style={{ backgroundColor: '#f0f2f5', color: '#1890ff' }} />
-                    <div>
-                        <Text strong style={{ fontSize: '15px', display: 'block' }}>{text}</Text>
-                        <Space split={<Text type="secondary">|</Text>}>
-                            <Text type="secondary" style={{ fontSize: '12px' }}>{record.id}</Text>
-                            <Text type="secondary" style={{ fontSize: '12px' }}>{record.provider}</Text>
-                        </Space>
-                    </div>
-                </Space>
-            ),
+            key: 'name', label: 'Tên khóa học', render: (val: string, row: any) => (
+                <div>
+                    <p className="font-bold text-gray-900">{val}</p>
+                    <p className="text-xs text-gray-500">{row.provider}</p>
+                </div>
+            )
         },
         {
-            title: 'Loại hình',
-            dataIndex: 'type',
-            key: 'type',
-            render: (type) => (
-                <Tag color={type === 'CME' ? 'blue' : 'purple'}>
-                    {type}
-                </Tag>
-            ),
+            key: 'type', label: 'Loại hình', render: (val: string) => (
+                <span className={`px-2 py-1 rounded-lg text-xs font-bold ${val === 'CME' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                    {val}
+                </span>
+            )
         },
+        { key: 'credits', label: 'Tín chỉ', render: (val: number) => <span className="font-medium">{val} giờ</span> },
         {
-            title: 'Tín chỉ',
-            dataIndex: 'credits',
-            key: 'credits',
-            render: (val) => <Text strong>{val} giờ</Text>,
-        },
-        {
-            title: 'Học phí',
-            dataIndex: 'price',
-            key: 'price',
-            render: (val) => (
-                <Text style={{ color: val === 0 ? '#52c41a' : '#262626', fontWeight: 'bold' }}>
+            key: 'price', label: 'Học phí', render: (val: number) => (
+                <span className={`font-bold ${val === 0 ? 'text-green-600' : 'text-gray-900'}`}>
                     {val === 0 ? 'Miễn phí' : val.toLocaleString() + ' đ'}
-                </Text>
-            ),
+                </span>
+            )
         },
-        {
-            title: 'Học viên',
-            dataIndex: 'students',
-            key: 'students',
-            render: (val) => (
-                <Tooltip title="Sức chứa tối đa: 200">
-                    <Space>
-                        <UsergroupAddOutlined />
-                        <Text>{val || 0} / 200</Text>
-                    </Space>
-                </Tooltip>
-            ),
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'published' ? 'success' : 'default'}>
-                    {(status || 'DRAFT').toUpperCase()}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            align: 'right',
-            render: (_, record) => (
-                <Space>
-                    <Button icon={<EyeOutlined />} type="link" />
-                    <Button icon={<EditOutlined />} type="link" />
-                </Space>
-            ),
-        },
+        { key: 'students', label: 'Học viên', render: (val: number) => <span>{val || 0} / 200</span> },
+        { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
     return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Giáo dục</Breadcrumb.Item>
-                <Breadcrumb.Item>Khóa học CME/CPE</Breadcrumb.Item>
-            </Breadcrumb>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
                 <div>
-                    <Title level={2} style={{ margin: 0 }}>Đào tạo & Tập huấn (CME/CPE)</Title>
-                    <Text type="secondary">Quản lý chương trình giáo dục y khoa liên tục và cấp chứng chỉ</Text>
+                    <h1 className="text-3xl font-bold text-gray-900">Đào tạo & Tập huấn (CME/CPE)</h1>
+                    <p className="text-gray-500 mt-1">Quản lý khóa học giáo dục y khoa liên tục</p>
                 </div>
-                <Button type="primary" icon={<PlusOutlined />} size="large">
+                <Button onClick={() => router.push('/admin/education/courses/create')} icon="plus">
                     Tạo khóa học mới
                 </Button>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Khóa học" value={courses.length} prefix={<ReadOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng tín chỉ" value={courses.reduce((sum, c) => sum + c.credits, 0)} suffix="giờ" />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Học viên" value={courses.reduce((sum, c) => sum + (c.students || 0), 0)} prefix={<UsergroupAddOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Chứng chỉ cấp" value={156} prefix={<TrophyOutlined style={{ color: '#faad14' }} />} />
-                    </Card>
-                </Col>
-            </Row>
-
-            <Card style={{ marginBottom: '16px' }}>
-                <Input
-                    placeholder="Tìm tên khóa học, đơn vị tổ chức..."
-                    prefix={<SearchOutlined />}
-                    value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
-                    style={{ width: 400 }}
-                    allowClear
-                />
-            </Card>
-
-            <Table
+            <DataTable
                 columns={columns}
-                dataSource={filteredData}
-                rowKey="id"
+                data={courses}
                 loading={loading}
-                pagination={{ pageSize: 15 }}
+                searchable
+                searchPlaceholder="Tìm tên khóa học, đơn vị tổ chức..."
+                actions={(row) => (
+                    <>
+                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i className="fi flaticon-eye"></i></button>
+                        <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg"><i className="fi flaticon-edit"></i></button>
+                    </>
+                )}
             />
         </div>
     );

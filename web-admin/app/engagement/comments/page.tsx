@@ -1,22 +1,17 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Tag, Avatar, Row, Col, Statistic, Breadcrumb, message, Input, Modal } from 'antd';
-import { CommentOutlined, CheckOutlined, StopOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import React, { useState, useEffect } from 'react';
 import engagementService, { Comment, CommentStats, CommentStatus } from '@/services/engagement.service';
 
-const { Title, Text } = Typography;
-
-export default function CommentsPage() {
+export default function CommentManagementPage() {
     const [comments, setComments] = useState<Comment[]>([]);
     const [stats, setStats] = useState<CommentStats>({ pending: 0, spam: 0, total: 0 });
     const [loading, setLoading] = useState(true);
-    const [searchText, setSearchText] = useState('');
+    const [filter, setFilter] = useState('');
 
     const fetchData = async () => {
-        setLoading(true);
         try {
+            setLoading(true);
             const [cData, sData] = await Promise.all([
                 engagementService.getComments(),
                 engagementService.getCommentStats()
@@ -24,8 +19,7 @@ export default function CommentsPage() {
             setComments(cData);
             setStats(sData);
         } catch (error) {
-            console.error('Failed to fetch engagement data:', error);
-            message.error('Không thể tải danh sách bình luận');
+            console.error('Failed to fetch engagement data', error);
         } finally {
             setLoading(false);
         }
@@ -35,155 +29,116 @@ export default function CommentsPage() {
         fetchData();
     }, []);
 
-    const handleAction = async (id: number, status: CommentStatus) => {
-        if (status === 'DELETED') {
-            Modal.confirm({
-                title: 'Xóa bình luận',
-                content: 'Bạn có chắc chắn muốn xóa bình luận này không?',
-                okText: 'Xóa',
-                okType: 'danger',
-                onOk: async () => {
-                    try {
-                        await engagementService.updateCommentStatus(id, status);
-                        message.success('Đã xóa bình luận');
-                        fetchData();
-                    } catch (error) {
-                        message.error('Lỗi khi xóa bình luận');
-                    }
-                }
-            });
-            return;
-        }
-
+    const handleAction = async (id: number, action: CommentStatus) => {
+        if (action === 'DELETED' && !confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
         try {
-            await engagementService.updateCommentStatus(id, status);
-            message.success(`Đã cập nhật trạng thái: ${status}`);
+            await engagementService.updateCommentStatus(id, action);
             fetchData();
         } catch (error) {
-            message.error('Lỗi khi cập nhật trạng thái');
+            alert('Lỗi khi thực hiện hành động');
         }
     };
 
-    const filteredData = comments.filter(c =>
-        c.userName.toLowerCase().includes(searchText.toLowerCase()) ||
-        c.content.toLowerCase().includes(searchText.toLowerCase()) ||
-        c.postTitle.toLowerCase().includes(searchText.toLowerCase())
+    const filteredComments = comments.filter(c =>
+        c.userName.toLowerCase().includes(filter.toLowerCase()) ||
+        c.content.toLowerCase().includes(filter.toLowerCase()) ||
+        c.postTitle.toLowerCase().includes(filter.toLowerCase())
     );
 
-    const columns: ColumnsType<Comment> = [
-        {
-            title: 'Người dùng',
-            dataIndex: 'userName',
-            key: 'userName',
-            render: (text, record) => (
-                <Space>
-                    <Avatar icon={<UserOutlined />} />
-                    <div>
-                        <Text strong>{text}</Text>
-                        <br />
-                        <Text type="secondary" style={{ fontSize: '12px' }}>{new Date(record.createdAt).toLocaleDateString()}</Text>
-                    </div>
-                </Space>
-            ),
-        },
-        {
-            title: 'Nội dung',
-            key: 'content',
-            render: (_, record) => (
-                <div style={{ maxWidth: '400px' }}>
-                    <Text>{record.content}</Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: '12px' }}>Trên: <a href="#">{record.postTitle}</a></Text>
-                </div>
-            ),
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={
-                    status === 'APPROVED' ? 'success' :
-                        status === 'PENDING' ? 'processing' :
-                            status === 'SPAM' ? 'error' : 'default'
-                }>
-                    {status}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            align: 'right',
-            render: (_, record) => (
-                <Space>
-                    {record.status !== 'APPROVED' && (
-                        <Button icon={<CheckOutlined />} type="link" style={{ color: '#52c41a' }} onClick={() => handleAction(record.id, 'APPROVED')} />
-                    )}
-                    {record.status !== 'SPAM' && (
-                        <Button icon={<WarningOutlined />} type="link" style={{ color: '#fa8c16' }} onClick={() => handleAction(record.id, 'SPAM')} />
-                    )}
-                    <Button icon={<DeleteOutlined />} type="link" danger onClick={() => handleAction(record.id, 'DELETED')} />
-                </Space>
-            ),
-        },
-    ];
-
     return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Tương tác</Breadcrumb.Item>
-                <Breadcrumb.Item>Bình luận</Breadcrumb.Item>
-            </Breadcrumb>
+        <div className="space-y-6">
+            <h1 className="text-2xl font-bold text-gray-900">Quản lý Bình luận & Tương tác</h1>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Bình luận</Title>
-                    <Text type="secondary">Quản lý các bình luận và tương tác từ người dùng trên bài viết</Text>
+            <div className="flex gap-4 mb-4">
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-1">
+                    <p className="text-gray-500 text-xs uppercase font-bold">Chờ duyệt</p>
+                    <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
                 </div>
-                <Button icon={<ReloadOutlined />} onClick={fetchData}>Làm mới</Button>
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-1">
+                    <p className="text-gray-500 text-xs uppercase font-bold">Báo cáo Spam</p>
+                    <p className="text-2xl font-bold text-red-600">{stats.spam}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-1">
+                    <p className="text-gray-500 text-xs uppercase font-bold">Tổng bình luận</p>
+                    <p className="text-2xl font-bold text-blue-600">{stats.total.toLocaleString()}</p>
+                </div>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={8}>
-                    <Card size="small">
-                        <Statistic title="Chờ duyệt" value={stats.pending} valueStyle={{ color: '#faad14' }} prefix={<ClockCircleOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={8}>
-                    <Card size="small">
-                        <Statistic title="Báo cáo Spam" value={stats.spam} valueStyle={{ color: '#cf1322' }} prefix={<StopOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={8}>
-                    <Card size="small">
-                        <Statistic title="Tổng bình luận" value={stats.total} prefix={<CommentOutlined />} />
-                    </Card>
-                </Col>
-            </Row>
+            <div className="flex justify-between items-center mb-2">
+                <div className="bg-white rounded-xl border border-gray-100 px-4 py-2 flex items-center gap-2 w-96">
+                    <i className="fi flaticon-search text-gray-400"></i>
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm theo người dùng, nội dung..."
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        className="bg-transparent outline-none text-sm w-full"
+                    />
+                </div>
+                <button onClick={fetchData} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
+                    <i className="fi flaticon-refresh"></i>
+                </button>
+            </div>
 
-            <Card style={{ marginBottom: '16px' }}>
-                <Input
-                    placeholder="Tìm kiếm người dùng, nội dung, bài viết..."
-                    prefix={<SearchOutlined />}
-                    value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
-                    style={{ width: 400 }}
-                    allowClear
-                />
-            </Card>
-
-            <Table
-                columns={columns}
-                dataSource={filteredData}
-                rowKey="id"
-                loading={loading}
-                pagination={{ pageSize: 15 }}
-            />
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                            <th className="px-6 py-4 font-bold text-gray-700">Người dùng</th>
+                            <th className="px-6 py-4 font-bold text-gray-700">Nội dung</th>
+                            <th className="px-6 py-4 font-bold text-gray-700">Trạng thái</th>
+                            <th className="px-6 py-4 font-bold text-gray-700 text-right">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {loading ? (
+                            <tr>
+                                <td colSpan={4} className="px-6 py-12 text-center text-gray-500 italic">Đang tải bình luận...</td>
+                            </tr>
+                        ) : filteredComments.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="px-6 py-12 text-center text-gray-500 italic">Không tìm thấy bình luận nào</td>
+                            </tr>
+                        ) : filteredComments.map((item) => (
+                            <tr key={item.id} className="hover:bg-gray-50 transition">
+                                <td className="px-6 py-4">
+                                    <p className="font-bold text-gray-900">{item.userName}</p>
+                                    <p className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleDateString()}</p>
+                                </td>
+                                <td className="px-6 py-4 max-w-md">
+                                    <p className="text-gray-800 text-sm mb-1">{item.content}</p>
+                                    <p className="text-xs text-blue-500 font-medium truncate">Trên: {item.postTitle}</p>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <span className={`px-2 py-1 rounded-lg text-xs font-bold 
+                                        ${item.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                            item.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                                item.status === 'SPAM' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
+                                        {item.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                        {item.status !== 'APPROVED' && (
+                                            <button onClick={() => handleAction(item.id, 'APPROVED')} className="p-2 text-green-600 hover:bg-green-50 rounded-lg tooltip" title="Duyệt">
+                                                <i className="fi flaticon-checked"></i>
+                                            </button>
+                                        )}
+                                        {item.status !== 'SPAM' && (
+                                            <button onClick={() => handleAction(item.id, 'SPAM')} className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg tooltip" title="Báo Spam">
+                                                <i className="fi flaticon-warning"></i>
+                                            </button>
+                                        )}
+                                        <button onClick={() => handleAction(item.id, 'DELETED')} className="p-2 text-red-500 hover:bg-red-50 rounded-lg tooltip" title="Xóa">
+                                            <i className="fi flaticon-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
-
-// Re-using user icon
-const UserOutlined = () => <span role="img" aria-label="user" className="anticon anticon-user"><svg viewBox="64 64 896 896" focusable="false" data-icon="user" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M858.5 763.6a374 374 0 00-80.6-119.5 375.63 375.63 0 00-119.5-80.6c-.4-.2-.8-.3-1.2-.5C719.5 518 760 444.7 760 362c0-137-111-248-248-248S264 225 264 362c0 82.7 40.5 156 102.8 201.1-.4.2-.8.3-1.2.5-44.8 18.9-85 46-119.5 80.6a375.63 375.63 0 00-80.6 119.5A371.7 371.7 0 00136 901.8a8 8 0 008 8.2h60c4.4 0 7.9-3.5 8-7.8 2-77.2 33-149.5 87.8-204.3 56.7-56.7 132-87.9 212.2-87.9s155.5 31.2 212.2 87.9C779 752.7 810 825 812 902.2c.1 4.4 3.6 7.8 8 7.8h60a8 8 0 008-8.2c-1-47.8-10.9-94.3-29.5-138.2zM512 566c-45.9 0-89.1-17.9-121.6-50.4S340 439.9 340 394s17.9-89.1 50.4-121.6S466.1 222 512 222s89.1 17.9 121.6 50.4S684 348.1 684 394s-17.9 89.1-50.4 121.6S557.9 566 512 566z"></path></svg></span>;
-const ClockCircleOutlined = () => <span role="img" aria-label="clock-circle" className="anticon anticon-clock-circle"><svg viewBox="64 64 896 896" focusable="false" data-icon="clock-circle" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372zm120-438.2l-103.4.1v-182c0-4.4-3.6-8-8-8h-16c-4.4 0-8 3.6-8 8v200.2c0 2.2.9 4.3 2.5 5.9l120.4 120.4c3.1 3.1 8.2 3.1 11.3 0l11.3-11.3c3.1-3.1 3.1-8.2 0-11.3L632 445.8z"></path></svg></span>;

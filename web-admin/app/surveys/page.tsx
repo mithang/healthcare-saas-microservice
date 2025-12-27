@@ -1,30 +1,20 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Row, Col, Statistic, Modal, Tooltip } from 'antd';
-import { FormOutlined, PlusOutlined, BarChartOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ClockCircleOutlined, MessageOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import surveyService, { Survey } from '@/services/survey.service';
 
-const { Title, Text } = Typography;
-
-export default function SurveysPage() {
+export default function SurveyListPage() {
     const [surveys, setSurveys] = useState<Survey[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchText, setSearchText] = useState('');
 
     const fetchSurveys = async () => {
-        setLoading(true);
         try {
+            setLoading(true);
             const data = await surveyService.getSurveys();
             setSurveys(data);
         } catch (error) {
-            console.error('Failed to fetch surveys:', error);
-            // Fallback mock
-            setSurveys([
-                { id: 1, title: 'Khảo sát mức độ hài lòng về dịch vụ khám bệnh', description: 'Đánh giá chất lượng dịch vụ và thái độ phục vụ của nhân viên y tế.', status: 'ACTIVE', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { responses: 1256 } },
-                { id: 2, title: 'Khảo sát nhu cầu tiêm chủng vaccine cúm', description: 'Thu thập ý kiến về nhu cầu và thời gian tiêm chủng phù hợp.', status: 'DRAFT', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { responses: 0 } }
-            ]);
+            console.error('Failed to fetch surveys', error);
         } finally {
             setLoading(false);
         }
@@ -34,152 +24,96 @@ export default function SurveysPage() {
         fetchSurveys();
     }, []);
 
-    const handleDelete = (id: number) => {
-        Modal.confirm({
-            title: 'Xóa khảo sát',
-            content: 'Bạn có chắc chắn muốn xóa bài khảo sát này không? Tất cả dữ liệu phản hồi liên quan sẽ bị mất.',
-            okText: 'Xóa',
-            okType: 'danger',
-            onOk: async () => {
-                try {
-                    await surveyService.deleteSurvey(id);
-                    message.success('Đã xóa khảo sát');
-                    fetchSurveys();
-                } catch (error) {
-                    message.error('Lỗi khi xóa khảo sát');
-                }
+    const handleDelete = async (id: number) => {
+        if (confirm('Bạn có chắc chắn muốn xóa khảo sát này?')) {
+            try {
+                await surveyService.deleteSurvey(id);
+                fetchSurveys();
+            } catch (error) {
+                alert('Lỗi khi xóa khảo sát');
             }
-        });
-    };
-
-    const filteredData = surveys.filter(item =>
-        item.title.toLowerCase().includes(searchText.toLowerCase())
-    );
-
-    const getStatusTag = (status: string) => {
-        switch (status) {
-            case 'ACTIVE': return <Tag color="success">ĐANG CHẠY</Tag>;
-            case 'DRAFT': return <Tag color="default">BẢN NHÁP</Tag>;
-            case 'CLOSED': return <Tag color="error">ĐÃ ĐÓNG</Tag>;
-            default: return <Tag>{status}</Tag>;
         }
     };
 
-    const columns: ColumnsType<Survey> = [
-        {
-            title: 'Tên khảo sát',
-            dataIndex: 'title',
-            key: 'title',
-            render: (text, record) => (
-                <div style={{ maxWidth: '450px' }}>
-                    <Text strong style={{ fontSize: '15px', display: 'block' }}>{text}</Text>
-                    <Text type="secondary" style={{ fontSize: '12px' }} ellipsis>{record.description}</Text>
-                </div>
-            ),
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => getStatusTag(status),
-        },
-        {
-            title: 'Phản hồi',
-            key: 'responses',
-            render: (_, record) => (
-                <Space>
-                    <MessageOutlined style={{ color: '#1890ff' }} />
-                    <Text strong>{record._count?.responses || 0}</Text>
-                </Space>
-            ),
-        },
-        {
-            title: 'Ngày tạo',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
-            render: (val) => (
-                <Space>
-                    <ClockCircleOutlined style={{ color: '#8c8c8c' }} />
-                    <Text type="secondary">{new Date(val).toLocaleDateString()}</Text>
-                </Space>
-            ),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            align: 'right',
-            render: (_, record) => (
-                <Space>
-                    <Tooltip title="Xem báo cáo">
-                        <Button icon={<BarChartOutlined />} type="link" />
-                    </Tooltip>
-                    <Tooltip title="Chỉnh sửa">
-                        <Button icon={<EditOutlined />} type="link" />
-                    </Tooltip>
-                    <Button icon={<DeleteOutlined />} type="link" danger onClick={() => handleDelete(record.id)} />
-                </Space>
-            ),
-        },
-    ];
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'ACTIVE': return 'bg-green-100 text-green-700';
+            case 'DRAFT': return 'bg-gray-100 text-gray-700';
+            case 'CLOSED': return 'bg-red-100 text-red-700';
+            default: return 'bg-gray-100 text-gray-700';
+        }
+    };
+
+    const formatStatus = (status: string) => {
+        switch (status) {
+            case 'ACTIVE': return 'Đang chạy';
+            case 'DRAFT': return 'Bản nháp';
+            case 'CLOSED': return 'Đã đóng';
+            default: return status;
+        }
+    };
 
     return (
-        <div style={{ padding: '0px' }}>
-            <Breadcrumb style={{ marginBottom: '16px' }}>
-                <Breadcrumb.Item>Sự kiện</Breadcrumb.Item>
-                <Breadcrumb.Item>Khảo sát ý kiến (Surveys)</Breadcrumb.Item>
-            </Breadcrumb>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
                 <div>
-                    <Title level={2} style={{ margin: 0 }}>Quản lý Khảo sát</Title>
-                    <Text type="secondary">Thiết kế và thu thập ý kiến đóng góp từ người dùng và đối tác</Text>
+                    <h1 className="text-2xl font-bold text-gray-900">Quản lý Khảo sát</h1>
+                    <p className="text-gray-500 text-sm mt-1">Tạo và quản lý các bài khảo sát, thu thập ý kiến người dùng.</p>
                 </div>
-                <Button type="primary" icon={<PlusOutlined />} size="large">
-                    Tạo khảo sát mới
-                </Button>
+                <Link href="/admin/surveys/builder" className="btn btn-primary bg-primary text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-dark transition">
+                    <i className="fi flaticon-add"></i> Tạo khảo sát
+                </Link>
             </div>
 
-            <Row gutter={16} style={{ marginBottom: '24px' }}>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng khảo sát" value={surveys.length} prefix={<FormOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Đang chạy" value={surveys.filter(s => s.status === 'ACTIVE').length} valueStyle={{ color: '#52c41a' }} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tổng phản hồi" value={surveys.reduce((sum, s) => sum + (s._count?.responses || 0), 0)} prefix={<MessageOutlined />} />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card size="small">
-                        <Statistic title="Tỷ lệ hoàn thành" value={87.5} suffix="%" valueStyle={{ color: '#1890ff' }} />
-                    </Card>
-                </Col>
-            </Row>
-
-            <Card style={{ marginBottom: '16px' }}>
-                <Input
-                    placeholder="Tìm theo tên khảo sát..."
-                    prefix={<SearchOutlined />}
-                    value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
-                    style={{ width: 400 }}
-                    allowClear
-                />
-            </Card>
-
-            <Table
-                columns={columns}
-                dataSource={filteredData}
-                rowKey="id"
-                loading={loading}
-                pagination={{ pageSize: 15 }}
-            />
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {loading ? (
+                    <div className="p-12 text-center text-gray-500">Đang tải danh sách khảo sát...</div>
+                ) : surveys.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">Chưa có khảo sát nào được tạo.</div>
+                ) : (
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-4 font-bold text-gray-700">Tên khảo sát</th>
+                                <th className="px-6 py-4 font-bold text-gray-700">Trạng thái</th>
+                                <th className="px-6 py-4 font-bold text-gray-700">Phản hồi</th>
+                                <th className="px-6 py-4 font-bold text-gray-700">Ngày tạo</th>
+                                <th className="px-6 py-4 font-bold text-gray-700 text-right">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {surveys.map((survey) => (
+                                <tr key={survey.id} className="hover:bg-gray-50 transition">
+                                    <td className="px-6 py-4">
+                                        <p className="font-bold text-gray-900">{survey.title}</p>
+                                        <p className="text-xs text-gray-500 truncate max-w-xs">{survey.description}</p>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${getStatusColor(survey.status)}`}>
+                                            {formatStatus(survey.status)}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-gray-700">{survey._count?.responses || 0}</td>
+                                    <td className="px-6 py-4 text-gray-500 text-sm">{new Date(survey.createdAt).toLocaleDateString('vi-VN')}</td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Link href={`/admin/surveys/${survey.id}/report`} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg tooltip" title="Xem báo cáo">
+                                                <i className="fi flaticon-stats"></i>
+                                            </Link>
+                                            <Link href={`/admin/surveys/builder?id=${survey.id}`} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg tooltip" title="Chỉnh sửa">
+                                                <i className="fi flaticon-edit"></i>
+                                            </Link>
+                                            <button onClick={() => handleDelete(survey.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg tooltip" title="Xóa">
+                                                <i className="fi flaticon-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
         </div>
     );
 }

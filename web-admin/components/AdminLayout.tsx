@@ -15,6 +15,7 @@ import {
     CreditCardOutlined,
     SettingOutlined,
     SearchOutlined,
+    ClockCircleOutlined,
     LogoutOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
@@ -80,6 +81,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             key: '/search',
             icon: <SearchOutlined />,
             label: <Link href="/search">Search Data</Link>,
+        },
+        {
+            key: '/jobs',
+            icon: <ClockCircleOutlined />,
+            label: <Link href="/jobs">Background Jobs</Link>,
         },
     ];
 

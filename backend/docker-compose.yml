@@ -41,6 +41,15 @@ services:
     networks:
       - saas-network
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - saas-network
+
   api-gateway: # API Gateway
     build:
       context: .
@@ -62,6 +71,7 @@ services:
       - notification-service
       - setting-service
       - search-service
+      - backgroundjob-service
     networks:
       - saas-network
 
@@ -197,6 +207,23 @@ services:
     networks:
       - saas-network
 
+  backgroundjob-service:
+    build:
+      context: .
+      args:
+        APP_NAME: backgroundjob-service
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/backgroundjob_db?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - rabbitmq
+      - db
+      - redis
+    networks:
+      - saas-network
+
 networks:
   saas-network:
     driver: bridge
@@ -204,3 +231,4 @@ networks:
 volumes:
   postgres_data:
   elasticsearch_data:
+  redis_data:

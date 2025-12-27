@@ -10,6 +10,7 @@ import { PaymentController } from './payment.controller';
 import { FileController } from './file.controller';
 import { SettingController } from './setting.controller';
 import { SearchController } from './search.controller';
+import { BackgroundJobController } from './backgroundjob.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -114,9 +115,20 @@ import { AppService } from './app.service';
           },
         },
       },
+      {
+        name: 'BACKGROUNDJOB_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'backgroundjob_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController],
   providers: [AppService],
 })
 export class AppModule { }

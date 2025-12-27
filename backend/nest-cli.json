@@ -108,6 +108,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/search-service/tsconfig.app.json"
       }
+    },
+    "backgroundjob-service": {
+      "type": "application",
+      "root": "apps/backgroundjob-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/backgroundjob-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/backgroundjob-service/tsconfig.app.json"
+      }
     }
   }
 }

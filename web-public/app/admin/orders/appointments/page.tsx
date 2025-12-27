@@ -1,28 +1,35 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import StatusBadge from '@/components/admin/StatusBadge';
-import Link from 'next/link';
 import { Button } from '@/components/admin/ui/Button';
 import { useRouter } from 'next/navigation';
-
-// Mock data with more realistic structure
-const appointments = Array.from({ length: 40 }, (_, i) => ({
-    id: i + 1,
-    patientName: `Bệnh nhân ${String.fromCharCode(65 + (i % 26))} ${i}`,
-    patientPhone: `09${10000000 + i}`,
-    doctorName: `BS. ${['Nguyễn', 'Trần', 'Lê'][i % 3]} ${['Minh', 'Hoa', 'Tuấn'][i % 3]}`,
-    date: `${20 + (i % 10)}/12/2024`,
-    time: `${8 + (i % 10)}:00`,
-    service: ['Khám tổng quát', 'Khám chuyên khoa', 'Tái khám', 'Tư vấn online'][i % 4],
-    status: ['pending', 'confirmed', 'completed', 'cancelled'][i % 4] as any,
-}));
+import bookingService, { Appointment } from '@/services/booking.service';
 
 export default function AppointmentsManagement() {
     const router = useRouter();
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const itemsPerPage = 10;
+
+    const fetchAppointments = async () => {
+        try {
+            setLoading(true);
+            const data = await bookingService.getAppointments();
+            setAppointments(data);
+        } catch (error) {
+            console.error('Failed to fetch appointments', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAppointments();
+    }, []);
 
     const filteredData = appointments.filter(item =>
         item.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,7 +42,7 @@ export default function AppointmentsManagement() {
 
     const columns = [
         {
-            key: 'patientName', label: 'Bệnh nhân', render: (val: string, row: any) => (
+            key: 'patientName', label: 'Bệnh nhân', render: (val: string, row: Appointment) => (
                 <div>
                     <p className="font-bold text-gray-900">{val}</p>
                     <p className="text-xs text-gray-500">{row.patientPhone}</p>
@@ -44,7 +51,7 @@ export default function AppointmentsManagement() {
         },
         { key: 'doctorName', label: 'Bác sĩ', render: (val: string) => <span className="font-medium text-blue-700">{val}</span> },
         {
-            key: 'date', label: 'Thời gian', render: (val: string, row: any) => (
+            key: 'date', label: 'Thời gian', render: (val: string, row: Appointment) => (
                 <div>
                     <p className="font-medium text-gray-900">{val}</p>
                     <p className="text-xs text-gray-500">{row.time}</p>
@@ -55,8 +62,8 @@ export default function AppointmentsManagement() {
         { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
-    const actions = (row: any) => (
-        <>
+    const actions = (row: Appointment) => (
+        <div className="flex gap-2">
             <button
                 onClick={() => router.push(`/admin/orders/appointments/${row.id}`)}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -71,7 +78,19 @@ export default function AppointmentsManagement() {
             >
                 <i className="fi flaticon-edit"></i>
             </button>
-        </>
+            <button
+                onClick={async () => {
+                    if (confirm('Bạn có chắc chắn muốn xóa lịch hẹn này?')) {
+                        await bookingService.deleteAppointment(row.id);
+                        fetchAppointments();
+                    }
+                }}
+                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Xóa"
+            >
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
     );
 
     return (
@@ -101,6 +120,7 @@ export default function AppointmentsManagement() {
             <DataTable
                 columns={columns}
                 data={paginatedData}
+                loading={loading}
                 actions={actions}
                 searchable
                 searchPlaceholder="Tìm kiếm bệnh nhân, bác sĩ..."

@@ -1,29 +1,37 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import StatusBadge from '@/components/admin/StatusBadge';
 import { Button } from '@/components/admin/ui/Button';
 import { useRouter } from 'next/navigation';
-
-const MOCK_DATA = Array.from({ length: 40 }, (_, i) => ({
-    id: i + 1,
-    orderCode: `LAB${10000 + i}`,
-    patientName: `Bệnh nhân ${String.fromCharCode(65 + (i % 26))}`,
-    patientPhone: `09${10000000 + i}`,
-    testType: ['Xét nghiệm máu', 'Xét nghiệm nước tiểu', 'X-quang', 'CT Scan'][i % 4],
-    hospital: `Bệnh viện ${String.fromCharCode(65 + ((i + 2) % 26))}`,
-    fee: (300 + i * 30) * 1000,
-    testDate: `${20 + (i % 10)}/12/2024`,
-    status: ['pending', 'processing', 'completed', 'cancelled'][i % 4] as any,
-}));
+import bookingService, { LabTest } from '@/services/booking.service';
 
 export default function LabTestsManagement() {
     const router = useRouter();
+    const [labTests, setLabTests] = useState<LabTest[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const itemsPerPage = 10;
 
-    const filteredData = MOCK_DATA.filter(item =>
+    const fetchLabTests = async () => {
+        try {
+            setLoading(true);
+            const data = await bookingService.getLabTests();
+            setLabTests(data);
+        } catch (error) {
+            console.error('Failed to fetch lab tests', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchLabTests();
+    }, []);
+
+    const filteredData = labTests.filter(item =>
         item.orderCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.patientName.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -34,7 +42,7 @@ export default function LabTestsManagement() {
     const columns = [
         { key: 'orderCode', label: 'Mã hồ sơ', render: (val: string) => <span className="font-mono font-bold text-gray-700">{val}</span> },
         {
-            key: 'patientName', label: 'Bệnh nhân', render: (val: string, row: any) => (
+            key: 'patientName', label: 'Bệnh nhân', render: (val: string, row: LabTest) => (
                 <div>
                     <p className="font-medium text-gray-900">{val}</p>
                     <p className="text-xs text-gray-500">{row.patientPhone}</p>
@@ -54,8 +62,8 @@ export default function LabTestsManagement() {
         { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
-    const actions = (row: any) => (
-        <>
+    const actions = (row: LabTest) => (
+        <div className="flex gap-2">
             <button
                 onClick={() => router.push(`/admin/orders/lab-tests/${row.id}`)}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -69,7 +77,19 @@ export default function LabTestsManagement() {
             >
                 <i className="fi flaticon-file"></i>
             </button>
-        </>
+            <button
+                onClick={async () => {
+                    if (confirm('Bạn có chắc chắn muốn xóa hồ sơ này?')) {
+                        await bookingService.deleteLabTest(row.id);
+                        fetchLabTests();
+                    }
+                }}
+                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Xóa"
+            >
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
     );
 
     return (
@@ -90,6 +110,7 @@ export default function LabTestsManagement() {
             <DataTable
                 columns={columns}
                 data={paginatedData}
+                loading={loading}
                 actions={actions}
                 searchable
                 searchPlaceholder="Tìm kiếm mã hồ sơ, bệnh nhân..."

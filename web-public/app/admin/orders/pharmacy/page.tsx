@@ -1,29 +1,37 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import StatusBadge from '@/components/admin/StatusBadge';
 import { Button } from '@/components/admin/ui/Button';
-import { useRouter } from 'next/navigation';
-
-const MOCK_DATA = Array.from({ length: 40 }, (_, i) => ({
-    id: i + 1,
-    code: `PHA${2024000 + i}`,
-    customerName: `Khách hàng ${String.fromCharCode(65 + (i % 26))} ${i}`,
-    customerPhone: `09${10000000 + i}`,
-    pharmacy: `Nhà thuốc ${['An Khang', 'Long Châu', 'Pharmacity'][i % 3]} - Q${(i % 10) + 1}`,
-    items: (i % 5) + 1,
-    total: ((i % 50) + 5) * 10000,
-    date: `${10 + (i % 20)}/12/2024`,
-    status: ['pending', 'processing', 'shipping', 'completed', 'cancelled'][i % 5] as any,
-}));
+import { useRouter } from 'navigation';
+import bookingService, { PharmacyOrder } from '@/services/booking.service';
 
 export default function PharmacyOrdersManagement() {
     const router = useRouter();
+    const [orders, setOrders] = useState<PharmacyOrder[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const itemsPerPage = 10;
 
-    const filteredData = MOCK_DATA.filter(item =>
+    const fetchOrders = async () => {
+        try {
+            setLoading(true);
+            const data = await bookingService.getPharmacyOrders();
+            setOrders(data);
+        } catch (error) {
+            console.error('Failed to fetch pharmacy orders', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const filteredData = orders.filter(item =>
         item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.customerPhone.includes(searchQuery)
@@ -35,7 +43,7 @@ export default function PharmacyOrdersManagement() {
     const columns = [
         { key: 'code', label: 'Mã đơn', render: (val: string) => <span className="font-mono font-bold text-gray-700">{val}</span> },
         {
-            key: 'customerName', label: 'Khách hàng', render: (val: string, row: any) => (
+            key: 'customerName', label: 'Khách hàng', render: (val: string, row: PharmacyOrder) => (
                 <div>
                     <p className="font-medium text-gray-900">{val}</p>
                     <p className="text-xs text-gray-500">{row.customerPhone}</p>
@@ -43,9 +51,9 @@ export default function PharmacyOrdersManagement() {
             )
         },
         { key: 'pharmacy', label: 'Nhà thuốc cung cấp' },
-        { key: 'items', label: 'SL', render: (val: number) => <span className="font-medium">{val} món</span> },
+        { key: 'itemsCount', label: 'SL', render: (val: number) => <span className="font-medium">{val} món</span> },
         {
-            key: 'total', label: 'Tổng tiền', render: (val: number) => (
+            key: 'totalAmount', label: 'Tổng tiền', render: (val: number) => (
                 <span className="font-bold text-green-600">
                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)}
                 </span>
@@ -55,8 +63,8 @@ export default function PharmacyOrdersManagement() {
         { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
-    const actions = (row: any) => (
-        <>
+    const actions = (row: PharmacyOrder) => (
+        <div className="flex gap-2">
             <button
                 onClick={() => router.push(`/admin/orders/pharmacy/${row.id}`)}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -71,7 +79,19 @@ export default function PharmacyOrdersManagement() {
             >
                 <i className="fi flaticon-edit"></i>
             </button>
-        </>
+            <button
+                onClick={async () => {
+                    if (confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
+                        await bookingService.deletePharmacyOrder(row.id);
+                        fetchOrders();
+                    }
+                }}
+                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Xóa"
+            >
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
     );
 
     return (
@@ -92,6 +112,7 @@ export default function PharmacyOrdersManagement() {
             <DataTable
                 columns={columns}
                 data={paginatedData}
+                loading={loading}
                 actions={actions}
                 searchable
                 searchPlaceholder="Tìm kiếm mã đơn, khách hàng..."

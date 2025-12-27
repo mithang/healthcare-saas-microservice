@@ -15,6 +15,7 @@ import { ContentController } from './content.controller';
 import { EducationController } from './education.controller';
 import { PartnerController } from './partner.controller';
 import { CommunityController } from './community.controller';
+import { BookingController } from './booking.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -142,6 +143,17 @@ import { AppService } from './app.service';
         },
       },
       {
+        name: 'BOOKING_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'booking_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
         name: 'EDUCATION_SERVICE',
         transport: Transport.RMQ,
         options: {
@@ -165,7 +177,7 @@ import { AppService } from './app.service';
       },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController],
   providers: [AppService],
 })
 export class AppModule { }

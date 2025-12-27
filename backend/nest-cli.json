@@ -207,6 +207,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/survey-service/tsconfig.app.json"
       }
+    },
+    "ai-service": {
+      "type": "application",
+      "root": "apps/ai-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/ai-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ai-service/tsconfig.app.json"
+      }
     }
   }
 }

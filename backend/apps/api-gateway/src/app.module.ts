@@ -21,6 +21,7 @@ import { FinanceController } from './finance.controller';
 import { SeminarController } from './seminar.controller';
 import { ReportController } from './report.controller';
 import { SurveyController } from './survey.controller';
+import { AIController } from './ai.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -235,9 +236,20 @@ import { AppService } from './app.service';
           },
         },
       },
+      {
+        name: 'AI_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'ai_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController, MarketingController, FinanceController, SeminarController, ReportController, SurveyController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController, BookingController, MarketingController, FinanceController, SeminarController, ReportController, SurveyController, AIController],
   providers: [AppService],
 })
 export class AppModule { }

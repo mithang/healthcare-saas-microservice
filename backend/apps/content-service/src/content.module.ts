@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { CommonModule } from '@libs/common';
+import { CommonModule } from '@app/common';
 import { ContentController } from './content.controller';
 import { ContentService } from './content.service';
 

@@ -1,5 +1,6 @@
+import { PrismaService } from './prisma';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient, CommentStatus } from '@prisma/client';
+import { PrismaClient, CommentStatus } from '.prisma/client-engagement-service';
 
 @Injectable()
 export class EngagementService implements OnModuleInit {

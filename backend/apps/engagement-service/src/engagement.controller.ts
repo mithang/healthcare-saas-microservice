@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { EngagementService } from './engagement.service';
-import { CommentStatus } from '@prisma/client';
+import { CommentStatus } from '.prisma/client-engagement-service';
 
 @Controller()
 export class EngagementController {

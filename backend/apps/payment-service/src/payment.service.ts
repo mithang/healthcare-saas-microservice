@@ -5,7 +5,7 @@ import {
   Plan,
   Subscription,
   SubscriptionStatus,
-} from '@prisma/client';
+} from '.prisma/client-payment-service';
 
 @Injectable()
 export class PaymentService {

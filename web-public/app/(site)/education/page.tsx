@@ -1,18 +1,34 @@
 "use client";
-import React, { useState } from 'react';
-import { Button, Input, Select } from '@/components/portal/ui';
+import React, { useEffect, useState } from 'react';
+import { Button, Input } from '@/components/portal/ui';
 import { useRouter } from 'next/navigation';
+import { educationService, Course } from '@/services/education.service';
 
 export default function EducationPortalPage() {
     const router = useRouter();
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
 
-    const courses = [
-        { id: 'CME001', name: 'Cập nhật Chẩn đoán & Điều trị Đái tháo đường 2024', type: 'CME', provider: 'BV ĐH Y Dược', image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=400', credits: 4, price: 500000, date: '25/12/2024' },
-        { id: 'CPE202', name: 'Quản lý sử dụng kháng sinh trong bệnh viện', type: 'CPE', provider: 'Hội Dược học', image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=400', credits: 2, price: 300000, date: '28/12/2024' },
-        { id: 'CME003', name: 'Siêu âm tim mạch nâng cao', type: 'CME', provider: 'Viện Tim', image: 'https://images.unsplash.com/photo-1579684385136-137af75461bb?auto=format&fit=crop&q=80&w=400', credits: 8, price: 2000000, date: '05/01/2025' },
-        { id: 'CME004', name: 'Kiểm soát nhiễm khuẩn cơ bản', type: 'CME', provider: 'Sở Y Tế', image: 'https://images.unsplash.com/photo-1584036561566-b93a901668d7?auto=format&fit=crop&q=80&w=400', credits: 4, price: 0, date: '10/01/2025' },
-    ];
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const data = await educationService.getCourses();
+                setCourses(data);
+            } catch (error) {
+                console.error('Failed to fetch courses:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCourses();
+    }, []);
+
+    const filteredCourses = courses.filter(course => {
+        if (filter === 'all') return true;
+        if (filter === 'Free') return course.price === 0;
+        return course.type === filter;
+    });
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 pb-12">
@@ -50,40 +66,53 @@ export default function EducationPortalPage() {
             </div>
 
             {/* Course Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {courses.map(course => (
-                    <div key={course.id} className="bg-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer" onClick={() => router.push(`/portal/education/${course.id}`)}>
-                        <div className="h-48 overflow-hidden relative">
-                            <img src={course.image} alt={course.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                            <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold text-white ${course.type === 'CME' ? 'bg-blue-500' : 'bg-purple-500'}`}>
-                                {course.type}
-                            </span>
-                            {course.price === 0 && (
-                                <span className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold bg-green-500 text-white shadow-lg">
-                                    Miễn phí
-                                </span>
-                            )}
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="bg-white border border-gray-100 rounded-3xl overflow-hidden animate-pulse p-4 flex flex-col gap-4">
+                            <div className="h-48 bg-gray-100 rounded-2xl w-full"></div>
+                            <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                            <div className="h-6 bg-gray-100 rounded w-full"></div>
+                            <div className="h-4 bg-gray-100 rounded w-3/4"></div>
                         </div>
-                        <div className="p-5">
-                            <div className="flex items-center gap-2 mb-3 text-xs text-gray-500 font-medium">
-                                <i className="fi flaticon-calendar"></i> {course.date}
-                                <span>•</span>
-                                <i className="fi flaticon-diploma"></i> {course.credits} tín chỉ
-                            </div>
-                            <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 h-12">{course.name}</h3>
-                            <p className="text-gray-500 text-sm mb-4 flex items-center gap-2">
-                                <i className="fi flaticon-hospital text-gray-400"></i> {course.provider}
-                            </p>
-                            <div className="flex justify-between items-center pt-4 border-t border-gray-50">
-                                <span className="font-bold text-primary text-lg">
-                                    {course.price === 0 ? 'Free' : course.price.toLocaleString() + 'đ'}
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {filteredCourses.map(course => (
+                        <div key={course.id} className="bg-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer" onClick={() => router.push(`/portal/education/${course.id}`)}>
+                            <div className="h-48 overflow-hidden relative">
+                                <img src={course.thumbnail || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=400'} alt={course.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold text-white ${course.type === 'CME' ? 'bg-blue-500' : 'bg-purple-500'}`}>
+                                    {course.type}
                                 </span>
-                                <Button size="sm" rounded="lg" icon="arrow-right">Chi tiết</Button>
+                                {course.price === 0 && (
+                                    <span className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold bg-green-500 text-white shadow-lg">
+                                        Miễn phí
+                                    </span>
+                                )}
+                            </div>
+                            <div className="p-5">
+                                <div className="flex items-center gap-2 mb-3 text-xs text-gray-500 font-medium">
+                                    <i className="fi flaticon-calendar"></i> {new Date().toLocaleDateString('vi-VN')}
+                                    <span>•</span>
+                                    <i className="fi flaticon-diploma"></i> {course.credits} tín chỉ
+                                </div>
+                                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 h-12">{course.name}</h3>
+                                <p className="text-gray-500 text-sm mb-4 flex items-center gap-2">
+                                    <i className="fi flaticon-hospital text-gray-400"></i> {course.provider}
+                                </p>
+                                <div className="flex justify-between items-center pt-4 border-t border-gray-50">
+                                    <span className="font-bold text-primary text-lg">
+                                        {course.price === 0 ? 'Free' : course.price.toLocaleString() + 'đ'}
+                                    </span>
+                                    <Button size="sm" rounded="lg" icon="arrow-right">Chi tiết</Button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

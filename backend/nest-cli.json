@@ -126,6 +126,33 @@
       "compilerOptions": {
         "tsConfigPath": "apps/content-service/tsconfig.app.json"
       }
+    },
+    "education-service": {
+      "type": "application",
+      "root": "apps/education-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/education-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/education-service/tsconfig.app.json"
+      }
+    },
+    "partner-service": {
+      "type": "application",
+      "root": "apps/partner-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/partner-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/partner-service/tsconfig.app.json"
+      }
+    },
+    "community-service": {
+      "type": "application",
+      "root": "apps/community-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/community-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/community-service/tsconfig.app.json"
+      }
     }
   }
 }

@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/portal/ui';
 import { useRouter, useParams } from 'next/navigation';
+import { educationService, Course } from '@/services/education.service';
 
 // Types
 type LessonType = 'video' | 'quiz';
@@ -33,57 +34,62 @@ export default function CourseLearningPage() {
     const router = useRouter();
     const { id } = params;
 
-    // --- Mock Data ---
-    const initialCourse = {
-        id: id,
-        name: 'Cập nhật Kiến thức Dược lâm sàng 2024',
-        progress: 75,
-        totalLessons: 4,
-        completedLessons: 3,
-        chapters: [
-            {
-                title: 'Chương 1: Tổng quan',
-                lessons: [
-                    { id: 'l1', title: 'Giới thiệu khóa học', duration: '10:00', completed: true, type: 'video' },
-                    { id: 'l2', title: 'Nguyên tắc dược lâm sàng', duration: '45:00', completed: true, type: 'video' },
-                ]
-            },
-            {
-                title: 'Chương 2: Thuốc Tim mạch',
-                lessons: [
-                    { id: 'l3', title: 'Điều trị Tăng huyết áp', duration: '60:00', completed: true, type: 'video' },
-                    {
-                        id: 'l4', title: 'Kiểm tra kiến thức Chương 2', duration: '15:00', completed: false, type: 'quiz', quizData: [
-                            {
-                                id: 'q1',
-                                question: 'Thuốc nào sau đây thuộc nhóm chẹn kênh calci (CCB)?',
-                                options: ['Amlodipine', 'Lisinopril', 'Losartan', 'Bisoprolol'],
-                                correctAnswer: 0
-                            },
-                            {
-                                id: 'q2',
-                                question: 'Tác dụng phụ thường gặp nhất của thuốc ức chế men chuyển (ACEi) là gì?',
-                                options: ['Phù chân', 'Ho khan', 'Nhịp tim nhanh', 'Hạ kali máu'],
-                                correctAnswer: 1
-                            },
-                            {
-                                id: 'q3',
-                                question: 'Mục tiêu huyết áp tiêu chuẩn cho bệnh nhân đái tháo đường là bao nhiêu?',
-                                options: ['< 140/90 mmHg', '< 130/80 mmHg', '< 120/80 mmHg', '< 150/90 mmHg'],
-                                correctAnswer: 1
-                            }
-                        ]
-                    },
-                ]
-            }
-        ] as Chapter[]
-    };
+    const [course, setCourse] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [currentLesson, setCurrentLesson] = useState<any>(null);
 
-    // --- State ---
-    const [course] = useState(initialCourse);
+    useEffect(() => {
+        const fetchCourse = async () => {
+            if (!id) return;
+            try {
+                const data = await educationService.getCourse(id);
+                // Map backend data to UI structure
+                const mappedCourse = {
+                    ...data,
+                    progress: 0,
+                    chapters: [
+                        {
+                            title: 'Nội dung khóa học',
+                            lessons: (data.lessons || []).map((l: any) => ({
+                                id: l.id,
+                                title: l.title,
+                                duration: '15:00', // Placeholder
+                                completed: false,
+                                type: 'video',
+                                videoUrl: l.videoUrl,
+                                quizData: undefined
+                            })).concat((data.quizzes || []).map((q: any) => ({
+                                id: q.id,
+                                title: q.title,
+                                duration: '10:00',
+                                completed: false,
+                                type: 'quiz',
+                                videoUrl: undefined,
+                                quizData: (q.questions || []).map((quest: any) => ({
+                                    id: quest.id,
+                                    question: quest.content,
+                                    options: Array.isArray(quest.options) ? quest.options : JSON.parse(quest.options || '[]'),
+                                    correctAnswer: quest.correctOption
+                                }))
+                            })))
+                        }
+                    ]
+                };
+                setCourse(mappedCourse);
+                if (mappedCourse.chapters[0].lessons.length > 0) {
+                    setCurrentLesson(mappedCourse.chapters[0].lessons[0]);
+                }
+            } catch (error) {
+                console.error('Failed to fetch course details:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCourse();
+    }, [id]);
+
     // Flatten lessons for easier navigation
-    const allLessons = useMemo(() => course.chapters.flatMap(c => c.lessons), [course]);
-    const [currentLesson, setCurrentLesson] = useState<Lesson>(allLessons.find(l => !l.completed) || allLessons[0]);
+    const allLessons = useMemo(() => course?.chapters?.flatMap((c: any) => c.lessons) || [], [course]);
 
     // Quiz State
     const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
@@ -91,7 +97,7 @@ export default function CourseLearningPage() {
     const [quizScore, setQuizScore] = useState(0);
 
     // --- Logic ---
-    const handleLessonSelect = (lesson: Lesson) => {
+    const handleLessonSelect = (lesson: any) => {
         setCurrentLesson(lesson);
         // Reset quiz state when switching lessons
         if (lesson.type === 'quiz') {
@@ -110,7 +116,7 @@ export default function CourseLearningPage() {
         if (!currentLesson.quizData) return;
 
         let correctCount = 0;
-        currentLesson.quizData.forEach(q => {
+        currentLesson.quizData.forEach((q: any) => {
             if (quizAnswers[q.id] === q.correctAnswer) {
                 correctCount++;
             }
@@ -120,7 +126,10 @@ export default function CourseLearningPage() {
         setQuizSubmitted(true);
     };
 
-    const isPass = currentLesson.quizData && (quizScore / currentLesson.quizData.length) >= 0.7; // 70% pass rate
+    const isPass = currentLesson?.quizData && (quizScore / currentLesson.quizData.length) >= 0.7;
+
+    if (loading) return <div className="p-12 text-center text-gray-500">Đang tải nội dung khóa học...</div>;
+    if (!course) return <div className="p-12 text-center text-red-500">Không tìm thấy khóa học.</div>;
 
     return (
         <div className="space-y-6">
@@ -132,77 +141,68 @@ export default function CourseLearningPage() {
                 <div className="flex flex-col md:flex-row justify-between gap-6 mb-8 border-b border-gray-100 pb-8">
                     <div>
                         <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold mb-2 inline-block">
-                            {currentLesson.type === 'video' ? 'Bài giảng Video' : 'Bài kiểm tra'}
+                            {currentLesson?.type === 'video' ? 'Bài giảng Video' : 'Bài kiểm tra'}
                         </span>
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">{course.name}</h1>
-                        <p className="text-gray-500">Đang học: {currentLesson.title}</p>
+                        <p className="text-gray-500">Đang học: {currentLesson?.title}</p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content Area */}
                     <div className="lg:col-span-2">
-                        {currentLesson.type === 'video' ? (
-                            // Video Player View
+                        {currentLesson?.type === 'video' ? (
                             <div>
                                 <div className="aspect-video bg-gray-900 rounded-2xl flex items-center justify-center relative group cursor-pointer overflow-hidden shadow-lg">
                                     <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
                                     <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white text-2xl z-10 group-hover:scale-110 transition-transform">
                                         <i className="fi flaticon-play-button"></i>
                                     </div>
+                                    {currentLesson.videoUrl && <video src={currentLesson.videoUrl} className="hidden" />}
                                 </div>
                                 <div className="mt-6">
                                     <h2 className="text-xl font-bold mb-2">Nội dung bài học</h2>
                                     <p className="text-gray-600">
-                                        Mô tả chi tiết nội dung video bài giảng hoặc tài liệu đi kèm sẽ hiển thị ở đây.
+                                        {course.description || "Mô tả chi tiết nội dung video bài giảng hoặc tài liệu đi kèm sẽ hiển thị ở đây."}
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            // Quiz View
                             <div className="bg-white rounded-2xl border border-blue-100 p-8 shadow-sm">
                                 <div className="flex justify-between items-center mb-6">
                                     <h2 className="text-2xl font-bold text-gray-900">📝 Bài kiểm tra trắc nghiệm</h2>
                                     <div className="text-sm font-medium text-gray-500">
-                                        {Object.keys(quizAnswers).length} / {currentLesson.quizData?.length} câu hỏi
+                                        {Object.keys(quizAnswers).length} / {currentLesson?.quizData?.length || 0} câu hỏi
                                     </div>
                                 </div>
 
-                                {/* Quiz Result */}
                                 {quizSubmitted && (
                                     <div className={`mb-8 p-6 rounded-xl border ${isPass ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                                         <h3 className={`font-bold text-lg mb-2 ${isPass ? 'text-green-700' : 'text-red-700'}`}>
                                             {isPass ? '🎉 Chúc mừng! Bạn đã vượt qua bài kiểm tra.' : '⚠️ Bạn chưa đạt yêu cầu. Vui lòng thử lại.'}
                                         </h3>
                                         <p className="text-gray-600">
-                                            Điểm số của bạn: <span className="font-bold">{quizScore}/{currentLesson.quizData?.length}</span>
+                                            Điểm số của bạn: <span className="font-bold">{quizScore}/{currentLesson?.quizData?.length}</span>
                                         </p>
                                     </div>
                                 )}
 
-                                {/* Questions List */}
                                 <div className="space-y-8">
-                                    {currentLesson.quizData?.map((q, idx) => {
+                                    {currentLesson?.quizData?.map((q: any, idx: number) => {
                                         const userAnswer = quizAnswers[q.id];
-                                        const isCorrect = quizSubmitted && userAnswer === q.correctAnswer;
-                                        const isWrong = quizSubmitted && userAnswer !== q.correctAnswer;
-
                                         return (
                                             <div key={q.id} className="space-y-3">
                                                 <h3 className="font-bold text-gray-800">Câu {idx + 1}: {q.question}</h3>
                                                 <div className="space-y-2">
-                                                    {q.options.map((opt, optIdx) => {
+                                                    {q.options.map((opt: string, optIdx: number) => {
                                                         let optionClass = "border-gray-200 hover:bg-gray-50 hover:border-gray-300";
-                                                        // Styles after submit
                                                         if (quizSubmitted) {
-                                                            if (optIdx === q.correctAnswer) optionClass = "bg-green-100 border-green-500 text-green-800"; // Always show correct answer
-                                                            else if (userAnswer === optIdx && userAnswer !== q.correctAnswer) optionClass = "bg-red-100 border-red-500 text-red-800"; // Wrong selection
-                                                            else optionClass = "border-gray-100 opacity-60"; // Other options
-                                                        } else {
-                                                            // Styles during checking
-                                                            if (userAnswer === optIdx) optionClass = "bg-blue-50 border-blue-500 text-blue-700 shadow-sm";
+                                                            if (optIdx === q.correctAnswer) optionClass = "bg-green-100 border-green-500 text-green-800";
+                                                            else if (userAnswer === optIdx && userAnswer !== q.correctAnswer) optionClass = "bg-red-100 border-red-500 text-red-800";
+                                                            else optionClass = "border-gray-100 opacity-60";
+                                                        } else if (userAnswer === optIdx) {
+                                                            optionClass = "bg-blue-50 border-blue-500 text-blue-700 shadow-sm";
                                                         }
-
                                                         return (
                                                             <div
                                                                 key={optIdx}
@@ -212,7 +212,6 @@ export default function CourseLearningPage() {
                                                                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
                                                                     ${quizSubmitted && optIdx === q.correctAnswer ? 'border-green-600 bg-green-600 text-white' :
                                                                         userAnswer === optIdx ? 'border-blue-600' : 'border-gray-300'}`}>
-                                                                    {/* Dot or Checkmark */}
                                                                     {quizSubmitted && optIdx === q.correctAnswer && <i className="fi flaticon-checked text-xs"></i>}
                                                                     {!quizSubmitted && userAnswer === optIdx && <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>}
                                                                 </div>
@@ -230,9 +229,8 @@ export default function CourseLearningPage() {
                                     <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
                                         <Button
                                             size="lg"
-                                            icon="checked"
                                             onClick={submitQuiz}
-                                            disabled={Object.keys(quizAnswers).length < (currentLesson.quizData?.length || 0)}
+                                            disabled={Object.keys(quizAnswers).length < (currentLesson?.quizData?.length || 0)}
                                         >
                                             Nộp bài
                                         </Button>
@@ -244,10 +242,8 @@ export default function CourseLearningPage() {
                                             setQuizSubmitted(false);
                                             setQuizScore(0);
                                         }}>Làm lại</Button>}
-                                        {isPass && <Button size="lg" icon="angle-right" onClick={() => {
-                                            // Find the index of the current lesson
-                                            const currentIndex = allLessons.findIndex(l => l.id === currentLesson.id);
-                                            // If there's a next lesson, select it
+                                        {isPass && <Button size="lg" icon="arrow-right" onClick={() => {
+                                            const currentIndex = allLessons.findIndex((l: any) => l.id === currentLesson.id);
                                             if (currentIndex !== -1 && currentIndex < allLessons.length - 1) {
                                                 handleLessonSelect(allLessons[currentIndex + 1]);
                                             } else {
@@ -264,26 +260,26 @@ export default function CourseLearningPage() {
                     <div className="bg-gray-50 rounded-2xl p-6 h-fit max-h-[700px] overflow-y-auto">
                         <h3 className="font-bold text-gray-900 mb-4">Danh sách bài học</h3>
                         <div className="space-y-4">
-                            {course.chapters.map((chapter, idx) => (
+                            {course.chapters.map((chapter: any, idx: number) => (
                                 <div key={idx}>
                                     <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{chapter.title}</h4>
                                     <div className="space-y-2">
-                                        {chapter.lessons.map((lesson) => {
-                                            const isActive = currentLesson.id === lesson.id;
+                                        {chapter.lessons.map((lesson: any) => {
+                                            const isActive = currentLesson?.id === lesson.id;
                                             return (
                                                 <div
                                                     key={lesson.id}
                                                     onClick={() => handleLessonSelect(lesson)}
                                                     className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all border ${isActive
-                                                            ? 'bg-white border-blue-500 shadow-md ring-1 ring-blue-500'
-                                                            : lesson.completed
-                                                                ? 'bg-blue-50/50 border-transparent text-gray-700'
-                                                                : 'bg-white border-gray-100 hover:border-blue-200'
+                                                        ? 'bg-white border-blue-500 shadow-md ring-1 ring-blue-500'
+                                                        : lesson.completed
+                                                            ? 'bg-blue-50/50 border-transparent text-gray-700'
+                                                            : 'bg-white border-gray-100 hover:border-blue-200'
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <i className={`fi ${lesson.type === 'quiz' ? 'flaticon-edit' :
-                                                                lesson.completed ? 'flaticon-checked text-blue-600' : 'flaticon-play-button text-gray-400'
+                                                            lesson.completed ? 'flaticon-checked text-blue-600' : 'flaticon-play-button text-gray-400'
                                                             }`}></i>
                                                         <span className={`text-sm font-medium line-clamp-1 ${isActive ? 'text-blue-700' : ''}`}>
                                                             {lesson.title}

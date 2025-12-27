@@ -1,121 +1,5 @@
 import apiService from './api';
 
-export interface Clinic {
-    id: number;
-    name: string;
-    address: string;
-    phone: string;
-    email?: string;
-    description?: string;
-    specialties?: string[];
-    rating?: number;
-    isVerified?: boolean;
-    image?: string;
-    openingHours?: any;
-    createdAt?: string;
-}
-
-export interface Hospital {
-    id: number;
-    name: string;
-    address: string;
-    phone: string;
-    website?: string;
-    description?: string;
-    departments?: string[];
-    beds?: number;
-    rating?: number;
-    isVerified?: boolean;
-    image?: string;
-    createdAt?: string;
-}
-
-class PartnerService {
-    // Clinics
-    async getClinics(): Promise<Clinic[]> {
-        return apiService.get<Clinic[]>('/clinics');
-    }
-
-    async getClinic(id: number): Promise<Clinic> {
-        return apiService.get<Clinic>(`/clinics/${id}`);
-    }
-
-    async createClinic(data: Partial<Clinic>): Promise<Clinic> {
-        return apiService.post<Clinic>('/clinics', data);
-    }
-
-    async updateClinic(id: number, data: Partial<Clinic>): Promise<Clinic> {
-        return apiService.put<Clinic>(`/clinics/${id}`, data);
-    }
-
-    async deleteClinic(id: number): Promise<void> {
-        return apiService.delete(`/clinics/${id}`);
-    }
-
-    // Hospitals
-    async getHospitals(): Promise<Hospital[]> {
-        return apiService.get<Hospital[]>('/hospitals');
-    }
-
-    async getHospital(id: number): Promise<Hospital> {
-        return apiService.get<Hospital>(`/hospitals/${id}`);
-    }
-
-    async createHospital(data: Partial<Hospital>): Promise<Hospital> {
-        return apiService.post<Hospital>('/hospitals', data);
-    }
-
-    async updateHospital(id: number, data: Partial<Hospital>): Promise<Hospital> {
-        return apiService.put<Hospital>(`/hospitals/${id}`, data);
-    }
-
-    async deleteHospital(id: number): Promise<void> {
-        return apiService.delete(`/hospitals/${id}`);
-    }
-
-    // Pharmacies
-    async getPharmacies(): Promise<Pharmacy[]> {
-        return apiService.get<Pharmacy[]>('/pharmacies');
-    }
-
-    async getPharmacy(id: number): Promise<Pharmacy> {
-        return apiService.get<Pharmacy>(`/pharmacies/${id}`);
-    }
-
-    async createPharmacy(data: Partial<Pharmacy>): Promise<Pharmacy> {
-        return apiService.post<Pharmacy>('/pharmacies', data);
-    }
-
-    async updatePharmacy(id: number, data: Partial<Pharmacy>): Promise<Pharmacy> {
-        return apiService.put<Pharmacy>(`/pharmacies/${id}`, data);
-    }
-
-    async deletePharmacy(id: number): Promise<void> {
-        return apiService.delete(`/pharmacies/${id}`);
-    }
-
-    // Doctors
-    async getDoctors(): Promise<Doctor[]> {
-        return apiService.get<Doctor[]>('/doctors');
-    }
-
-    async getDoctor(id: number): Promise<Doctor> {
-        return apiService.get<Doctor>(`/doctors/${id}`);
-    }
-
-    async createDoctor(data: Partial<Doctor>): Promise<Doctor> {
-        return apiService.post<Doctor>('/doctors', data);
-    }
-
-    async updateDoctor(id: number, data: Partial<Doctor>): Promise<Doctor> {
-        return apiService.put<Doctor>(`/doctors/${id}`, data);
-    }
-
-    async deleteDoctor(id: number): Promise<void> {
-        return apiService.delete(`/doctors/${id}`);
-    }
-}
-
 export interface Pharmacy {
     id: number;
     name: string;
@@ -142,6 +26,152 @@ export interface Doctor {
     isVerified?: boolean;
     image?: string;
     createdAt?: string;
+}
+
+export interface Patient {
+    id: number;
+    name: string;
+    phone: string;
+    email?: string;
+    visits: number;
+    lastVisit?: string;
+    status: string;
+    createdAt?: string;
+}
+
+class PartnerService {
+    private readonly baseUrl = '/education/partners';
+
+    // Clinics
+    async getClinics(): Promise<Clinic[]> {
+        const response = await apiService.get(`${this.baseUrl}/clinics`);
+        return (response as any).data || response;
+    }
+
+    async getClinic(id: number): Promise<Clinic> {
+        const response = await apiService.get(`${this.baseUrl}/clinics/${id}`);
+        return (response as any).data || response;
+    }
+
+    async createClinic(data: Partial<Clinic>): Promise<Clinic> {
+        const response = await apiService.post(`${this.baseUrl}/clinics`, data);
+        return (response as any).data || response;
+    }
+
+    async updateClinic(id: number, data: Partial<Clinic>): Promise<Clinic> {
+        const response = await apiService.put(`${this.baseUrl}/clinics/${id}`, data);
+        return (response as any).data || response;
+    }
+
+    async deleteClinic(id: number): Promise<void> {
+        await apiService.delete(`${this.baseUrl}/clinics/${id}`);
+    }
+
+    // Hospitals
+    async getHospitals(): Promise<Hospital[]> {
+        const response = await apiService.get(`${this.baseUrl}/hospitals`);
+        return (response as any).data || response;
+    }
+
+    async getHospital(id: number): Promise<Hospital> {
+        const response = await apiService.get(`${this.baseUrl}/hospitals/${id}`);
+        return (response as any).data || response;
+    }
+
+    async createHospital(data: Partial<Hospital>): Promise<Hospital> {
+        const response = await apiService.post(`${this.baseUrl}/hospitals`, data);
+        return (response as any).data || response;
+    }
+
+    async updateHospital(id: number, data: Partial<Hospital>): Promise<Hospital> {
+        const response = await apiService.put(`${this.baseUrl}/hospitals/${id}`, data);
+        return (response as any).data || response;
+    }
+
+    async deleteHospital(id: number): Promise<void> {
+        await apiService.delete(`${this.baseUrl}/hospitals/${id}`);
+    }
+
+    // Pharmacies
+    async getPharmacies(): Promise<Pharmacy[]> {
+        const response = await apiService.get(`${this.baseUrl}/pharmacies`);
+        return (response as any).data || response;
+    }
+
+    async getPharmacy(id: number): Promise<Pharmacy> {
+        const response = await apiService.get(`${this.baseUrl}/pharmacies/${id}`);
+        return (response as any).data || response;
+    }
+
+    async createPharmacy(data: Partial<Pharmacy>): Promise<Pharmacy> {
+        const response = await apiService.post(`${this.baseUrl}/pharmacies`, data);
+        return (response as any).data || response;
+    }
+
+    async updatePharmacy(id: number, data: Partial<Pharmacy>): Promise<Pharmacy> {
+        const response = await apiService.put(`${this.baseUrl}/pharmacies/${id}`, data);
+        return (response as any).data || response;
+    }
+
+    async deletePharmacy(id: number): Promise<void> {
+        await apiService.delete(`${this.baseUrl}/pharmacies/${id}`);
+    }
+
+    // Doctors
+    async getDoctors(): Promise<Doctor[]> {
+        const response = await apiService.get(`${this.baseUrl}/doctors`);
+        return (response as any).data || response;
+    }
+
+    async getDoctor(id: number): Promise<Doctor> {
+        const response = await apiService.get(`${this.baseUrl}/doctors/${id}`);
+        return (response as any).data || response;
+    }
+
+    async createDoctor(data: Partial<Doctor>): Promise<Doctor> {
+        const response = await apiService.post(`${this.baseUrl}/doctors`, data);
+        return (response as any).data || response;
+    }
+
+    async updateDoctor(id: number, data: Partial<Doctor>): Promise<Doctor> {
+        const response = await apiService.put(`${this.baseUrl}/doctors/${id}`, data);
+        return (response as any).data || response;
+    }
+
+    async deleteDoctor(id: number): Promise<void> {
+        await apiService.delete(`${this.baseUrl}/doctors/${id}`);
+    }
+
+    // Patients
+    async getPatients(): Promise<Patient[]> {
+        const response = await apiService.get(`${this.baseUrl}/patients`);
+        return (response as any).data || response;
+    }
+
+    async getPatient(id: number): Promise<Patient> {
+        const response = await apiService.get(`${this.baseUrl}/patients/${id}`);
+        return (response as any).data || response;
+    }
+
+    async createPatient(data: Partial<Patient>): Promise<Patient> {
+        const response = await apiService.post(`${this.baseUrl}/patients`, data);
+        return (response as any).data || response;
+    }
+
+    async updatePatient(id: number, data: Partial<Patient>): Promise<Patient> {
+        const response = await apiService.put(`${this.baseUrl}/patients/${id}`, data);
+        return (response as any).data || response;
+    }
+
+    async deletePatient(id: number): Promise<void> {
+        await apiService.delete(`${this.baseUrl}/patients/${id}`);
+    }
+
+    // Pending Partners
+    async getPendingPartners(): Promise<any[]> {
+        const response = await apiService.get(`${this.baseUrl}/pending`);
+        return (response as any).data || response;
+    }
 }
 
 export default new PartnerService();

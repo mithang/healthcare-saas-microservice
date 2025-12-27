@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import partnerService, { Doctor } from '@/services/partner.service';
+import DataTable from '@/components/admin/DataTable';
+import StatusBadge from '@/components/admin/StatusBadge';
 
 export default function DoctorsManagement() {
     const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -27,7 +29,6 @@ export default function DoctorsManagement() {
 
     const filteredDoctors = doctors.filter(doctor => {
         if (filter.specialty !== 'all' && doctor.specialty !== filter.specialty) return false;
-        // status filtering might need adjustment based on backend data, assuming backend returns all
         if (filter.search && !doctor.name.toLowerCase().includes(filter.search.toLowerCase())) return false;
         return true;
     });
@@ -36,7 +37,44 @@ export default function DoctorsManagement() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedDoctors = filteredDoctors.slice(startIndex, startIndex + itemsPerPage);
 
-    if (loading) return <div className="p-8 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div></div>;
+    const columns = [
+        { key: 'id', label: 'ID', render: (val: any) => <span className="text-gray-600">#{val}</span> },
+        {
+            key: 'name', label: 'Bác sĩ', render: (val: string, row: Doctor) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600">
+                        {val.charAt(0)}
+                    </div>
+                    <span className="font-medium text-gray-900">{val}</span>
+                </div>
+            )
+        },
+        { key: 'specialty', label: 'Chuyên khoa' },
+        { key: 'hospital', label: 'Bệnh viện', render: (val: string) => val || 'Tự do' },
+        {
+            key: 'rating', label: 'Đánh giá', render: (val: number) => (
+                <div className="flex items-center gap-1">
+                    <i className="fi flaticon-star text-yellow-500 text-sm"></i>
+                    <span className="font-bold text-gray-900">{val || 'N/A'}</span>
+                </div>
+            )
+        },
+        {
+            key: 'isVerified', label: 'Trạng thái', render: (val: boolean) => (
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${val ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                    {val ? 'Đã xác thực' : 'Chưa xác thực'}
+                </span>
+            )
+        },
+    ];
+
+    const actions = (row: Doctor) => (
+        <div className="flex gap-2">
+            <Link href={`/admin/partners/doctors/${row.id}/edit`} className="text-green-600 hover:text-green-800">
+                <i className="fi flaticon-edit"></i>
+            </Link>
+        </div>
+    );
 
     return (
         <div className="space-y-6">
@@ -61,15 +99,6 @@ export default function DoctorsManagement() {
                     <option value="Nhi khoa">Nhi khoa</option>
                     <option value="Tiêu hóa">Tiêu hóa</option>
                 </select>
-                <select
-                    value={filter.status}
-                    onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-                    className="border border-gray-200 rounded-lg px-4 py-2 outline-none"
-                >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="active">Hoạt động</option>
-                    <option value="inactive">Tạm ngưng</option>
-                </select>
                 <input
                     type="text"
                     placeholder="Tìm kiếm bác sĩ..."
@@ -79,92 +108,17 @@ export default function DoctorsManagement() {
                 />
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">ID</th>
-                            <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Bác sĩ</th>
-                            <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Chuyên khoa</th>
-                            <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Bệnh viện</th>
-                            <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Bệnh nhân</th>
-                            <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Đánh giá</th>
-                            <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Trạng thái</th>
-                            <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedDoctors.map(doctor => (
-                            <tr key={doctor.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                <td className="px-6 py-4 text-gray-600">#{doctor.id}</td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600">
-                                            {doctor.name.charAt(0)}
-                                        </div>
-                                        <span className="font-medium text-gray-900">{doctor.name}</span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600">{doctor.specialty}</td>
-                                <td className="px-6 py-4 text-gray-600">{doctor.hospital || 'Tự do'}</td>
-                                <td className="px-6 py-4 text-gray-600">N/A</td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-1">
-                                        <i className="fi flaticon-star text-yellow-500 text-sm"></i>
-                                        <span className="font-bold text-gray-900">{doctor.rating || 'N/A'}</span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${doctor.isVerified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                                        }`}>
-                                        {doctor.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex gap-2">
-                                        <Link href={`/admin/partners/doctors/${doctor.id}/edit`} className="text-green-600 hover:text-green-800">
-                                            <i className="fi flaticon-edit"></i>
-                                        </Link>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div className="text-sm text-gray-600">
-                    Hiển thị {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredDoctors.length)} trong tổng số {filteredDoctors.length} bác sĩ
-                </div>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                        className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-                    >
-                        Trước
-                    </button>
-                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(page => (
-                        <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-4 py-2 rounded-lg ${currentPage === page ? 'bg-primary text-white font-bold' : 'border border-gray-200 hover:bg-gray-50'
-                                }`}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                    <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                        className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-                    >
-                        Sau
-                    </button>
-                </div>
-            </div>
+            <DataTable
+                columns={columns}
+                data={paginatedDoctors}
+                loading={loading}
+                actions={actions}
+                pagination={{
+                    currentPage,
+                    totalPages,
+                    onPageChange: setCurrentPage,
+                }}
+            />
         </div>
     );
 }

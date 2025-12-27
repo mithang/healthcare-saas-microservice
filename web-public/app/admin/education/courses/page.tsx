@@ -1,19 +1,29 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import StatusBadge from '@/components/admin/StatusBadge';
 import { Button } from '@/components/admin/ui/Button';
 import { useRouter } from 'next/navigation';
+import { educationService, Course } from '@/services/education.service';
 
 export default function EducationCoursesPage() {
     const router = useRouter();
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const courses = [
-        { id: 'CME001', name: 'Cập nhật Chẩn đoán & Điều trị Đái tháo đường 2024', type: 'CME', provider: 'Bệnh viện ĐH Y Dược', credits: 4, price: 500000, students: 120, status: 'active' },
-        { id: 'CPE202', name: 'Quản lý sử dụng kháng sinh trong bệnh viện', type: 'CPE', provider: 'Hội Dược học TP.HCM', credits: 2, price: 300000, students: 85, status: 'active' },
-        { id: 'CME003', name: 'Siêu âm tim mạch nâng cao', type: 'CME', provider: 'Viện Tim', credits: 8, price: 2000000, students: 45, status: 'upcoming' },
-        { id: 'CME004', name: 'An toàn người bệnh và Kiểm soát nhiễm khuẩn', type: 'CME', provider: 'Sở Y Tế', credits: 4, price: 0, students: 300, status: 'completed' },
-    ];
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const data = await educationService.getCourses();
+                setCourses(data);
+            } catch (error) {
+                console.error('Failed to fetch courses:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCourses();
+    }, []);
 
     const columns = [
         { key: 'id', label: 'Mã khóa học', render: (val: string) => <span className="font-mono font-bold text-gray-600">{val}</span> },
@@ -40,7 +50,7 @@ export default function EducationCoursesPage() {
                 </span>
             )
         },
-        { key: 'students', label: 'Học viên', render: (val: number) => <span>{val} / 200</span> },
+        { key: 'students', label: 'Học viên', render: (val: number) => <span>{val || 0} / 200</span> },
         { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
@@ -59,6 +69,7 @@ export default function EducationCoursesPage() {
             <DataTable
                 columns={columns}
                 data={courses}
+                loading={loading}
                 searchable
                 searchPlaceholder="Tìm tên khóa học, đơn vị tổ chức..."
                 actions={(row) => (

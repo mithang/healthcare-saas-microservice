@@ -12,6 +12,9 @@ import { SettingController } from './setting.controller';
 import { SearchController } from './search.controller';
 import { BackgroundJobController } from './backgroundjob.controller';
 import { ContentController } from './content.controller';
+import { EducationController } from './education.controller';
+import { PartnerController } from './partner.controller';
+import { CommunityController } from './community.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -128,11 +131,33 @@ import { AppService } from './app.service';
         },
       },
       {
-        name: 'CONTENT_SERVICE',
+        name: 'COMMUNITY_SERVICE',
         transport: Transport.RMQ,
         options: {
           urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
-          queue: 'content_queue',
+          queue: 'community_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
+        name: 'EDUCATION_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'education_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
+        name: 'PARTNER_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'partner_queue',
           queueOptions: {
             durable: false,
           },
@@ -140,7 +165,7 @@ import { AppService } from './app.service';
       },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController, EducationController, PartnerController, CommunityController],
   providers: [AppService],
 })
 export class AppModule { }

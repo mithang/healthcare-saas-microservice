@@ -31,9 +31,10 @@ interface DataTableProps {
         value: string;
         onChange: (val: string) => void;
     }[];
+    loading?: boolean;
 }
 
-export default function DataTable({ columns, data, actions, pagination, searchable, searchPlaceholder = "Tìm kiếm dữ liệu...", onSearch, filters }: DataTableProps) {
+export default function DataTable({ columns, data, actions, pagination, searchable, searchPlaceholder = "Tìm kiếm dữ liệu...", onSearch, filters, loading }: DataTableProps) {
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,23 +90,46 @@ export default function DataTable({ columns, data, actions, pagination, searchab
                                 )}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {data.map((row, idx) => (
-                                <tr key={idx} className="hover:bg-blue-50/50 transition-colors duration-150">
-                                    {columns.map((col) => (
-                                        <td key={col.key} className="px-6 py-4 text-sm text-gray-700">
-                                            {col.render ? col.render(row[col.key], row) : row[col.key]}
-                                        </td>
-                                    ))}
-                                    {actions && (
-                                        <td className="px-6 py-4">
-                                            <div className="flex gap-2">
-                                                {actions(row)}
-                                            </div>
-                                        </td>
-                                    )}
+                        <tbody className="divide-y divide-gray-100">
+                            {loading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        {columns.map((col) => (
+                                            <td key={col.key} className="px-6 py-4">
+                                                <div className="h-4 bg-gray-100 rounded w-full"></div>
+                                            </td>
+                                        ))}
+                                        {actions && (
+                                            <td className="px-6 py-4">
+                                                <div className="h-4 bg-gray-100 rounded w-16"></div>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))
+                            ) : data.length > 0 ? (
+                                data.map((row, idx) => (
+                                    <tr key={idx} className="hover:bg-blue-50/50 transition-colors duration-150">
+                                        {columns.map((col) => (
+                                            <td key={col.key} className="px-6 py-4 text-sm text-gray-700">
+                                                {col.render ? col.render(row[col.key], row) : row[col.key]}
+                                            </td>
+                                        ))}
+                                        {actions && (
+                                            <td className="px-6 py-4">
+                                                <div className="flex gap-2">
+                                                    {actions(row)}
+                                                </div>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={columns.length + (actions ? 1 : 0)} className="px-6 py-12 text-center text-gray-500">
+                                        Không có dữ liệu hiển thị.
+                                    </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>

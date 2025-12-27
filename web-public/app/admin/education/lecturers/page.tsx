@@ -1,13 +1,27 @@
 "use client";
-import React, { useState } from 'react';
-
-const lecturersData = [
-    { id: 1, name: 'GS.TS Nguyễn Văn A', title: 'Giáo sư', specialty: 'Tim mạch', courses: 12, avatar: '/img/doctor-1.jpg' },
-    { id: 2, name: 'TS.BS Trần Thị B', title: 'Tiến sĩ', specialty: 'Dược lâm sàng', courses: 8, avatar: '/img/doctor-2.jpg' },
-    { id: 3, name: 'ThS. Lê Văn C', title: 'Thạc sĩ', specialty: 'Nội tiết', courses: 5, avatar: '/img/doctor-3.jpg' },
-];
+import React, { useEffect, useState } from 'react';
+import { educationService, Lecturer } from '@/services/education.service';
 
 export default function LecturerListPage() {
+    const [lecturers, setLecturers] = useState<Lecturer[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchLecturers = async () => {
+            try {
+                const data = await educationService.getLecturers();
+                setLecturers(data);
+            } catch (error) {
+                console.error('Failed to fetch lecturers:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLecturers();
+    }, []);
+
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải danh sách giảng viên...</div>;
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -21,12 +35,12 @@ export default function LecturerListPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {lecturersData.map((lecturer) => (
+                {lecturers.length > 0 ? lecturers.map((lecturer) => (
                     <div key={lecturer.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition group">
                         <div className="relative w-24 h-24 mb-4">
-                            {/* Mock Avatar */}
-                            <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition">
-                                {lecturer.name[0]}
+                            {/* Avatar */}
+                            <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition overflow-hidden">
+                                {lecturer.avatar ? <img src={lecturer.avatar} alt={lecturer.name} className="w-full h-full object-cover" /> : lecturer.name[0]}
                             </div>
                             <button className="absolute bottom-0 right-0 bg-white border border-gray-200 p-1.5 rounded-full shadow-sm hover:text-primary">
                                 <i className="fi flaticon-edit text-xs"></i>
@@ -34,14 +48,18 @@ export default function LecturerListPage() {
                         </div>
                         <h3 className="font-bold text-gray-900 text-lg">{lecturer.name}</h3>
                         <p className="text-primary text-sm font-medium mb-1">{lecturer.title} • {lecturer.specialty}</p>
-                        <p className="text-gray-400 text-xs">{lecturer.courses} khóa học đã dạy</p>
+                        {/* <p className="text-gray-400 text-xs">{lecturer.courses?.length || 0} khóa học đã dạy</p> */}
 
                         <div className="flex gap-2 mt-6 w-full">
                             <button className="flex-1 py-2 bg-gray-50 text-gray-600 font-bold rounded-xl text-sm hover:bg-gray-100">Hồ sơ</button>
                             <button className="flex-1 py-2 bg-primary/10 text-primary font-bold rounded-xl text-sm hover:bg-primary hover:text-white transition">Gán khóa học</button>
                         </div>
                     </div>
-                ))}
+                )) : (
+                    <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200">
+                        Chưa có giảng viên nào.
+                    </div>
+                )}
             </div>
         </div>
     );

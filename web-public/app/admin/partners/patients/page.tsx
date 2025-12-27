@@ -1,28 +1,37 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import StatusBadge from '@/components/admin/StatusBadge';
 import Link from 'next/link';
-
-const MOCK_DATA = Array.from({ length: 50 }, (_, i) => ({
-    id: i + 1,
-    name: `Bệnh nhân ${String.fromCharCode(65 + (i % 26))}`,
-    phone: `090${1000000 + i}`,
-    email: `patient${i + 1}@email.com`,
-    visits: Math.floor(Math.random() * 20),
-    lastVisit: `${15 - (i % 15)}/12/2024`,
-    status: i % 5 === 0 ? 'inactive' : 'active',
-}));
+import partnerService, { Patient } from '@/services/partner.service';
 
 export default function PatientsManagement() {
+    const [patients, setPatients] = useState<Patient[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const itemsPerPage = 10;
 
-    const filteredData = MOCK_DATA.filter(item =>
+    const fetchPatients = async () => {
+        try {
+            setLoading(true);
+            const data = await partnerService.getPatients();
+            setPatients(data);
+        } catch (error) {
+            console.error('Failed to fetch patients', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPatients();
+    }, []);
+
+    const filteredData = patients.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.phone.includes(searchQuery)
     );
 
@@ -35,24 +44,21 @@ export default function PatientsManagement() {
     const columns = [
         { key: 'name', label: 'Họ tên', render: (val: string) => <span className="font-medium text-gray-900">{val}</span> },
         { key: 'phone', label: 'Điện thoại' },
-        { key: 'email', label: 'Email' },
-        { key: 'visits', label: 'Lượt khám' },
-        { key: 'lastVisit', label: 'Lần cuối' },
+        { key: 'email', label: 'Email', render: (val: string) => val || 'N/A' },
+        { key: 'visits', label: 'Lượt khám', render: (val: number) => val || 0 },
+        { key: 'lastVisit', label: 'Lần cuối', render: (val: string) => val || 'Chưa khám' },
         { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
-    const actions = (row: any) => (
-        <>
+    const actions = (row: Patient) => (
+        <div className="flex gap-2">
             <Link href={`/admin/partners/patients/${row.id}`} className="text-blue-600 hover:text-blue-800">
                 <i className="fi flaticon-eye"></i>
             </Link>
             <Link href={`/admin/partners/patients/${row.id}/edit`} className="text-green-600 hover:text-green-800">
                 <i className="fi flaticon-edit"></i>
             </Link>
-            <button className="text-red-600 hover:text-red-800">
-                <i className="fi flaticon-delete"></i>
-            </button>
-        </>
+        </div>
     );
 
     return (
@@ -73,6 +79,7 @@ export default function PatientsManagement() {
             <DataTable
                 columns={columns}
                 data={paginatedData}
+                loading={loading}
                 actions={actions}
                 searchable
                 onSearch={setSearchQuery}

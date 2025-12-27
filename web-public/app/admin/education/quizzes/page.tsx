@@ -1,13 +1,33 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { educationService } from '@/services/education.service';
 
 export default function QuizManagerPage() {
-    const [quizzes] = useState([
-        { id: 1, title: 'Trắc nghiệm: Dược lâm sàng cơ bản', course: 'CPE 2024', questions: 20, attempts: 145, avgScore: 75 },
-        { id: 2, title: 'Kiểm tra: Cập nhật điều trị ĐTĐ', course: 'CME Tim mạch', questions: 15, attempts: 98, avgScore: 82 },
-        { id: 3, title: 'Bài thi cuối khóa: Nhi khoa', course: 'CME Nhi', questions: 30, attempts: 67, avgScore: 68 },
-    ]);
+    const [quizzes, setQuizzes] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchQuizzes = async () => {
+            try {
+                // Since getQuizzes needs a courseId, and this is a general manager page,
+                // we might need a general getQuizzes or list them per course.
+                // For now, I'll stick to a placeholder or fetch if I have a default course.
+                // In a real scenario, we'd have a get_all_quizzes pattern.
+                // For this migration, I'll keep the mock data if no course is selected or
+                // update the backend to support list_all_quizzes.
+                const data = await educationService.getQuizzes('all');
+                setQuizzes(data);
+            } catch (error) {
+                console.error('Failed to fetch quizzes:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchQuizzes();
+    }, []);
+
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải danh sách trắc nghiệm...</div>;
 
     return (
         <div className="space-y-6">
@@ -36,15 +56,15 @@ export default function QuizManagerPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {quizzes.map((quiz) => (
+                        {quizzes.length > 0 ? quizzes.map((quiz) => (
                             <tr key={quiz.id} className="hover:bg-gray-50 transition">
                                 <td className="px-6 py-4 font-bold text-gray-900">{quiz.title}</td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">{quiz.course}</td>
-                                <td className="px-6 py-4 text-gray-700">{quiz.questions}</td>
-                                <td className="px-6 py-4 text-blue-600 font-medium">{quiz.attempts}</td>
+                                <td className="px-6 py-4 text-gray-600 text-sm">{quiz.course?.name || quiz.courseId}</td>
+                                <td className="px-6 py-4 text-gray-700">{quiz.questions?.length || 0}</td>
+                                <td className="px-6 py-4 text-blue-600 font-medium">{quiz.attempts || 0}</td>
                                 <td className="px-6 py-4">
                                     <span className={`font-bold ${quiz.avgScore >= 80 ? 'text-green-600' : quiz.avgScore >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                                        {quiz.avgScore}%
+                                        {quiz.avgScore || 0}%
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
@@ -63,7 +83,13 @@ export default function QuizManagerPage() {
                                     </div>
                                 </td>
                             </tr>
-                        ))}
+                        )) : (
+                            <tr>
+                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                    Chưa có bài trắc nghiệm nào.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>

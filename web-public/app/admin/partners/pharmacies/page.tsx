@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import partnerService, { Pharmacy } from '@/services/partner.service';
+import DataTable from '@/components/admin/DataTable';
 
 // Custom Modal Component for Delete Confirmation
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; itemName: string }) => {
@@ -43,7 +44,7 @@ export default function PharmaciesManagement() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const itemsPerPage = 10;
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -51,6 +52,7 @@ export default function PharmaciesManagement() {
 
     const fetchPharmacies = async () => {
         try {
+            setLoading(true);
             const data = await partnerService.getPharmacies();
             setPharmacies(data);
         } catch (error) {
@@ -89,9 +91,42 @@ export default function PharmaciesManagement() {
         }
     };
 
-    if (loading) return (
-        <div className="min-h-[400px] flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    const columns = [
+        { key: 'name', label: 'Tên', render: (val: string) => <span className="font-medium text-gray-900">{val}</span> },
+        { key: 'address', label: 'Địa chỉ', render: (val: string) => <span className="text-gray-600 max-w-xs truncate block" title={val}>{val}</span> },
+        { key: 'phone', label: 'Điện thoại' },
+        {
+            key: 'rating', label: 'Đánh giá', render: (val: number) => (
+                <div className="flex items-center gap-1 font-medium text-gray-900">
+                    <span className="text-yellow-400">★</span> {val || 0}
+                </div>
+            )
+        },
+        {
+            key: 'isVerified', label: 'Trạng thái', render: (val: boolean) => (
+                val ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        Đã xác thực
+                    </span>
+                ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                        Chưa xác thực
+                    </span>
+                )
+            )
+        },
+    ];
+
+    const actions = (row: Pharmacy) => (
+        <div className="flex gap-2">
+            <Link href={`/admin/partners/pharmacies/${row.id}/edit`} className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors">
+                <i className="fi flaticon-edit"></i>
+            </Link>
+            <button onClick={() => openDeleteModal(row.id, row.name)} className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors">
+                <i className="fi flaticon-delete"></i>
+            </button>
         </div>
     );
 
@@ -110,110 +145,19 @@ export default function PharmaciesManagement() {
                 </Link>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo tên hoặc địa chỉ..."
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    />
-                    <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50/50 border-b border-gray-100">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tên</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Địa chỉ</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Điện thoại</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Đánh giá</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {paginatedData.map((pharmacy: any) => (
-                                <tr key={pharmacy.id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-900">{pharmacy.name}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" title={pharmacy.address}>{pharmacy.address}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-600">{pharmacy.phone}</td>
-                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-yellow-400">★</span>
-                                            {pharmacy.rating || 0}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {pharmacy.isVerified ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                                                Đã xác thực
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                                                Chưa xác thực
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-3">
-                                            <Link href={`/admin/partners/pharmacies/${pharmacy.id}/edit`} className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors group">
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </Link>
-                                            <button onClick={() => openDeleteModal(pharmacy.id, pharmacy.name)} className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors group">
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                {paginatedData.length === 0 && (
-                    <div className="p-12 text-center">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900">Không tìm thấy dữ liệu</h3>
-                        <p className="text-gray-500 mt-1">Thử thay đổi bộ lọc tìm kiếm hoặc thêm mới.</p>
-                    </div>
-                )}
-                {/* Pagination Stats */}
-                <div className="bg-gray-50 px-6 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
-                    <div>
-                        Hiển thị {Math.min((currentPage - 1) * itemsPerPage + 1, filteredData.length)} đến {Math.min(currentPage * itemsPerPage, filteredData.length)} trong số {filteredData.length} kết quả
-                    </div>
-                </div>
-            </div>
-
-            {totalPages > 0 && (
-                <div className="flex items-center justify-center gap-2">
-                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 border rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <button key={page} onClick={() => setCurrentPage(page)} className={`w-10 h-10 rounded-lg font-medium transition-all ${currentPage === page ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-105' : 'bg-white border text-gray-600 hover:bg-gray-50 hover:border-gray-300'}`}>{page}</button>
-                    ))}
-                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 border rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                    </button>
-                </div>
-            )}
+            <DataTable
+                columns={columns}
+                data={paginatedData}
+                loading={loading}
+                actions={actions}
+                searchable
+                onSearch={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+                pagination={{
+                    currentPage,
+                    totalPages,
+                    onPageChange: setCurrentPage,
+                }}
+            />
 
             <DeleteConfirmationModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={confirmDelete} itemName={itemToDelete?.name || ''} />
         </div>

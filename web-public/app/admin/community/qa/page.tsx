@@ -1,25 +1,34 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import StatusBadge from '@/components/admin/StatusBadge';
-
-const MOCK_DATA = Array.from({ length: 40 }, (_, i) => ({
-    id: i + 1,
-    question: `Câu hỏi về sức khỏe ${i + 1}`,
-    askedBy: `User ${String.fromCharCode(65 + (i % 26))}`,
-    category: ['Tim mạch', 'Tiêu hóa', 'Da liễu', 'Nội khoa'][i % 4],
-    answers: Math.floor(Math.random() * 10),
-    views: Math.floor(Math.random() * 500) + 50,
-    askedDate: `${15 + (i % 15)}/12/2024`,
-    status: i % 8 === 0 ? 'pending' : 'approved',
-}));
+import communityService, { QAQuestion } from '@/services/community.service';
 
 export default function QAManagement() {
+    const [questions, setQuestions] = useState<QAQuestion[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const itemsPerPage = 10;
 
-    const filteredData = MOCK_DATA.filter(item =>
+    const fetchQuestions = async () => {
+        try {
+            setLoading(true);
+            const data = await communityService.getQAQuestions();
+            setQuestions(data);
+        } catch (error) {
+            console.error('Failed to fetch QA questions', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchQuestions();
+    }, []);
+
+    const filteredData = questions.filter(item =>
         item.question.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -28,25 +37,60 @@ export default function QAManagement() {
 
     const columns = [
         { key: 'question', label: 'Câu hỏi', render: (val: string) => <span className="font-medium text-gray-900">{val}</span> },
-        { key: 'askedBy', label: 'Người hỏi' },
+        { key: 'askedByName', label: 'Người hỏi' },
         { key: 'category', label: 'Danh mục' },
-        { key: 'answers', label: 'Trả lời' },
+        { key: '_count', label: 'Trả lời', render: (val: any) => val?.answers || 0 },
         { key: 'views', label: 'Lượt xem' },
-        { key: 'askedDate', label: 'Ngày hỏi' },
+        { key: 'createdAt', label: 'Ngày hỏi', render: (val: string) => new Date(val).toLocaleDateString() },
         { key: 'status', label: 'Trạng thái', render: (val: string) => <StatusBadge status={val as any} /> },
     ];
 
-    const actions = (row: any) => (
-        <>
-            <button className="text-blue-600 hover:text-blue-800"><i className="fi flaticon-eye"></i></button>
-            <button className="text-green-600 hover:text-green-800"><i className="fi flaticon-check"></i></button>
-        </>
+    const actions = (row: QAQuestion) => (
+        <div className="flex gap-2">
+            <button className="text-blue-600 hover:text-blue-800" title="Xem chi tiết">
+                <i className="fi flaticon-eye"></i>
+            </button>
+            <button
+                className="text-green-600 hover:text-green-800"
+                title="Duyệt"
+                onClick={async () => {
+                    await communityService.updateQAQuestion(row.id, { status: 'approved' });
+                    fetchQuestions();
+                }}
+            >
+                <i className="fi flaticon-check"></i>
+            </button>
+            <button
+                className="text-red-600 hover:text-red-800"
+                title="Xóa"
+                onClick={async () => {
+                    if (confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) {
+                        await communityService.deleteQAQuestion(row.id);
+                        fetchQuestions();
+                    }
+                }}
+            >
+                <i className="fi flaticon-delete"></i>
+            </button>
+        </div>
     );
 
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-bold text-gray-900">Quản lý Hỏi đáp</h1>
-            <DataTable columns={columns} data={paginatedData} actions={actions} searchable onSearch={setSearchQuery} pagination={{ currentPage, totalPages, onPageChange: setCurrentPage }} />
+            <DataTable
+                columns={columns}
+                data={paginatedData}
+                loading={loading}
+                actions={actions}
+                searchable
+                onSearch={setSearchQuery}
+                pagination={{
+                    currentPage,
+                    totalPages,
+                    onPageChange: setCurrentPage
+                }}
+            />
         </div>
     );
 }

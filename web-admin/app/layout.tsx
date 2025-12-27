@@ -227,8 +227,17 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     const userName = user?.name || 'Admin User';
     const userRole = (user as any)?.role === 'super_admin' || user?.roleId === 1 ? 'Super Admin' : (typeof (user as any)?.role === 'object' ? ((user as any)?.role as any)?.name : (user as any)?.role) || 'Admin';
 
+    // If it's an auth page, render without the admin layout (sidebar/header)
+    if (pathname?.startsWith('/auth')) {
+        return (
+            <ProtectedRoute redirectTo="/auth/login">
+                {children}
+            </ProtectedRoute>
+        );
+    }
+
     return (
-        <ProtectedRoute redirectTo="/admin/login">
+        <ProtectedRoute redirectTo="/auth/login">
             <div className="min-h-screen bg-gray-50 flex">
                 {/* Sidebar */}
                 <aside className="w-72 bg-gray-900 text-white flex-shrink-0 overflow-y-auto">

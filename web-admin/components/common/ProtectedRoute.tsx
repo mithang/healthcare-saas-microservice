@@ -18,24 +18,23 @@ export default function ProtectedRoute({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Exclude login pages from protection
-  const isLoginPage = pathname === '/login';
+  // Exclude login/auth pages from protection
+  const isAuthPage = pathname?.startsWith('/auth');
 
   // Determine redirect URL based on current path
   const getDefaultRedirectUrl = () => {
-
-    return 'http://localhost:3001/login';
+    return '/auth/login';
   };
 
   const redirectUrl = getDefaultRedirectUrl();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated && !isLoginPage) {
+    if (!loading && !isAuthenticated && !isAuthPage) {
       router.push(redirectUrl);
     }
-  }, [isAuthenticated, loading, router, redirectUrl, isLoginPage]);
+  }, [isAuthenticated, loading, router, redirectUrl, isAuthPage]);
 
-  if (loading && !isLoginPage) {
+  if (loading && !isAuthPage) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -43,7 +42,7 @@ export default function ProtectedRoute({
     );
   }
 
-  if (!isAuthenticated && !isLoginPage) {
+  if (!isAuthenticated && !isAuthPage) {
     return null;
   }
 

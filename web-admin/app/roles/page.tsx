@@ -333,7 +333,7 @@ export default function RolesPage() {
                     </div>
 
                     <div style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #f0f0f0', padding: '16px', borderRadius: '8px', background: '#fafafa' }}>
-                        <Collapse defaultActiveKey={['0']} ghost expandIconPosition="right">
+                        <Collapse defaultActiveKey={['0']} ghost expandIconPosition="start">
                             {Object.entries(permissionGroups).map(([groupName, permissions], index) => {
                                 const groupSelectedCount = permissions.filter(p => selectedPermissions.includes(p)).length;
                                 const isAllGroupSelected = groupSelectedCount === permissions.length;

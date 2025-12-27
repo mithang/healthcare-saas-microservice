@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Row, Col, Statistic, Progress, Modal } from 'antd';
+import { Table, Typography, Card, Space, Button, Input, Tag, Breadcrumb, message, Row, Col, Statistic, Progress, Modal, List } from 'antd';
 import { CalendarOutlined, PlusOutlined, EnvironmentOutlined, UsergroupAddOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PictureOutlined, TeamOutlined, QrcodeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import seminarService, { Seminar } from '@/services/seminar.service';

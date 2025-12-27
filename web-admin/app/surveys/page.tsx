@@ -22,8 +22,8 @@ export default function SurveysPage() {
             console.error('Failed to fetch surveys:', error);
             // Fallback mock
             setSurveys([
-                { id: 1, title: 'Khảo sát mức độ hài lòng về dịch vụ khám bệnh', description: 'Đánh giá chất lượng dịch vụ và thái độ phục vụ của nhân viên y tế.', status: 'ACTIVE', createdAt: new Date().toISOString(), _count: { responses: 1256 } },
-                { id: 2, title: 'Khảo sát nhu cầu tiêm chủng vaccine cúm', description: 'Thu thập ý kiến về nhu cầu và thời gian tiêm chủng phù hợp.', status: 'DRAFT', createdAt: new Date().toISOString(), _count: { responses: 0 } }
+                { id: 1, title: 'Khảo sát mức độ hài lòng về dịch vụ khám bệnh', description: 'Đánh giá chất lượng dịch vụ và thái độ phục vụ của nhân viên y tế.', status: 'ACTIVE', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { responses: 1256 } },
+                { id: 2, title: 'Khảo sát nhu cầu tiêm chủng vaccine cúm', description: 'Thu thập ý kiến về nhu cầu và thời gian tiêm chủng phù hợp.', status: 'DRAFT', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), _count: { responses: 0 } }
             ]);
         } finally {
             setLoading(false);

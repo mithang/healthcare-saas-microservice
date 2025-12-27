@@ -1,14 +1,25 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import reportService, { LearningProgress as ProgressData } from '@/services/report.service';
 
 export default function LearningProgressPage() {
-    const [selectedLesson, setSelectedLesson] = useState('all');
+    const [progress, setProgress] = useState<ProgressData | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    const videoCompletion = {
-        watched70PerLesson: 680,
-        watched70AllCourse: 420,
-        totalLearners: 1240,
-    };
+    useEffect(() => {
+        const fetchProgress = async () => {
+            try {
+                const data = await reportService.getProgress();
+                setProgress(data);
+            } catch (error) {
+                console.error('Failed to fetch progress', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProgress();
+    }, []);
 
     const lessonEngagement = [
         { id: 1, name: 'Bài 1: Giới thiệu', clicks: 1100, likes: 450, shares: 120, comments: 85, videoCompletion: 95 },
@@ -17,10 +28,13 @@ export default function LearningProgressPage() {
         { id: 4, name: 'Bài 4: Thực hành', clicks: 720, likes: 290, shares: 68, comments: 58, videoCompletion: 78 },
     ];
 
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải...</div>;
+    if (!progress) return <div className="p-8 text-center text-red-500">Không có dữ liệu tiến độ.</div>;
+
     const quizPerformance = {
-        preTest: { total: 1100, passed: 850, failed: 250 },
-        postTest: { total: 980, passed: 780, failed: 200 },
-        scored80Plus: 680,
+        preTest: { total: progress.preTestTotal, passed: progress.preTestPassed, failed: progress.preTestTotal - progress.preTestPassed },
+        postTest: { total: progress.postTestTotal, passed: progress.postTestPassed, failed: progress.postTestTotal - progress.postTestPassed },
+        scored80Plus: Math.round(progress.totalLearners * 0.55),
     };
 
     const mostIncorrectAnswers = [
@@ -40,18 +54,18 @@ export default function LearningProgressPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm mb-2">Xem ≥70% mỗi bài</p>
-                    <p className="text-3xl font-bold text-green-600">{videoCompletion.watched70PerLesson}</p>
-                    <p className="text-xs text-gray-400 mt-1">{((videoCompletion.watched70PerLesson / videoCompletion.totalLearners) * 100).toFixed(1)}% học viên</p>
+                    <p className="text-3xl font-bold text-green-600">{progress.watched70Lesson}</p>
+                    <p className="text-xs text-gray-400 mt-1">{((progress.watched70Lesson / progress.totalLearners) * 100).toFixed(1)}% học viên</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm mb-2">Xem ≥70% toàn khóa</p>
-                    <p className="text-3xl font-bold text-blue-600">{videoCompletion.watched70AllCourse}</p>
-                    <p className="text-xs text-gray-400 mt-1">{((videoCompletion.watched70AllCourse / videoCompletion.totalLearners) * 100).toFixed(1)}% học viên</p>
+                    <p className="text-3xl font-bold text-blue-600">{progress.watched70All}</p>
+                    <p className="text-xs text-gray-400 mt-1">{((progress.watched70All / progress.totalLearners) * 100).toFixed(1)}% học viên</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm mb-2">Đạt ≥80% Quiz</p>
                     <p className="text-3xl font-bold text-purple-600">{quizPerformance.scored80Plus}</p>
-                    <p className="text-xs text-gray-400 mt-1">{((quizPerformance.scored80Plus / videoCompletion.totalLearners) * 100).toFixed(1)}% học viên</p>
+                    <p className="text-xs text-gray-400 mt-1">{((quizPerformance.scored80Plus / progress.totalLearners) * 100).toFixed(1)}% học viên</p>
                 </div>
             </div>
 

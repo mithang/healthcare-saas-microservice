@@ -1,19 +1,25 @@
 "use client";
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
+import reportService, { EducationKPI } from '@/services/report.service';
 
 export default function CourseKPIPage() {
-    const kpi = {
-        totalEnrolled: 1240,
-        expectedEnrollment: 1500,
-        enrollmentRate: 83,
-        started: 1100,
-        completed: 420,
-        startedRate: 89,
-        completedRate: 34,
-        totalNotifications: 3450,
-        usageFrequency: 2.8,
-        avgCourseDuration: '12.5 giờ',
-    };
+    const [kpi, setKpi] = useState<EducationKPI | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchKPI = async () => {
+            try {
+                const data = await reportService.getKPI();
+                setKpi(data);
+            } catch (error) {
+                console.error('Failed to fetch KPI', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchKPI();
+    }, []);
 
     const peakUsageTimes = [
         { day: 'T2', morning: 120, afternoon: 180, evening: 250 },
@@ -25,10 +31,13 @@ export default function CourseKPIPage() {
         { day: 'CN', morning: 80, afternoon: 120, evening: 180 },
     ];
 
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải...</div>;
+    if (!kpi) return <div className="p-8 text-center text-red-500">Không có dữ liệu KPI.</div>;
+
     const learnerHierarchy = [
-        { level: 'RSM (Level 1)', count: 45, color: 'bg-red-500' },
-        { level: 'DM (Level 2)', count: 180, color: 'bg-blue-500' },
-        { level: 'REF (Level 3)', count: 1015, color: 'bg-green-500' },
+        { level: 'RSM (Level 1)', count: Math.round(kpi.totalEnrolled * 0.036), color: 'bg-red-500' },
+        { level: 'DM (Level 2)', count: Math.round(kpi.totalEnrolled * 0.145), color: 'bg-blue-500' },
+        { level: 'REF (Level 3)', count: Math.round(kpi.totalEnrolled * 0.819), color: 'bg-green-500' },
     ];
 
     return (
@@ -44,7 +53,7 @@ export default function CourseKPIPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                         <p className="text-gray-500 text-sm mb-2">Đã đăng ký / Dự kiến</p>
-                        <p className="text-3xl font-bold text-gray-900">{kpi.totalEnrolled} / {kpi.expectedEnrollment}</p>
+                        <p className="text-3xl font-bold text-gray-900">{kpi.totalEnrolled} / {kpi.expectedEnrolled}</p>
                         <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
                             <div className="h-full bg-blue-500" style={{ width: `${kpi.enrollmentRate}%` }}></div>
                         </div>

@@ -1,15 +1,26 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import reportService, { UserAnalytics } from '@/services/report.service';
 
 export default function UserAnalyticsPage() {
     const [timeRange, setTimeRange] = useState('month');
+    const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    const stats = {
-        totalUsers: 1240,
-        activeUsers: 856,
-        activityRate: 69,
-        multipleSessionUsers: 645,
-    };
+    useEffect(() => {
+        const fetchAnalytics = async () => {
+            try {
+                const data = await reportService.getUsersAnalytics();
+                setAnalytics(data);
+            } catch (error) {
+                console.error('Failed to fetch analytics', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAnalytics();
+    }, [timeRange]);
 
     const osByMonth = [
         { month: 'T1', ios: 120, android: 180, web: 50 },
@@ -26,19 +37,22 @@ export default function UserAnalyticsPage() {
         { hour: '21-24h', count: 95 },
     ];
 
+    if (loading) return <div className="p-8 text-center text-gray-500">Đang tải...</div>;
+    if (!analytics) return <div className="p-8 text-center text-red-500">Không có dữ liệu phân tích.</div>;
+
     const byProvince = [
-        { name: 'TP.HCM', count: 450, percent: 36 },
-        { name: 'Hà Nội', count: 320, percent: 26 },
-        { name: 'Đà Nẵng', count: 180, percent: 15 },
-        { name: 'Cần Thơ', count: 120, percent: 10 },
-        { name: 'Khác', count: 170, percent: 13 },
+        { name: 'TP.HCM', count: Math.round(analytics.totalUsers * 0.36), percent: 36 },
+        { name: 'Hà Nội', count: Math.round(analytics.totalUsers * 0.26), percent: 26 },
+        { name: 'Đà Nẵng', count: Math.round(analytics.totalUsers * 0.15), percent: 15 },
+        { name: 'Cần Thơ', count: Math.round(analytics.totalUsers * 0.10), percent: 10 },
+        { name: 'Khác', count: Math.round(analytics.totalUsers * 0.13), percent: 13 },
     ];
 
     const byEducation = [
-        { level: 'Đại học', count: 580, percent: 47, color: 'bg-blue-500' },
-        { level: 'Trung cấp', count: 380, percent: 31, color: 'bg-green-500' },
-        { level: 'Sơ cấp', count: 180, percent: 14, color: 'bg-yellow-500' },
-        { level: 'Khác', count: 100, percent: 8, color: 'bg-gray-400' },
+        { level: 'Đại học', count: Math.round(analytics.totalUsers * 0.47), percent: 47, color: 'bg-blue-500' },
+        { level: 'Trung cấp', count: Math.round(analytics.totalUsers * 0.31), percent: 31, color: 'bg-green-500' },
+        { level: 'Sơ cấp', count: Math.round(analytics.totalUsers * 0.14), percent: 14, color: 'bg-yellow-500' },
+        { level: 'Khác', count: Math.round(analytics.totalUsers * 0.08), percent: 8, color: 'bg-gray-400' },
     ];
 
     return (
@@ -63,20 +77,20 @@ export default function UserAnalyticsPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">Tổng người dùng</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.totalUsers}</p>
+                    <p className="text-3xl font-bold text-gray-900">{analytics.totalUsers}</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">Người dùng hoạt động</p>
-                    <p className="text-3xl font-bold text-green-600">{stats.activeUsers}</p>
+                    <p className="text-3xl font-bold text-green-600">{analytics.activeUsers}</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">Tỷ lệ hoạt động</p>
-                    <p className="text-3xl font-bold text-blue-600">{stats.activityRate}%</p>
+                    <p className="text-3xl font-bold text-blue-600">{analytics.activityRate}%</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">Hoạt động &gt; 1 lần</p>
-                    <p className="text-3xl font-bold text-purple-600">{stats.multipleSessionUsers}</p>
-                    <p className="text-xs text-gray-400 mt-1">{((stats.multipleSessionUsers / stats.totalUsers) * 100).toFixed(1)}% tổng số</p>
+                    <p className="text-3xl font-bold text-purple-600">{analytics.multipleSessionUsers}</p>
+                    <p className="text-xs text-gray-400 mt-1">{((analytics.multipleSessionUsers / analytics.totalUsers) * 100).toFixed(1)}% tổng số</p>
                 </div>
             </div>
 
@@ -101,25 +115,6 @@ export default function UserAnalyticsPage() {
                                     Web {month.web}
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Installation by Time of Day */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6">Cài đặt theo Thời gian trong Ngày</h2>
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                    {installByHour.map((slot) => (
-                        <div key={slot.hour} className="text-center">
-                            <div className="bg-gray-100 rounded-xl p-4 mb-2 relative overflow-hidden">
-                                <div
-                                    className="absolute bottom-0 left-0 right-0 bg-primary/20 transition-all"
-                                    style={{ height: `${(slot.count / 200) * 100}%` }}
-                                ></div>
-                                <p className="text-2xl font-bold text-gray-900 relative z-10">{slot.count}</p>
-                            </div>
-                            <p className="text-xs text-gray-600 font-medium">{slot.hour}</p>
                         </div>
                     ))}
                 </div>

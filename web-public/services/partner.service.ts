@@ -11,6 +11,7 @@ export interface Clinic {
     rating?: number;
     isVerified?: boolean;
     image?: string;
+    openingHours?: any;
     createdAt?: string;
 }
 

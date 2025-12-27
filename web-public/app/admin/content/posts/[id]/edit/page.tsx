@@ -37,7 +37,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
                 setCategories(cats);
                 setFormData({
                     title: post.title,
-                    categoryId: post.categoryId,
+                    categoryId: String(post.categoryId),
                     content: post.content,
                     isActive: post.isActive,
                     thumbnail: post.thumbnail,
@@ -58,7 +58,10 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         e.preventDefault();
         setUpdateLoading(true);
         try {
-            await contentService.updatePost(id, formData);
+            await contentService.updatePost(id, {
+                ...formData,
+                categoryId: parseInt(formData.categoryId as string)
+            });
             alert('Tin tức đã được cập nhật thành công!');
             router.push('/admin/content/posts');
         } catch (err: any) {
@@ -79,7 +82,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
                 </Link>
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Chỉnh sửa tin tức</h1>
-                    <p className="text-gray-500 mt-1">ID: #{params.id}</p>
+                    <p className="text-gray-500 mt-1">ID: #{id}</p>
                 </div>
             </div>
 

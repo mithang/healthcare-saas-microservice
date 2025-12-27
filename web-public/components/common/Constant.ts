@@ -335,6 +335,8 @@ export const USER_TYPE = {
   doctor: "bác sĩ",
   hospital: "bệnh viện",
   clinic: "phòng khám",
+  pharmacy: "nhà thuốc",
+  pharmacist: "dược sĩ",
   user: "người dùng"
 }
 

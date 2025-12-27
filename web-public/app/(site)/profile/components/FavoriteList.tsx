@@ -26,7 +26,7 @@ interface Statistics {
 
 interface FavoriteItem {
   userId: string;
-  userType: 'doctor' | 'hospital' | 'clinic';
+  userType: 'doctor' | 'hospital' | 'clinic' | 'pharmacy' | 'pharmacist';
   name: string;
   degree: string;
   avatar: string;

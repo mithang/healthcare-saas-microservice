@@ -1,191 +1,263 @@
-import { v4 as uuidv4 } from 'uuid';
+import apiService from './api';
 
 export interface Category {
-    id: string;
+    id: number;
     name: string;
 }
 
 export interface Post {
-    id: string;
+    id: number;
     title: string;
-    categoryId: string;
-    category?: string; // Derived for display
+    categoryId: number;
+    category?: string;
     content: string;
+    desc: string;
     isActive: boolean;
     thumbnail: string;
-    desc: string;
     author: string;
     date: string;
     view: number;
-    type: string;
+}
+
+export interface Comment {
+    id: number;
+    targetId: string;
+    targetType: 'post' | 'question' | 'video';
+    authorName: string;
+    content: string;
+    date: string;
+    isActive: boolean;
+}
+
+export interface Question {
+    id: number;
+    title: string;
+    content: string;
+    authorName: string;
+    category: string;
+    date: string;
+    isActive: boolean;
+    isResolved: boolean;
+    answers: Answer[];
+}
+
+export interface Answer {
+    id: number;
+    questionId: number;
+    authorName: string;
+    content: string;
+    date: string;
+}
+
+export interface Topic {
+    id: number;
+    title: string;
+    authorName: string;
+    date: string;
+    category: string;
+    viewCount: number;
+    commentCount: number;
+    isActive: boolean;
+}
+
+export interface Banner {
+    id: number;
+    title: string;
+    image: string;
+    link: string;
+    position: 'home_hero' | 'sidebar' | 'news_top';
+    isActive: boolean;
+}
+
+export interface Video {
+    id: number;
+    title: string;
+    url: string;
+    thumbnail: string;
+    duration: string;
+    author: string;
+    date: string;
+    isActive: boolean;
+}
+
+export interface StaticPage {
+    id: number;
+    title: string;
+    slug: string;
+    content: string;
+    isActive: boolean;
 }
 
 export interface TopSearchKeyword {
-    id: string;
+    id: number;
     keyword: string;
-    searchTimes: number;
+    count: number;
     isActive: boolean;
 }
 
 class ContentService {
-    private readonly STORAGE_KEY_POSTS = 'mock_posts';
-    private readonly STORAGE_KEY_CATEGORIES = 'mock_categories';
-    private readonly STORAGE_KEY_TOP_SEARCH = 'mock_top_searches';
-
-    private getPostsFromStorage(): Post[] {
-        if (typeof window === 'undefined') return [];
-        const stored = localStorage.getItem(this.STORAGE_KEY_POSTS);
-        return stored ? JSON.parse(stored) : [];
-    }
-
-    private savePostsToStorage(posts: Post[]) {
-        if (typeof window === 'undefined') return;
-        localStorage.setItem(this.STORAGE_KEY_POSTS, JSON.stringify(posts));
-    }
-
-    private getCategoriesFromStorage(): Category[] {
-        if (typeof window === 'undefined') return [];
-        const stored = localStorage.getItem(this.STORAGE_KEY_CATEGORIES);
-        if (stored) return JSON.parse(stored);
-
-        // Default categories if empty
-        const defaults = [
-            { id: '1', name: 'Sống khỏe' },
-            { id: '2', name: 'Y học' },
-            { id: '3', name: 'Tin tức' }
-        ];
-        this.saveCategoriesToStorage(defaults);
-        return defaults;
-    }
-
-    private saveCategoriesToStorage(categories: Category[]) {
-        if (typeof window === 'undefined') return;
-        localStorage.setItem(this.STORAGE_KEY_CATEGORIES, JSON.stringify(categories));
-    }
-
-    private getTopSearchesFromStorage(): TopSearchKeyword[] {
-        if (typeof window === 'undefined') return [];
-        const stored = localStorage.getItem(this.STORAGE_KEY_TOP_SEARCH);
-        return stored ? JSON.parse(stored) : [];
-    }
-
-    private saveTopSearchesToStorage(data: TopSearchKeyword[]) {
-        if (typeof window === 'undefined') return;
-        localStorage.setItem(this.STORAGE_KEY_TOP_SEARCH, JSON.stringify(data));
-    }
-
     // --- Posts ---
 
     async getPosts(): Promise<Post[]> {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const posts = this.getPostsFromStorage();
-        const categories = this.getCategoriesFromStorage();
-
-        return posts.map(p => ({
-            ...p,
-            category: categories.find(c => c.id === p.categoryId)?.name || 'Unknown'
-        }));
+        const response = await apiService.get('/content/posts');
+        return (response as any).data;
     }
 
-    async getPost(id: string): Promise<Post> {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const posts = this.getPostsFromStorage();
-        const post = posts.find(p => p.id === id);
-        if (!post) throw new Error('Post not found');
-        return post;
+    async getPost(id: string | number): Promise<Post> {
+        const response = await apiService.get(`/content/posts/${id}`);
+        return (response as any).data;
     }
 
-    async createPost(data: Omit<Post, 'id' | 'view' | 'date'>): Promise<Post> {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const posts = this.getPostsFromStorage();
-        const newPost: Post = {
-            ...data,
-            id: uuidv4(),
-            view: 0,
-            date: new Date().toLocaleDateString('vi-VN'),
-        };
-        posts.unshift(newPost);
-        this.savePostsToStorage(posts);
-        return newPost;
+    async createPost(data: any): Promise<Post> {
+        const response = await apiService.post('/content/posts', data);
+        return (response as any).data;
     }
 
-    async updatePost(id: string, data: Partial<Post>): Promise<Post> {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const posts = this.getPostsFromStorage();
-        const index = posts.findIndex(p => p.id === id);
-        if (index === -1) throw new Error('Post not found');
-
-        const updatedPost = { ...posts[index], ...data };
-        posts[index] = updatedPost;
-        this.savePostsToStorage(posts);
-        return updatedPost;
+    async updatePost(id: string | number, data: any): Promise<Post> {
+        const response = await apiService.put(`/content/posts/${id}`, data);
+        return (response as any).data;
     }
 
-    async deletePost(id: string): Promise<void> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        let posts = this.getPostsFromStorage();
-        posts = posts.filter(p => p.id !== id);
-        this.savePostsToStorage(posts);
+    async deletePost(id: string | number): Promise<void> {
+        await apiService.delete(`/content/posts/${id}`);
     }
 
     // --- Categories ---
 
     async getCategories(): Promise<Category[]> {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        return this.getCategoriesFromStorage();
+        const response = await apiService.get('/content/categories');
+        return (response as any).data;
     }
 
     async createCategory(name: string): Promise<Category> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const categories = this.getCategoriesFromStorage();
-        const newCategory = { id: uuidv4(), name };
-        categories.push(newCategory);
-        this.saveCategoriesToStorage(categories);
-        return newCategory;
+        const response = await apiService.post('/content/categories', { name });
+        return (response as any).data;
     }
 
-    async deleteCategory(id: string): Promise<void> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        let categories = this.getCategoriesFromStorage();
-        categories = categories.filter(c => c.id !== id);
-        this.saveCategoriesToStorage(categories);
+    async deleteCategory(id: string | number): Promise<void> {
+        await apiService.delete(`/content/categories/${id}`);
     }
 
     // --- Top Searches ---
 
     async getTopSearches(): Promise<TopSearchKeyword[]> {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        return this.getTopSearchesFromStorage();
+        const response = await apiService.get('/content/top-searches');
+        return (response as any).data;
     }
 
-    async createTopSearch(keyword: string, searchTimes: number): Promise<TopSearchKeyword> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const items = this.getTopSearchesFromStorage();
-        const newItem = { id: uuidv4(), keyword, searchTimes, isActive: true };
-        items.push(newItem);
-        this.saveTopSearchesToStorage(items);
-        return newItem;
+    async createTopSearch(keyword: string, count: number): Promise<TopSearchKeyword> {
+        const response = await apiService.post('/content/top-searches', { keyword, count });
+        return (response as any).data;
     }
 
-    async updateTopSearch(id: string, data: Partial<TopSearchKeyword>): Promise<TopSearchKeyword> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const items = this.getTopSearchesFromStorage();
-        const index = items.findIndex(i => i.id === id);
-        if (index === -1) throw new Error('Keyword not found');
-
-        const updated = { ...items[index], ...data };
-        items[index] = updated;
-        this.saveTopSearchesToStorage(items);
-        return updated;
+    async updateTopSearch(id: string | number, data: any): Promise<TopSearchKeyword> {
+        const response = await apiService.put(`/content/top-searches/${id}`, data);
+        return (response as any).data;
     }
 
-    async deleteTopSearch(id: string): Promise<void> {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        let items = this.getTopSearchesFromStorage();
-        items = items.filter(i => i.id !== id);
-        this.saveTopSearchesToStorage(items);
+    async deleteTopSearch(id: string | number): Promise<void> {
+        await apiService.delete(`/content/top-searches/${id}`);
+    }
+
+    // --- Banners ---
+
+    async getBanners(): Promise<Banner[]> {
+        const response = await apiService.get('/content/banners');
+        return (response as any).data;
+    }
+
+    async createBanner(data: any): Promise<Banner> {
+        const response = await apiService.post('/content/banners', data);
+        return (response as any).data;
+    }
+
+    async deleteBanner(id: string | number): Promise<void> {
+        await apiService.delete(`/content/banners/${id}`);
+    }
+
+    // --- Videos ---
+
+    async getVideos(): Promise<Video[]> {
+        const response = await apiService.get('/content/videos');
+        return (response as any).data;
+    }
+
+    async createVideo(data: any): Promise<Video> {
+        const response = await apiService.post('/content/videos', data);
+        return (response as any).data;
+    }
+
+    async deleteVideo(id: string | number): Promise<void> {
+        await apiService.delete(`/content/videos/${id}`);
+    }
+
+    // --- Static Pages ---
+
+    async getStaticPages(): Promise<StaticPage[]> {
+        const response = await apiService.get('/content/pages');
+        return (response as any).data;
+    }
+
+    async createStaticPage(data: any): Promise<StaticPage> {
+        const response = await apiService.post('/content/pages', data);
+        return (response as any).data;
+    }
+
+    async updateStaticPage(id: string | number, data: any): Promise<StaticPage> {
+        const response = await apiService.put(`/content/pages/${id}`, data);
+        return (response as any).data;
+    }
+
+    async deleteStaticPage(id: string | number): Promise<void> {
+        await apiService.delete(`/content/pages/${id}`);
+    }
+
+    // --- Questions & Answers ---
+
+    async getQuestions(): Promise<Question[]> {
+        const response = await apiService.get('/content/questions');
+        return (response as any).data;
+    }
+
+    async deleteQuestion(id: string | number): Promise<void> {
+        await apiService.delete(`/content/questions/${id}`);
+    }
+
+    async addAnswer(questionId: string | number, authorName: string, content: string): Promise<Answer> {
+        const response = await apiService.post(`/content/questions/${questionId}/answers`, { authorName, content });
+        return (response as any).data;
+    }
+
+    // --- Topics ---
+
+    async getTopics(): Promise<Topic[]> {
+        const response = await apiService.get('/content/topics');
+        return (response as any).data;
+    }
+
+    async deleteTopic(id: string | number): Promise<void> {
+        await apiService.delete(`/content/topics/${id}`);
+    }
+
+    // --- Comments ---
+
+    async getComments(targetId: string, targetType: 'post' | 'question' | 'video'): Promise<Comment[]> {
+        const response = await apiService.get('/content/comments', { params: { targetId, targetType } });
+        return (response as any).data;
+    }
+
+    async getAllComments(): Promise<Comment[]> {
+        const response = await apiService.get('/content/comments');
+        return (response as any).data;
+    }
+
+    async createComment(data: any): Promise<Comment> {
+        const response = await apiService.post('/content/comments', data);
+        return (response as any).data;
+    }
+
+    async deleteComment(id: string | number): Promise<void> {
+        await apiService.delete(`/content/comments/${id}`);
     }
 }
 

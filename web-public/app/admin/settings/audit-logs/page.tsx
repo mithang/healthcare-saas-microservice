@@ -4,18 +4,18 @@ import DataTable from '@/components/admin/DataTable';
 
 export default function AuditLogs() {
     const columns = [
-        { header: 'Thời gian', accessor: 'timestamp', width: '180px' },
-        { header: 'Người dùng', accessor: 'user', width: '200px' },
+        { label: 'Thời gian', key: 'timestamp', width: '180px' },
+        { label: 'Người dùng', key: 'user', width: '200px' },
         {
-            header: 'Hành động', accessor: 'action', width: '200px', render: (val: string) => (
+            label: 'Hành động', key: 'action', width: '200px', render: (val: string) => (
                 <span className={`font-medium ${val.includes('Delete') ? 'text-red-600' : val.includes('Create') ? 'text-green-600' : 'text-blue-600'}`}>
                     {val}
                 </span>
             )
         },
-        { header: 'Đối tượng', accessor: 'target', width: '250px' },
-        { header: 'IP', accessor: 'ip', width: '150px' },
-        { header: 'Chi tiết', accessor: 'details' },
+        { label: 'Đối tượng', key: 'target', width: '250px' },
+        { label: 'IP', key: 'ip', width: '150px' },
+        { label: 'Chi tiết', key: 'details' },
     ];
 
     const data = [

@@ -117,6 +117,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/backgroundjob-service/tsconfig.app.json"
       }
+    },
+    "content-service": {
+      "type": "application",
+      "root": "apps/content-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/content-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/content-service/tsconfig.app.json"
+      }
     }
   }
 }

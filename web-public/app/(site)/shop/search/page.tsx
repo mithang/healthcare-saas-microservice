@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/shop/ProductCard';
 import SearchBar from '@/components/shop/SearchBar';
 
-export default function SearchPage() {
+import { Suspense } from 'react';
+
+function SearchPageContent() {
     const searchParams = useSearchParams();
     const query = searchParams.get('q') || '';
 
@@ -50,5 +52,13 @@ export default function SearchPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SearchPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <SearchPageContent />
+        </Suspense>
     );
 }

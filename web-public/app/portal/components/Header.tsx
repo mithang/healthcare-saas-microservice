@@ -7,13 +7,13 @@ import { useAuth } from '@/providers/AuthProvider';
 export default function Header() {
     const { user } = useAuth();
 
-    console.log("ABC",user);
-    
+    console.log("ABC", user);
+
     // Default values if user data is not available
-    const userName = user?.fullName || 'Dr. Nguyễn Văn A';
-    const userRole = user?.role === 'doctor' ? 'Bác sĩ' : '';
-    const userSpecialty = user?.speciality || 'Khoa Tim mạch';
-    
+    const userName = user?.name || 'Dr. Nguyễn Văn A';
+    const userRole = (user as any)?.role === 'doctor' || user?.roleId === 2 ? 'Bác sĩ' : '';
+    const userSpecialty = user?.department || user?.position || 'Khoa Tim mạch';
+
     return (
         <header className="h-[70px] bg-white border-b border-gray-100 flex items-center justify-between px-6 md:px-10 sticky top-0 z-30">
             <div className="flex items-center gap-4">

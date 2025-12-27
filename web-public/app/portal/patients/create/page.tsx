@@ -24,13 +24,11 @@ export default function CreatePatientPage() {
                         label="Họ và tên"
                         placeholder="Nhập họ tên đầy đủ"
                         required
-                        fullWidth
                     />
                     <Input
                         label="Số điện thoại"
                         placeholder="Nhập số điện thoại"
                         required
-                        fullWidth
                         type="tel"
                         icon="phone-call"
                     />
@@ -47,17 +45,14 @@ export default function CreatePatientPage() {
                         label="Ngày sinh"
                         type="date"
                         required
-                        fullWidth
                     />
                     <Input
                         label="CMND/CCCD"
                         placeholder="Nhập số CMND/CCCD"
-                        fullWidth
                     />
                     <Input
                         label="Mã BHYT"
                         placeholder="Nhập mã thẻ BHYT (nếu có)"
-                        fullWidth
                     />
                 </div>
 
@@ -65,13 +60,11 @@ export default function CreatePatientPage() {
                     <Input
                         label="Địa chỉ"
                         placeholder="Nhập địa chỉ liên hệ"
-                        fullWidth
                         icon="marker"
                     />
                     <Input
                         label="Tiền sử bệnh lý"
                         placeholder="Ghi chú tiền sử bệnh (nếu có)"
-                        fullWidth
                         containerClassName="mb-0"
                     />
                 </div>

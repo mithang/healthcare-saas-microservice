@@ -134,10 +134,10 @@ const Header: React.FC<HeaderProps> = ({ title, icon }) => {
               <Link href="/portal/profile" className="flex items-center gap-2 md:gap-3 hover:opacity-90 transition-opacity">
                 <div className="text-right hidden sm:block">
                   <p className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-[120px]">
-                    {user?.fullName || 'User'}
+                    {user?.name || 'User'}
                   </p>
                   <p className="text-[10px] md:text-xs text-gray-500 truncate max-w-[120px]">
-                    {user?.role === 'doctor' ? 'Doctor' : (typeof user?.role === 'object' ? (user?.role as any)?.name : user?.role) || ''}
+                    {(user as any)?.role === 'doctor' || user?.roleId === 2 ? 'Doctor' : (typeof (user as any)?.role === 'object' ? ((user as any)?.role as any)?.name : (user as any)?.role) || ''}
                   </p>
                 </div>
                 <div className="relative">

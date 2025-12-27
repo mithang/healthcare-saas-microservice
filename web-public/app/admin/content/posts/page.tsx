@@ -42,7 +42,7 @@ export default function NewsManagement() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedNews = filteredNews.slice(startIndex, startIndex + itemsPerPage);
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: number | string) => {
         if (confirm('Bạn có chắc chắn muốn xóa tin tức này?')) {
             try {
                 await contentService.deletePost(id);
@@ -138,7 +138,9 @@ export default function NewsManagement() {
                                 <td className="px-6 py-4 text-gray-600 text-sm font-medium">{news.author}</td>
                                 <td className="px-6 py-4 text-gray-500 text-sm">{news.date}</td>
                                 <td className="px-6 py-4 text-center">
-                                    <span className="text-gray-900 font-bold">{news.view.toLocaleString()}</span>
+                                    <span className="text-gray-900 font-bold hover:text-primary cursor-pointer transition-colors" title="Quản lý bình luận">
+                                        💬 QL
+                                    </span>
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                     <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${news.isActive ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-700 border border-gray-200'

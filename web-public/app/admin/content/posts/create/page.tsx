@@ -29,7 +29,7 @@ export default function CreateNews() {
                 const cats = await contentService.getCategories();
                 setCategories(cats);
                 if (cats.length > 0 && !formData.categoryId) {
-                    setFormData(prev => ({ ...prev, categoryId: cats[0].id }));
+                    setFormData(prev => ({ ...prev, categoryId: String(cats[0].id) }));
                 }
             } catch (error) {
                 console.error("Failed to fetch categories", error);
@@ -46,6 +46,7 @@ export default function CreateNews() {
         try {
             await contentService.createPost({
                 ...formData,
+                categoryId: parseInt(formData.categoryId as string),
                 type: 'article',
             });
             alert('Tin tức đã được tạo thành công!');

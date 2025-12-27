@@ -24,7 +24,9 @@ let apiKeys: ApiKeys = {
   apiSecret: process.env.NEXT_PUBLIC_ZOOM_API_SECRET_KEY || "",
 };
 
-const Meeting: React.FC = () => {
+import { Suspense } from 'react';
+
+const MeetingContent: React.FC = () => {
   const [ZoomMtg, setZoomMtg] = useState<any>(null);
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
@@ -73,13 +75,13 @@ const Meeting: React.FC = () => {
         if (!_.isEmpty(mtConfig)) {
           ZoomMtg.generateSDKSignature({
             meetingNumber: mtConfig.meetingNumber,
-            apiKey: apiKeys.apiKey,
-            apiSecret: apiKeys.apiSecret,
-            role: mtConfig.role,
+            sdkKey: apiKeys.apiKey,
+            sdkSecret: apiKeys.apiSecret,
+            role: String(mtConfig.role),
             success: function (res: { result: string }) {
               console.log("res", res);
               setTimeout(() => {
-                joinMeeting(res.result, mtConfig);
+                joinMeeting(res.result, { ...mtConfig, apiKey: apiKeys.apiKey });
               }, 1000);
             },
           });
@@ -93,6 +95,14 @@ const Meeting: React.FC = () => {
   }, [mtConfig]);
 
   return <div className="Zoom">Zoom Testing</div>;
+};
+
+const Meeting: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading meeting...</div>}>
+      <MeetingContent />
+    </Suspense>
+  );
 };
 
 export default Meeting;

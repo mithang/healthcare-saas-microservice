@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import _ from 'lodash';
 import Flaticon from './Flaticon';
 
@@ -19,15 +20,15 @@ interface SideMenuItemProps {
 }
 
 export const SideMenuItem: React.FC<SideMenuItemProps> = ({ item }) => {
-  const location = useLocation();
+  const pathname = usePathname();
   const [isDropdown, setIsDropdown] = useState<boolean>(false);
 
   return (
     <div className="sidemenu-item">
       <Link
-        to={item.route}
+        href={item.route}
         onClick={() => setIsDropdown(!isDropdown)}
-        className={`sidemenu-link${location.pathname === item.route ? ' active' : ''}`}
+        className={`sidemenu-link${pathname === item.route ? ' active' : ''}`}
       >
         {item.title}
         {item.subNav && <Flaticon icon='down-arrow' />}
@@ -36,7 +37,7 @@ export const SideMenuItem: React.FC<SideMenuItemProps> = ({ item }) => {
         <div className={`sidemenu-sub${isDropdown ? ' expanded' : ''}`}>
           {_.map(item.subNav, (subItem, i) => (
             <Link
-              to={subItem.route}
+              href={subItem.route}
               key={i}
               className="sidemenu-link"
             >

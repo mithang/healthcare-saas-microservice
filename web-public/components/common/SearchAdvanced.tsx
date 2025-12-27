@@ -57,7 +57,7 @@ const SearchAdvanced: React.FC<SearchAdvancedProps> = ({ onSearch, isShow = fals
               <Select
                 classNamePrefix={'select'}
                 defaultValue={WEEKDAY[0]}
-                onChange={setSelectedWeekday}
+                onChange={(val: any) => setSelectedWeekday(val)}
                 options={WEEKDAY}
                 placeholder='Chọn ngày trong tuần'
               />
@@ -70,7 +70,7 @@ const SearchAdvanced: React.FC<SearchAdvancedProps> = ({ onSearch, isShow = fals
               <Select
                 classNamePrefix={'select'}
                 defaultValue={TIME[0]}
-                onChange={setSelectedTime}
+                onChange={(val: any) => setSelectedTime(val)}
                 options={TIME}
                 placeholder='Chọn khung giờ'
               />
@@ -83,7 +83,7 @@ const SearchAdvanced: React.FC<SearchAdvancedProps> = ({ onSearch, isShow = fals
               <Select
                 classNamePrefix={'select'}
                 defaultValue={PRICE[0]}
-                onChange={setSelectedPrice}
+                onChange={(val: any) => setSelectedPrice(val)}
                 options={PRICE}
                 placeholder='Chọn giá khám'
               />
@@ -96,7 +96,7 @@ const SearchAdvanced: React.FC<SearchAdvancedProps> = ({ onSearch, isShow = fals
               <Select
                 classNamePrefix={'select'}
                 defaultValue={RADIUS[0]}
-                onChange={setSelectedRadius}
+                onChange={(val: any) => setSelectedRadius(val)}
                 options={RADIUS}
                 placeholder='Chọn phạm vi bán kính'
               />

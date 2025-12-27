@@ -56,10 +56,7 @@ interface WorkplaceData {
 interface GalleryItem { img: string; }
 interface MapItem { img: string; label: string; }
 interface QaItem { author: Author; publishDate: string; service: string; content: string; reply: string; vote: number; }
-interface NewsData {
-    thumbnail: string; title: string; author: Author; publishDate: string; desc: string;
-    view: number; comments: { length: number }; slug: string; type: 'article' | 'video';
-}
+import { NewsData } from '../../common/NewsArticle';
 interface FavoriteItem {
     userId: string; userType: 'doctor' | 'hospital' | 'clinic'; name: string; degree: string; avatar: string; speciality: string;
     traffic: Traffic; statistic: Statistics; address: string;

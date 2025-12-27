@@ -12,7 +12,7 @@ export default function TopSearchesManagement() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [keywordToDelete, setKeywordToDelete] = useState<TopSearchKeyword | null>(null);
     const [editingKeyword, setEditingKeyword] = useState<TopSearchKeyword | null>(null);
-    const [newKeyword, setNewKeyword] = useState({ keyword: '', searchTimes: 0 });
+    const [newKeyword, setNewKeyword] = useState({ keyword: '', count: 0 });
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const showMessage = (text: string, type: 'success' | 'error' = 'success') => {
@@ -67,19 +67,19 @@ export default function TopSearchesManagement() {
             if (editingKeyword) {
                 await contentService.updateTopSearch(editingKeyword.id, {
                     keyword: newKeyword.keyword,
-                    searchTimes: parseInt(newKeyword.searchTimes.toString())
+                    count: parseInt(newKeyword.count.toString())
                 });
                 showMessage('Đã cập nhật từ khóa');
             } else {
                 await contentService.createTopSearch(
                     newKeyword.keyword,
-                    parseInt(newKeyword.searchTimes.toString())
+                    parseInt(newKeyword.count.toString())
                 );
                 showMessage('Đã thêm từ khóa mới');
             }
             setIsModalOpen(false);
             setEditingKeyword(null);
-            setNewKeyword({ keyword: '', searchTimes: 0 });
+            setNewKeyword({ keyword: '', count: 0 });
             fetchKeywords();
         } catch (err) {
             showMessage('Lưu thất bại', 'error');
@@ -88,7 +88,7 @@ export default function TopSearchesManagement() {
 
     const openEditModal = (keyword: TopSearchKeyword) => {
         setEditingKeyword(keyword);
-        setNewKeyword({ keyword: keyword.keyword, searchTimes: keyword.searchTimes });
+        setNewKeyword({ keyword: keyword.keyword, count: keyword.count });
         setIsModalOpen(true);
     };
 
@@ -109,7 +109,7 @@ export default function TopSearchesManagement() {
                 <button
                     onClick={() => {
                         setEditingKeyword(null);
-                        setNewKeyword({ keyword: '', searchTimes: 0 });
+                        setNewKeyword({ keyword: '', count: 0 });
                         setIsModalOpen(true);
                     }}
                     className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-dark transition-colors"
@@ -160,7 +160,7 @@ export default function TopSearchesManagement() {
                                 <td className="px-6 py-4 font-bold text-gray-900">{k.keyword}</td>
                                 <td className="px-6 py-4 text-center">
                                     <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-bold text-sm">
-                                        {k.searchTimes.toLocaleString()}
+                                        {k.count.toLocaleString()}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-center">
@@ -227,8 +227,8 @@ export default function TopSearchesManagement() {
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Lượt tìm kiếm</label>
                                 <input
                                     type="number"
-                                    value={newKeyword.searchTimes}
-                                    onChange={(e) => setNewKeyword({ ...newKeyword, searchTimes: parseInt(e.target.value || '0') })}
+                                    value={newKeyword.count}
+                                    onChange={(e) => setNewKeyword({ ...newKeyword, count: parseInt(e.target.value || '0') })}
                                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                                 />
                             </div>

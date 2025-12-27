@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import DataTable from '@/components/admin/DataTable';
+import StatusBadge from '@/components/admin/StatusBadge';
 import StatsCard from '@/components/admin/StatsCard';
 
 const MOCK_DATA = Array.from({ length: 30 }, (_, i) => ({
@@ -20,11 +21,11 @@ export default function RevenueManagement() {
     const paginatedData = MOCK_DATA.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const columns = [
-        { key: 'date', label: 'Ngày' },
-        { key: 'source', label: 'Nguồn' },
-        { key: 'amount', label: 'Tổng tiền', render: (val: string) => <span className="font-bold text-green-600">{val}</span> },
-        { key: 'fee', label: 'Phí' },
-        { key: 'net', label: 'Thực nhận', render: (val: string) => <span className="font-bold text-blue-600">{val}</span> },
+        { label: 'Thời gian', key: 'timestamp' },
+        { label: 'Loại', key: 'type' },
+        { label: 'Chi tiết', key: 'details' },
+        { label: 'Số tiền', key: 'amount', render: (val: number) => <span className="font-bold text-green-600">{val.toLocaleString()} đ</span> },
+        { label: 'Trạng thái', key: 'status', render: (val: string) => <StatusBadge status={val === 'Done' ? 'approved' : 'pending'} /> }
     ];
 
     return (

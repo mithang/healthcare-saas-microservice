@@ -1,5 +1,6 @@
 import apiService from './api';
 import { User } from './auth.service';
+export { type User };
 
 export interface CreateUserData {
     userId: string;

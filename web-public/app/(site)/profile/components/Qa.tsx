@@ -33,7 +33,7 @@ interface QaProps {
     name: string;
     degree: string;
     service: Service[];
-    userType: "doctor" | "hospital" | "clinic" | "user";
+    userType: "doctor" | "hospital" | "clinic" | "pharmacy" | "pharmacist" | "user";
   };
 }
 

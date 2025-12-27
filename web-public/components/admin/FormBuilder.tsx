@@ -16,6 +16,7 @@ interface Field {
     options?: { value: string; label: string }[];
     rows?: number;
     disabled?: boolean;
+    isMulti?: boolean;
 }
 
 interface FormBuilderProps {
@@ -64,6 +65,7 @@ export default function FormBuilder({ fields, onSubmit, submitLabel = 'Lưu thay
                                 placeholder={field.placeholder}
                                 required={field.required}
                                 isDisabled={field.disabled}
+                                isMulti={field.isMulti}
                             />
                         ) : field.type === 'date' ? (
                             <DatePicker

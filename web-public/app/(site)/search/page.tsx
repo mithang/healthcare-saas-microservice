@@ -246,7 +246,9 @@ const searchResult: SearchResultData = {
   ]
 };
 
-const SearchResult: React.FC = () => {
+import { Suspense } from 'react';
+
+const SearchResultContent: React.FC = () => {
   const searchParams = useSearchParams();
   const type = searchParams.get('type');
   const [fixed, setFixed] = useState<boolean>(false);
@@ -386,5 +388,13 @@ const SearchResult: React.FC = () => {
     </Fragment>
   )
 }
+
+const SearchResult: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading search results...</div>}>
+      <SearchResultContent />
+    </Suspense>
+  );
+};
 
 export default SearchResult;

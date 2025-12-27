@@ -5,16 +5,16 @@ import classNames from 'classnames';
 
 import { convertNum } from './Utilities';
 
-interface Author {
+export interface Author {
   name: string;
   avatar: string;
 }
 
-interface Comments {
+export interface Comments {
   length: number;
 }
 
-interface NewsData {
+export interface NewsData {
   thumbnail: string;
   title: string;
   author: Author;
@@ -26,7 +26,7 @@ interface NewsData {
   type: string; // Changed to string to match data source
 }
 
-interface NewsArticleProps {
+export interface NewsArticleProps {
   data: NewsData;
   role: 'highlightTop' | 'highlightSub' | 'latestTop' | 'latestSub' | 'mostview' | 'categoriesTop' | 'categoriesSub' | 'profile' | 'userNewsFeed';
 }
@@ -61,12 +61,11 @@ const NewsArticle: React.FC<NewsArticleProps> = ({ data, role }) => {
   const isUserNewsFeed = role === 'userNewsFeed';
 
   const containerClasses = classNames('rounded-[7px] overflow-hidden group', {
-    'bg-[#f3f6f9] mb-5': isHighlightTop || isLatestTop,
+    'bg-[#f3f6f9]': isHighlightTop || isLatestTop,
     'mt-5': isHighlightSub || isUserNewsFeed,
-    'mb-5': isLatestSub,
+    'mb-5': isHighlightTop || isLatestTop || isLatestSub || isCategoriesSub,
     'mb-7.5': isMostView || isProfile,
     'mb-5 lg:mb-0 border-b-0 rounded-b-0': isCategoriesTop,
-    'mb-5': isCategoriesSub,
   });
 
   const thumbnailClasses = classNames('overflow-hidden block h-full', {
@@ -96,14 +95,14 @@ const NewsArticle: React.FC<NewsArticleProps> = ({ data, role }) => {
     <div className={containerClasses}>
       <div className="flex flex-wrap -mx-[5px] h-full"> {/* Using smaller gap to match m-row behavior inside specific components often */}
         <div className={`px-[5px] ${colClass[role][0]}`}>
-          <Ratio
-            ratio={16 / 10}
-            className={thumbnailClasses}
-            tagName='a'
-            href={slug}
-          >
-            <img src={thumbnail} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt={title} />
-          </Ratio>
+          <a href={slug} className="block">
+            <Ratio
+              ratio={16 / 10}
+              className={thumbnailClasses}
+            >
+              <img src={thumbnail} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt={title} />
+            </Ratio>
+          </a>
         </div>
 
         <div className={`px-[5px] ${colClass[role][1]}`}>

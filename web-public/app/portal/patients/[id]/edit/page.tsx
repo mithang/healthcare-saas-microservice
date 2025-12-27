@@ -28,13 +28,11 @@ export default function EditPatientPage() {
                         label="Họ và tên"
                         defaultValue="Trần Văn A"
                         required
-                        fullWidth
                     />
                     <Input
                         label="Số điện thoại"
                         defaultValue="0901234567"
                         required
-                        fullWidth
                         type="tel"
                         icon="phone-call"
                     />
@@ -53,17 +51,14 @@ export default function EditPatientPage() {
                         type="date"
                         defaultValue="1980-05-15"
                         required
-                        fullWidth
                     />
                     <Input
                         label="CMND/CCCD"
                         defaultValue="079123456789"
-                        fullWidth
                     />
                     <Input
                         label="Mã BHYT"
                         defaultValue="DN479123456789"
-                        fullWidth
                     />
                 </div>
 
@@ -71,13 +66,11 @@ export default function EditPatientPage() {
                     <Input
                         label="Địa chỉ"
                         defaultValue="123 Nguyễn Văn Cừ, Q5, TP.HCM"
-                        fullWidth
                         icon="marker"
                     />
                     <Input
                         label="Tiền sử bệnh lý"
                         defaultValue="Cao huyết áp nhẹ"
-                        fullWidth
                         containerClassName="mb-0"
                     />
                 </div>

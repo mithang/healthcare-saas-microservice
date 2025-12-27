@@ -51,7 +51,6 @@ export default function TopUpPage() {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         rightIcon="money"
-                        fullWidth
                     />
                 </div>
 

@@ -47,7 +47,6 @@ const Livestream: React.FC = () => {
       <Ratio
         ratio={16 / 9}
         className="overflow-hidden relative block border border-[#f0f2f5] rounded-[7px] md:rounded-b-none group"
-        tagName='div'
       >
         <img src={item.thumbnail} className="w-full h-auto" alt="" />
         <a href="/" className="flex justify-center items-center absolute inset-0 bg-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 no-underline">

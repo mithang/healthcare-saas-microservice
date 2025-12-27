@@ -1,28 +1,7 @@
 import React from 'react';
 import _ from 'lodash';
 
-import NewsArticle from '../../common/NewsArticle';
-import { Author } from '../../common/NewsArticle'; // Assuming NewsArticle exports Author or I define it here. 
-// Wait, NewsArticle types might not be exported. 
-// I'll redefine generic types or check if NewsArticle exports them. 
-// For safety, I'll redefine them as they were, to avoid import errors if NewsArticle doesn't export.
-
-interface Author {
-    avatar: string;
-    name: string;
-}
-
-interface NewsData {
-    thumbnail: string;
-    title: string;
-    author: Author;
-    publishDate: string;
-    desc: string;
-    view: number;
-    comments: { length: number };
-    slug: string;
-    type: 'article' | 'video';
-}
+import NewsArticle, { NewsData } from '../../common/NewsArticle';
 
 interface ArticleListProps {
     data: NewsData[];

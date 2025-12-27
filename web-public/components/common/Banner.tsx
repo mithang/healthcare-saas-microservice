@@ -268,7 +268,7 @@ const Banner: React.FC<BannerProps> = ({ page }) => {
                       <div className="relative">
                         <input
                           type="text"
-                          {...register("keyword", { required: true })}
+                          {...(register("keyword", { required: true }) as any)}
                           className="w-full h-[45px] md:h-[50px] lg:h-[45px] xl:h-[48px] border border-white md:border-[#fff] lg:border-[#5fad73] rounded-[5px] text-[15px] md:text-[17px] px-[10px] md:px-[20px] bg-white/70 md:bg-white placeholder:text-[#52575c] placeholder:text-[13px] md:placeholder:text-[15px] focus:ring-0 focus:outline-none focus:shadow-md"
                           autoComplete="off"
                           placeholder="Triệu chứng bệnh, bệnh viện, phòng khám, bác sĩ"
@@ -292,7 +292,7 @@ const Banner: React.FC<BannerProps> = ({ page }) => {
                             type="text"
                             className="hidden"
                             value={selectedType.value}
-                            {...register("type")}
+                            {...(register("type") as any)}
                             readOnly
                           />
                         </div>
@@ -315,7 +315,7 @@ const Banner: React.FC<BannerProps> = ({ page }) => {
                             type="text"
                             className="hidden"
                             value={selectedDistrict.value}
-                            {...register("district")}
+                            {...(register("district") as any)}
                             readOnly
                           />
                         </div>
@@ -341,7 +341,7 @@ const Banner: React.FC<BannerProps> = ({ page }) => {
                             type="text"
                             className="hidden"
                             value={selectedCity.value}
-                            {...register("city")}
+                            {...(register("city") as any)}
                             readOnly
                           />
                         </div>
@@ -379,7 +379,7 @@ const Banner: React.FC<BannerProps> = ({ page }) => {
                               type="text"
                               className="hidden"
                               value={selectedWeekday.value}
-                              {...register("weekday")}
+                              {...(register("weekday") as any)}
                               readOnly
                             />
                           </div>

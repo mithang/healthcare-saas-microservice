@@ -39,20 +39,17 @@ export default function EditProfilePage() {
                             label="Họ và tên hiển thị"
                             defaultValue="Mithang"
                             required
-                            fullWidth
                         />
                         <Input
                             label="Email"
                             defaultValue="mithang@example.com"
                             required
-                            fullWidth
                             type="email"
                             icon="envelope"
                         />
                         <Input
                             label="Số điện thoại"
                             defaultValue="0987xxx678"
-                            fullWidth
                             type="tel"
                             disabled
                             icon="phone-call"

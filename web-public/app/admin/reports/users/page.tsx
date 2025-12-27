@@ -74,7 +74,7 @@ export default function UserAnalyticsPage() {
                     <p className="text-3xl font-bold text-blue-600">{stats.activityRate}%</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-gray-500 text-sm mb-1">Hoạt động >1 lần</p>
+                    <p className="text-gray-500 text-sm mb-1">Hoạt động &gt; 1 lần</p>
                     <p className="text-3xl font-bold text-purple-600">{stats.multipleSessionUsers}</p>
                     <p className="text-xs text-gray-400 mt-1">{((stats.multipleSessionUsers / stats.totalUsers) * 100).toFixed(1)}% tổng số</p>
                 </div>

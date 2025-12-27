@@ -16,7 +16,7 @@ interface IntroSection {
 }
 
 interface IntroData {
-  userType: 'doctor' | string;
+  userType: 'doctor' | 'hospital' | 'clinic' | 'pharmacy' | 'pharmacist' | 'user';
   intro: IntroSection;
   address: string;
   email: string[];

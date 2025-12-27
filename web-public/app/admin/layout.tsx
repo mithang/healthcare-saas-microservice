@@ -223,8 +223,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const { user } = useAuth();
     console.log("data", user)
     // Default values if user data is not available
-    const userName = user?.fullName || 'Admin User';
-    const userRole = user?.role === 'super_admin' ? 'Super Admin' : (typeof user?.role === 'object' ? (user?.role as any)?.name : user?.role) || 'Admin';
+    const userName = user?.name || 'Admin User';
+    const userRole = (user as any)?.role === 'super_admin' || user?.roleId === 1 ? 'Super Admin' : (typeof (user as any)?.role === 'object' ? ((user as any)?.role as any)?.name : (user as any)?.role) || 'Admin';
 
     return (
         <ProtectedRoute redirectTo="/admin/login">

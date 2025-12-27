@@ -11,6 +11,7 @@ import { FileController } from './file.controller';
 import { SettingController } from './setting.controller';
 import { SearchController } from './search.controller';
 import { BackgroundJobController } from './backgroundjob.controller';
+import { ContentController } from './content.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -126,9 +127,20 @@ import { AppService } from './app.service';
           },
         },
       },
+      {
+        name: 'CONTENT_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'content_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController, SearchController, BackgroundJobController, ContentController],
   providers: [AppService],
 })
 export class AppModule { }

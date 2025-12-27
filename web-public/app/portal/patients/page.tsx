@@ -12,7 +12,6 @@ const MOCK_USERS: EcosystemUser[] = [
         Address: '123 Nguyễn Văn Linh, Q7, TP.HCM',
         Age: 34,
         BirthDay: '1990-01-01T00:00:00Z',
-        Sex: 'Nam',
         Avatar: '', // Placeholder or URL
         IsDoctor: false,
         IsPartner: false,

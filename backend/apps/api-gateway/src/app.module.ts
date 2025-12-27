@@ -8,6 +8,7 @@ import { ApikeyController } from './apikey.controller';
 import { LoggerController } from './logger.controller';
 import { PaymentController } from './payment.controller';
 import { FileController } from './file.controller';
+import { SettingController } from './setting.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -90,9 +91,20 @@ import { AppService } from './app.service';
           },
         },
       },
+      {
+        name: 'SETTING_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'setting_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
-  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController],
+  controllers: [AppController, AuthController, UserController, RoleController, ApikeyController, LoggerController, PaymentController, FileController, SettingController],
   providers: [AppService],
 })
 export class AppModule { }

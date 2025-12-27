@@ -13,6 +13,7 @@ import {
     FileTextOutlined,
     FileOutlined,
     CreditCardOutlined,
+    SettingOutlined,
     LogoutOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
@@ -68,6 +69,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             key: '/subscriptions',
             icon: <CreditCardOutlined />,
             label: <Link href="/subscriptions">Subscription</Link>,
+        },
+        {
+            key: '/settings',
+            icon: <SettingOutlined />,
+            label: <Link href="/settings">Settings</Link>,
         },
     ];
 
